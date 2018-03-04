@@ -1,0 +1,8 @@
+language: go
+go_import_path: github.com/0xfe/microstellar
+go:
+  - 1.9.x
+  - tip
+
+script:
+  - go test -v ./...
