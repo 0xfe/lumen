@@ -1,4 +1,4 @@
-package cli
+package store
 
 // Implement a simple TTL based store.
 

@@ -1,4 +1,4 @@
-package cli
+package store
 
 // Test Redis Store
 //
