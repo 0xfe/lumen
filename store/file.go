@@ -3,6 +3,7 @@ package store
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"sync"
 	"time"
 
@@ -33,6 +34,42 @@ func newFileData() *fileData {
 	}
 }
 
+// newFileDataFromFile tries to load data from fileName, creating a
+// new file with empty data if it can't read it. Returns error if it
+// can't parse an existing file, or reads invalid data.
+func newFileDataFromFile(fileName string) (*fileData, error) {
+	fileData := newFileData()
+
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		log.Printf("Creating new file: %s", fileName)
+		return fileData, fileData.sync(fileName)
+	}
+
+	err = json.Unmarshal(data, &fileData)
+
+	if err != nil {
+		return nil, errors.Errorf("invalid content in %s: %v", fileName, err)
+	}
+
+	return fileData, nil
+}
+
+func (data *fileData) sync(fileName string) error {
+	jsonData, err := json.Marshal(*data)
+
+	if err != nil {
+		return errors.Errorf("could not marshall json: %v", err)
+	}
+
+	err = ioutil.WriteFile(fileName, jsonData, 0644)
+	if err != nil {
+		return errors.Errorf("could not write to file: %v", err)
+	}
+
+	return nil
+}
+
 // DataStore represents the conntection to the Google Cloud Datastore.
 type FileStore struct {
 	*Store
@@ -42,6 +79,12 @@ type FileStore struct {
 }
 
 func NewFileStore(path string) (*FileStore, error) {
+	fileData, err := newFileDataFromFile(path)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "can't create file store")
+	}
+
 	// Try to connect
 	fileStore := &FileStore{
 		Store: &Store{
@@ -50,25 +93,14 @@ func NewFileStore(path string) (*FileStore, error) {
 		},
 		path: path,
 		mu:   &sync.RWMutex{},
-		data: newFileData(),
+		data: fileData,
 	}
-
 	return fileStore, nil
 }
 
 // sync must be called under mu
 func (fs *FileStore) sync() error {
-	jsonData, err := json.Marshal(*fs.data)
-	if err != nil {
-		return errors.Errorf("could not marshall json: %v", err)
-	}
-
-	err = ioutil.WriteFile(fs.path, jsonData, 0644)
-	if err != nil {
-		return errors.Errorf("could not write to file: %v", err)
-	}
-
-	return err
+	return fs.data.sync(fs.path)
 }
 
 func (fs *FileStore) Set(k string, v string, ttl time.Duration) error {
