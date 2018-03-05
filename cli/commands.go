@@ -7,12 +7,12 @@ import (
 )
 
 type CLI struct {
-	store store.StoreAPI
+	store store.API
 	ms    *microstellar.MicroStellar
 }
 
 // NewCLI
-func NewCLI(store store.StoreAPI, ms *microstellar.MicroStellar) *CLI {
+func NewCLI(store store.API, ms *microstellar.MicroStellar) *CLI {
 	return &CLI{
 		store: store,
 		ms:    ms,

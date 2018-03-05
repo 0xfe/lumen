@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func testBasicLookup(t *testing.T, store StoreAPI) {
+func testBasicLookup(t *testing.T, store API) {
 	store.Set("foo", "bar", 0)
 	v, err := store.Get("foo")
 
@@ -22,7 +22,7 @@ func testBasicLookup(t *testing.T, store StoreAPI) {
 
 // Test store expiry. This is hacky because we're using time.Sleep(), but an okay
 // tradeoff given the simplicity.
-func testTTL(t *testing.T, store StoreAPI) {
+func testTTL(t *testing.T, store API) {
 	store.Set("mo", "bar", 10*time.Millisecond)
 	time.Sleep(20 * time.Millisecond)
 

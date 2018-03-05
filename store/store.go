@@ -1,37 +1,39 @@
 package store
 
 import (
-	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
+	"github.com/stellar/go/support/log"
 )
 
 // StoreAPI abstracts the storage backend.
-type StoreAPI interface {
+type API interface {
 	Set(k string, v string, ttl time.Duration) error
 	Get(k string) (string, error)
 	Delete(k string) error
 }
 
-// Backend represents the storage backend. Currently, only "internal" and "redis" are supported.
+// Store represents the storage backend. Currently, only "internal" and "redis" are supported.
 type Store struct {
 	driver     string
 	parameters string
 }
 
-func NewStore(driver, parameters string) (StoreAPI, error) {
-	if driver == "redis" {
+func NewStore(driver, parameters string) (API, error) {
+	switch driver {
+	case "redis":
 		store, err := NewRedisStore(parameters)
 		return store, err
-	} else if driver == "internal" {
+	case "internal":
 		return NewInternalStore()
-	} else if driver == "none" || driver == "" {
+	case "file":
+		return NewFileStore(parameters)
+	case "dummy":
 		return &DummyStore{&Store{"dummy", "dummy"}}, nil
 	}
 
-	log.WithFields(log.Fields{"type": "store"}).Errorf("Driver not found: %s", driver)
-	return nil, fmt.Errorf("Driver not found: %s", driver)
+	return nil, errors.Errorf("Driver not found: %s", driver)
 }
 
 type DummyStore struct {
@@ -39,13 +41,15 @@ type DummyStore struct {
 }
 
 func (store *DummyStore) Set(k string, v string, ttl time.Duration) error {
-	return nil
+	log.Errorf("Calling Set() on dummy store does nothing")
+	return errors.Errorf("Dummy store stores nothing!")
 }
 
 func (store *DummyStore) Get(k string) (string, error) {
-	return "", fmt.Errorf("Dummy store stores nothing!")
+	log.Errorf("Calling Set() on dummy store does nothing")
+	return "", errors.Errorf("Dummy store stores nothing!")
 }
 
 func (store *DummyStore) Delete(k string) error {
-	return nil
+	return errors.Errorf("Dummy store stores nothing!")
 }

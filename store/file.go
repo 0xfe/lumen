@@ -9,27 +9,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-type FileEntry struct {
+type fileEntry struct {
 	Value     string    `json:"value"`
 	NoExpire  bool      `json:"bool"`
 	ExpiresOn time.Time `json:"expires_on"`
 }
 
-func (e FileEntry) expired() bool {
+func (e fileEntry) expired() bool {
 	return !e.NoExpire && time.Now().After(e.ExpiresOn)
 }
 
-type FileData struct {
+type fileData struct {
 	Version string               `json:"version"`
 	Seq     uint64               `json:"seq"`
-	Pairs   map[string]FileEntry `json:"pairs"`
+	Pairs   map[string]fileEntry `json:"pairs"`
 }
 
-func NewFileData() *FileData {
-	return &FileData{
+func newFileData() *fileData {
+	return &fileData{
 		Version: "1",
 		Seq:     0,
-		Pairs:   make(map[string]FileEntry),
+		Pairs:   make(map[string]fileEntry),
 	}
 }
 
@@ -38,7 +38,7 @@ type FileStore struct {
 	*Store
 	path string
 	mu   *sync.RWMutex // protects data
-	data *FileData
+	data *fileData
 }
 
 func NewFileStore(path string) (*FileStore, error) {
@@ -49,7 +49,8 @@ func NewFileStore(path string) (*FileStore, error) {
 			parameters: path,
 		},
 		path: path,
-		data: NewFileData(),
+		mu:   &sync.RWMutex{},
+		data: newFileData(),
 	}
 
 	return fileStore, nil
@@ -74,7 +75,7 @@ func (fs *FileStore) Set(k string, v string, ttl time.Duration) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 
-	fs.data.Pairs[k] = FileEntry{
+	fs.data.Pairs[k] = fileEntry{
 		Value:     v,
 		NoExpire:  ttl == 0,
 		ExpiresOn: time.Now().Add(ttl),
