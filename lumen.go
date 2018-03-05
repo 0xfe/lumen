@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/0xfe/lumen/cli"
 	"github.com/0xfe/lumen/store"
 	"github.com/0xfe/microstellar"
@@ -11,27 +13,29 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct {
-	StorageDriver string
-	StorageParams string
+type config struct {
+	storageDriver string
+	storageParams string
+	verbose       bool
 }
 
-func ReadConfig(env string) Config {
+func readConfig(env string) config {
 	homeDir := os.Getenv("HOME")
 	filePath := fmt.Sprintf("%s%s%s", homeDir, string(os.PathSeparator), ".lumen-data.json")
 
-	config := Config{
-		StorageDriver: "file",
-		StorageParams: filePath,
+	config := config{
+		storageDriver: "file",
+		storageParams: filePath,
+		verbose:       false,
 	}
 
 	switch env {
 	case "dev":
-		viper.SetConfigName("lumen-config-dev")
+		viper.SetConfigName(".lumen-config-dev")
 	case "test":
-		viper.SetConfigName("lumen-config-test")
+		viper.SetConfigName(".lumen-config-test")
 	default: // also "prod"
-		viper.SetConfigName("lumen-config")
+		viper.SetConfigName(".lumen-config")
 	}
 
 	viper.AddConfigPath(".")
@@ -42,8 +46,9 @@ func ReadConfig(env string) Config {
 	err := viper.ReadInConfig() // Find and read the config file
 
 	if err == nil {
-		config.StorageDriver = viper.GetString("storage.driver")
-		config.StorageParams = viper.GetString("storage.params")
+		config.storageDriver = viper.GetString("storage.driver")
+		config.storageParams = viper.GetString("storage.params")
+		config.verbose = viper.GetBool("verbose")
 	}
 
 	return config
@@ -53,17 +58,31 @@ func help(cmd *cobra.Command, args []string) {
 	fmt.Fprint(os.Stderr, cmd.UsageString())
 }
 
+func setup(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Lookup("verbose").Value.String() == "true" {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+}
+
 var rootCmd = &cobra.Command{
-	Use:   "lumen",
-	Short: "Lumen is a commandline client for the Stellar blockchain",
-	Run:   help,
+	Use:              "lumen",
+	Short:            "Lumen is a commandline client for the Stellar blockchain",
+	Run:              help,
+	PersistentPreRun: setup,
 }
 
 func Start() {
-	config := ReadConfig(os.Getenv("LUMEN_ENV"))
-	store, _ := store.NewStore(config.StorageDriver, config.StorageParams)
+	// Add global flags
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
 
+	// Load config and setup CLI
+	config := readConfig(os.Getenv("LUMEN_ENV"))
+	store, _ := store.NewStore(config.storageDriver, config.storageParams)
 	cli := cli.NewCLI(store, microstellar.New("test"))
+
+	if config.verbose {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 
 	// Install the CLI
 	cli.Install(rootCmd)

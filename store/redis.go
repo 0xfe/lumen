@@ -17,11 +17,11 @@ type Redis struct {
 
 func NewRedisStore(address string) (*Redis, error) {
 	// Try to connect
-	log.WithFields(log.Fields{"type": "store", "store": "redis"}).Infof("Connecting to redis at %v", address)
+	log.WithFields(log.Fields{"type": "redis"}).Infof("Connecting to redis at %v", address)
 	client := redis.NewClient(&redis.Options{Addr: address})
 
 	if err := client.Ping().Err(); err != nil {
-		log.WithFields(log.Fields{"type": "store", "store": "redis"}).Infof("connection failed:", err)
+		log.WithFields(log.Fields{"type": "redis", "method": "ping"}).Infof("connection failed:", err)
 		return nil, fmt.Errorf("can't reach redis server at %s: %v", address, err)
 	}
 
@@ -42,7 +42,7 @@ func (store *Redis) WithPrefix(prefix string) *Redis {
 func (store *Redis) Set(k string, v string, ttl time.Duration) error {
 	err := store.client.Set(store.prefix+k, v, ttl).Err()
 	if err != nil {
-		log.WithFields(log.Fields{"type": "store", "store": "redis"}).Errorf("Set: %v", err)
+		log.WithFields(log.Fields{"type": "redis", "method": "set"}).Errorf("Set: %v", err)
 	}
 	return err
 }
@@ -50,7 +50,7 @@ func (store *Redis) Set(k string, v string, ttl time.Duration) error {
 func (store *Redis) Get(k string) (string, error) {
 	val, err := store.client.Get(store.prefix + k).Result()
 	if err != nil {
-		log.WithFields(log.Fields{"type": "store", "store": "redis"}).Debugf("Get: %v", err)
+		log.WithFields(log.Fields{"type": "redis", "method": "get"}).Debugf("Get: %v", err)
 	}
 	return val, err
 }
@@ -58,7 +58,7 @@ func (store *Redis) Get(k string) (string, error) {
 func (store *Redis) Delete(k string) error {
 	err := store.client.Del(store.prefix + k).Err()
 	if err != nil {
-		log.WithFields(log.Fields{"type": "store", "store": "redis"}).Errorf("Del: %v", err)
+		log.WithFields(log.Fields{"type": "redis", "method": "delete"}).Errorf("Del: %v", err)
 	}
 	return err
 }

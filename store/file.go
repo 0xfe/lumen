@@ -3,11 +3,11 @@ package store
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type fileEntry struct {
@@ -40,15 +40,18 @@ func newFileData() *fileData {
 func newFileDataFromFile(fileName string) (*fileData, error) {
 	fileData := newFileData()
 
+	logrus.WithFields(logrus.Fields{"type": "filestore", "method": "new"}).Debugf("reading file: %s", fileName)
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		log.Printf("Creating new file: %s", fileName)
+		logrus.WithFields(logrus.Fields{"type": "filestore", "method": "new"}).Debugf("read error: %v", err)
+		logrus.WithFields(logrus.Fields{"type": "filestore", "method": "new"}).Infof("creating new file: %s", fileName)
 		return fileData, fileData.sync(fileName)
 	}
 
 	err = json.Unmarshal(data, &fileData)
 
 	if err != nil {
+		logrus.WithFields(logrus.Fields{"type": "filestore", "method": "new"}).Errorf("parse error: %v", err)
 		return nil, errors.Errorf("invalid content in %s: %v", fileName, err)
 	}
 
@@ -59,11 +62,14 @@ func (data *fileData) sync(fileName string) error {
 	jsonData, err := json.Marshal(*data)
 
 	if err != nil {
+		logrus.WithFields(logrus.Fields{"type": "filestore", "method": "sync"}).Errorf("marshaling error: %v", err)
 		return errors.Errorf("could not marshall json: %v", err)
 	}
 
+	logrus.WithFields(logrus.Fields{"type": "filestore", "method": "sync"}).Debugf("writing to file: %s", fileName)
 	err = ioutil.WriteFile(fileName, jsonData, 0644)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{"type": "filestore", "method": "sync"}).Errorf("write error: %v", err)
 		return errors.Errorf("could not write to file: %v", err)
 	}
 
@@ -82,7 +88,7 @@ func NewFileStore(path string) (*FileStore, error) {
 	fileData, err := newFileDataFromFile(path)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "can't create file store")
+		return nil, errors.Wrap(err, "can't read or create file store")
 	}
 
 	// Try to connect
@@ -107,6 +113,7 @@ func (fs *FileStore) Set(k string, v string, ttl time.Duration) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 
+	logrus.WithFields(logrus.Fields{"type": "filestore", "method": "set", "key": k}).Debugf("writing val: %s (ttl: %v)", v, ttl)
 	fs.data.Pairs[k] = fileEntry{
 		Value:     v,
 		NoExpire:  ttl == 0,
@@ -123,8 +130,11 @@ func (fs *FileStore) Get(k string) (string, error) {
 
 	val, ok := fs.data.Pairs[k]
 	if !ok || val.expired() {
+		logrus.WithFields(logrus.Fields{"type": "filestore", "method": "get", "key": k}).Debugf("not found, expired: %v", ok && val.expired())
 		return "", errors.Errorf("not found: %s", k)
 	}
+
+	logrus.WithFields(logrus.Fields{"type": "filestore", "method": "get", "key": k}).Debugf("got val: %s (expires: %v, expires_on: %v)", val.Value, !val.NoExpire, val.ExpiresOn)
 	return val.Value, nil
 }
 
@@ -132,6 +142,7 @@ func (fs *FileStore) Delete(k string) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 
+	logrus.WithFields(logrus.Fields{"type": "filestore", "method": "delete", "key": k}).Debugf("deleting")
 	delete(fs.data.Pairs, k)
 	return fs.sync()
 }
