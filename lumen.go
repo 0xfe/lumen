@@ -16,7 +16,7 @@ func help(cmd *cobra.Command, args []string) {
 
 var rootCmd = &cobra.Command{
 	Use:   "lumen",
-	Short: "Lumen is a commandline client for the Stellar blockchain based",
+	Short: "Lumen is a commandline client for the Stellar blockchain",
 	Run:   help,
 }
 
@@ -28,6 +28,6 @@ func Start() {
 	cli.Install(rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v", err)
+		// fmt.Fprintf(os.Stderr, "error: %v", err)
 	}
 }
