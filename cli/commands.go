@@ -161,18 +161,17 @@ func (cli *CLI) cmdPay(cmd *cobra.Command, args []string) {
 
 	if err != nil {
 		showError(fields, "payment failed: %v", microstellar.ErrorString(err))
-	} else {
-		showSuccess("paid\n")
 	}
 }
 
 func (cli *CLI) cmdBalance(cmd *cobra.Command, args []string) {
-	address := args[0]
+	fields := logrus.Fields{"cmd": "balance"}
+	address := cli.validateAddressOrSeed(fields, args[0], "address")
 
 	account, err := cli.ms.LoadAccount(address)
 
 	if err != nil {
-		showError(logrus.Fields{"cmd": "balance"}, "payment failed: %v", err)
+		showError(logrus.Fields{"cmd": "balance"}, "payment failed: %v", microstellar.ErrorString(err))
 	} else {
 		showSuccess("%v\n", account.GetNativeBalance())
 	}

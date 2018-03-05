@@ -1,5 +1,10 @@
-# MicroStellar [![Build Status](https://travis-ci.org/0xfe/microstellar.svg?branch=master)](https://travis-ci.org/0xfe/microstellar)
-#### -- a production of [0xfe industries](https://github.com/0xfe) --
+<p align="center">
+  <img src="https://imgur.com/kPRfhrH.png" width="400"/>
+  <br/>
+  <b>-- a production of [<a href="https://github.com/0xfe">0xfe industries</a>] --</b>
+  <br/>
+  <a href="https://travis-ci.org/0xfe/microstellar"><img src="https://travis-ci.org/0xfe/microstellar.svg?branch=master"/></a>
+</p>
 
 MicroStellar is an easy-to-use Go client for the [Stellar](http://stellar.org) blockchain network. The API is simple and clean, without sacrificing flexibility.
 

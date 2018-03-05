@@ -10,8 +10,6 @@ import (
 	"github.com/stellar/go/strkey"
 )
 
-type AddressOrSeed string
-
 // ValidAddress returns error if address is an invalid stellar address
 func ValidAddress(address string) error {
 	_, err := strkey.Decode(strkey.VersionByteAccountID, address)
@@ -36,7 +34,7 @@ func ValidAddressOrSeed(addressOrSeed string) bool {
 }
 
 // ErrorString parses the horizon error out of err.
-func ErrorString(err error) string {
+func ErrorString(err error, showStackTrace ...bool) string {
 	var errorString string
 	herr, isHorizonError := errors.Cause(err).(*horizon.Error)
 
@@ -55,7 +53,10 @@ func ErrorString(err error) string {
 			herr.Problem.Type)
 	}
 
-	errorString += fmt.Sprintf("\nStack trace:\n%+v\n", err)
+	if len(showStackTrace) > 0 {
+		errorString += fmt.Sprintf("\nStack trace:\n%+v\n", err)
+	}
+
 	return errorString
 }
 

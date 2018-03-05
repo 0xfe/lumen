@@ -64,7 +64,7 @@ func NewTx(networkName string, params ...Params) *Tx {
 		client = horizon.DefaultTestNetClient
 		fake = true
 	case "custom":
-		network = build.Network{params[0]["passphrase"].(string)}
+		network = build.Network{Passphrase: params[0]["passphrase"].(string)}
 		client = &horizon.Client{
 			URL:  params[0]["url"].(string),
 			HTTP: http.DefaultClient,
@@ -327,7 +327,7 @@ func (o *TxOptions) WithContext(context context.Context) *TxOptions {
 	return o
 }
 
-// WithContext sets the cursor for watchers
+// WithCursor sets the cursor for watchers
 func (o *TxOptions) WithCursor(cursor string) *TxOptions {
 	o.hasCursor = true
 	o.cursor = cursor

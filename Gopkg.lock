@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "3a7e953133c521dbf74cc7960299510fad84aadb"
-  version = "v0.1.2"
+  revision = "7460a6dccfe3374f92a1eb99d1491896c9e95491"
+  version = "v0.1.3"
 
 [[projects]]
   branch = "master"
