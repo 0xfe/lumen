@@ -8,10 +8,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// DataStore represents the conntection to the Google Cloud Datastore.
+// Redis represents a Redis-based backing store.
 type Redis struct {
-	store  *Store
+	*Store
 	client *redis.Client
+	prefix string // all redis keys are prefixed with this
 }
 
 func NewRedisStore(address string) (*Redis, error) {
@@ -25,7 +26,7 @@ func NewRedisStore(address string) (*Redis, error) {
 	}
 
 	return &Redis{
-		store: &Store{
+		Store: &Store{
 			driver:     "redis",
 			parameters: address,
 		},
@@ -33,8 +34,13 @@ func NewRedisStore(address string) (*Redis, error) {
 	}, nil
 }
 
+func (store *Redis) WithPrefix(prefix string) *Redis {
+	store.prefix = prefix + ":"
+	return store
+}
+
 func (store *Redis) Set(k string, v string, ttl time.Duration) error {
-	err := store.client.Set(k, v, ttl).Err()
+	err := store.client.Set(store.prefix+k, v, ttl).Err()
 	if err != nil {
 		log.WithFields(log.Fields{"type": "store", "store": "redis"}).Errorf("Set: %v", err)
 	}
@@ -42,7 +48,7 @@ func (store *Redis) Set(k string, v string, ttl time.Duration) error {
 }
 
 func (store *Redis) Get(k string) (string, error) {
-	val, err := store.client.Get(k).Result()
+	val, err := store.client.Get(store.prefix + k).Result()
 	if err != nil {
 		log.WithFields(log.Fields{"type": "store", "store": "redis"}).Debugf("Get: %v", err)
 	}
@@ -50,7 +56,7 @@ func (store *Redis) Get(k string) (string, error) {
 }
 
 func (store *Redis) Delete(k string) error {
-	err := store.client.Del(k).Err()
+	err := store.client.Del(store.prefix + k).Err()
 	if err != nil {
 		log.WithFields(log.Fields{"type": "store", "store": "redis"}).Errorf("Del: %v", err)
 	}

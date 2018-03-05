@@ -1,6 +1,6 @@
 package store
 
-// Implement a simple TTL based store.
+// Implement a simple TTL based in-memory store.
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ func (e entry) expired() bool {
 
 // Internal represents the internal memstore
 type Internal struct {
-	store      *Store
+	*Store
 	entries    map[string]*entry
 	ticker     *time.Ticker
 	gcInterval time.Duration
@@ -43,7 +43,7 @@ type Internal struct {
 func NewInternalStore() (*Internal, error) {
 	// Try to connect
 	return &Internal{
-		store: &Store{
+		Store: &Store{
 			driver:     "internal",
 			parameters: "",
 		},

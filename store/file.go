@@ -9,38 +9,50 @@ import (
 	"github.com/pkg/errors"
 )
 
+type FileEntry struct {
+	Value     string    `json:"value"`
+	NoExpire  bool      `json:"bool"`
+	ExpiresOn time.Time `json:"expires_on"`
+}
+
+func (e FileEntry) expired() bool {
+	return !e.NoExpire && time.Now().After(e.ExpiresOn)
+}
+
 type FileData struct {
-	Version string            `json:"version"`
-	Seq     uint64            `json:"seq"`
-	Pairs   map[string]string `json:"pairs"`
+	Version string               `json:"version"`
+	Seq     uint64               `json:"seq"`
+	Pairs   map[string]FileEntry `json:"pairs"`
 }
 
 func NewFileData() *FileData {
 	return &FileData{
 		Version: "1",
 		Seq:     0,
-		Pairs:   make(map[string]string),
+		Pairs:   make(map[string]FileEntry),
 	}
 }
 
 // DataStore represents the conntection to the Google Cloud Datastore.
 type FileStore struct {
-	store *Store
-	path  string
-	mu    *sync.RWMutex // protects data
-	data  *FileData
+	*Store
+	path string
+	mu   *sync.RWMutex // protects data
+	data *FileData
 }
 
 func NewFileStore(path string) (*FileStore, error) {
 	// Try to connect
-	return &FileStore{
-		store: &Store{
+	fileStore := &FileStore{
+		Store: &Store{
 			driver:     "file",
 			parameters: path,
 		},
 		path: path,
 		data: NewFileData(),
-	}, nil
+	}
+
+	return fileStore, nil
 }
 
 // sync must be called under mu
@@ -62,9 +74,13 @@ func (fs *FileStore) Set(k string, v string, ttl time.Duration) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 
-	fs.data.Pairs[k] = v
-	fs.data.Seq++
+	fs.data.Pairs[k] = FileEntry{
+		Value:     v,
+		NoExpire:  ttl == 0,
+		ExpiresOn: time.Now().Add(ttl),
+	}
 
+	fs.data.Seq++
 	return fs.sync()
 }
 
@@ -73,10 +89,10 @@ func (fs *FileStore) Get(k string) (string, error) {
 	defer fs.mu.RUnlock()
 
 	val, ok := fs.data.Pairs[k]
-	if !ok {
+	if !ok || val.expired() {
 		return "", errors.Errorf("not found: %s", k)
 	}
-	return val, nil
+	return val.Value, nil
 }
 
 func (fs *FileStore) Delete(k string) error {
