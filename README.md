@@ -134,3 +134,9 @@ lumen options set homedomain mary qubit.sh --signers bill,sharon
 # Who are mo's signers?
 lumen options get mo signers
 ```
+
+### Configuring Lumen
+
+* Config file
+* Change backend
+* Namespaces
