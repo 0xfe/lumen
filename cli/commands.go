@@ -105,7 +105,7 @@ func (cli *CLI) cmdSet(cmd *cobra.Command, args []string) {
 
 	err := cli.SetVar(key, val)
 	if err != nil {
-		showError("set failed: ", err)
+		showError(logrus.Fields{"cmd": "set"}, "set failed: ", err)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (cli *CLI) cmdDel(cmd *cobra.Command, args []string) {
 
 	err := cli.DelVar(key)
 	if err != nil {
-		showError("del failed: %s\n", err)
+		showError(logrus.Fields{"cmd": "del"}, "del failed: %s\n", err)
 	}
 }
 
@@ -128,7 +128,7 @@ func (cli *CLI) cmdGet(cmd *cobra.Command, args []string) {
 	if err == nil {
 		showSuccess(val + "\n")
 	} else {
-		showError("no such variable: %s\n", args[0])
+		showError(logrus.Fields{"cmd": "get"}, "no such variable: %s\n", args[0])
 	}
 }
 
@@ -138,7 +138,7 @@ func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
 	watcher, err := cli.ms.WatchPayments(address)
 
 	if err != nil {
-		showError("can't watch address: %+v\n", err)
+		showError(logrus.Fields{"cmd": "watch"}, "can't watch address: %+v\n", err)
 		return
 	}
 
@@ -147,19 +147,20 @@ func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
 	}
 
 	if watcher.Err != nil {
-		showError("%+v\n", *watcher.Err)
+		showError(logrus.Fields{"cmd": "watch"}, "%+v\n", *watcher.Err)
 	}
 }
 
 func (cli *CLI) cmdPay(cmd *cobra.Command, args []string) {
-	source := args[0]
-	target := args[1]
-	amount := args[2]
+	fields := logrus.Fields{"cmd": "pay"}
+	source := cli.validateAddressOrSeed(fields, args[0], "seed")
+	target := cli.validateAddressOrSeed(fields, args[1], "address")
 
+	amount := args[2]
 	err := cli.ms.PayNative(source, target, amount)
 
 	if err != nil {
-		showError("payment failed: %v\n", err)
+		showError(fields, "payment failed: %v", microstellar.ErrorString(err))
 	} else {
 		showSuccess("paid\n")
 	}
@@ -171,7 +172,7 @@ func (cli *CLI) cmdBalance(cmd *cobra.Command, args []string) {
 	account, err := cli.ms.LoadAccount(address)
 
 	if err != nil {
-		showError("payment failed: %v\n", err)
+		showError(logrus.Fields{"cmd": "balance"}, "payment failed: %v", err)
 	} else {
 		showSuccess("%v\n", account.GetNativeBalance())
 	}
