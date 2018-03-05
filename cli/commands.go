@@ -1,8 +1,12 @@
 package cli
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/0xfe/lumen/store"
 	"github.com/0xfe/microstellar"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -48,13 +52,6 @@ func (cli *CLI) Install(rootCmd *cobra.Command) {
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
-		Use:   "account [new|add|del|address|seed]",
-		Short: "get variable",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdGet,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
 		Use:   "watch [address]",
 		Short: "watch the address on the ledger",
 		Args:  cobra.MinimumNArgs(1),
@@ -74,6 +71,34 @@ func (cli *CLI) Install(rootCmd *cobra.Command) {
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cli.cmdBalance,
 	})
+
+	accountsCmd := &cobra.Command{
+		Use:   "account [new|add|del|address|seed]",
+		Short: "look up accounts",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				logrus.WithFields(logrus.Fields{"cmd": "accounts"}).Errorf("unrecognized parameter: %s", args[0])
+			}
+			fmt.Fprint(os.Stderr, rootCmd.UsageString())
+		},
+	}
+
+	accountsCmd.AddCommand(&cobra.Command{
+		Use:   "new [name]",
+		Short: "create a new random keypair named [name]",
+		Args:  cobra.MinimumNArgs(1),
+		Run:   cli.cmdNewAccount,
+	})
+
+	accountsCmd.AddCommand(&cobra.Command{
+		Use:   "add [name] [address] [seed]",
+		Short: "add a keypayr named [name] with [address] and [seed]",
+		Args:  cobra.MinimumNArgs(2),
+		Run:   cli.cmdNewAccount,
+	})
+
+	rootCmd.AddCommand(accountsCmd)
 }
 
 func (cli *CLI) SetVar(key string, value string) error {
