@@ -1,2 +1,2 @@
 #!/bin/bash -x
-go build -o lumen main/main.go 
+go build -o dist/lumen main/main.go 
