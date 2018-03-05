@@ -11,4 +11,5 @@ func showSuccess(msg string, args ...interface{}) {
 
 func showError(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg, args)
+	os.Exit(-1)
 }

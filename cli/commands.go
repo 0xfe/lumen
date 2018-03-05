@@ -1,14 +1,18 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/0xfe/lumen/store"
 	"github.com/0xfe/microstellar"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 type CLI struct {
 	store store.API
 	ms    *microstellar.MicroStellar
+	ns    string // namespace
 }
 
 // NewCLI
@@ -16,6 +20,7 @@ func NewCLI(store store.API, ms *microstellar.MicroStellar) *CLI {
 	return &CLI{
 		store: store,
 		ms:    ms,
+		ns:    "default",
 	}
 }
 
@@ -71,36 +76,55 @@ func (cli *CLI) Install(rootCmd *cobra.Command) {
 	rootCmd.AddCommand(cli.getAccountsCmd())
 }
 
+// SetVar writes the kv pair to the storage backend
 func (cli *CLI) SetVar(key string, value string) error {
+	key = fmt.Sprintf("%s:%s", cli.ns, key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "SetVar"}).Debugf("setting %s: %s", key, value)
 	return cli.store.Set(key, value, 0)
 }
 
 func (cli *CLI) GetVar(key string) (string, error) {
+	key = fmt.Sprintf("%s:%s", cli.ns, key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "GetVar"}).Debugf("getting %s", key)
 	return cli.store.Get(key)
 }
 
 func (cli *CLI) DelVar(key string) error {
+	key = fmt.Sprintf("%s:%s", cli.ns, key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "DelVar"}).Debugf("deleting %s", key)
 	return cli.store.Delete(key)
 }
 
 func (cli *CLI) cmdVersion(cmd *cobra.Command, args []string) {
-	showSuccess("v0.1")
+	showSuccess("v0.1\n")
 }
 
 func (cli *CLI) cmdSet(cmd *cobra.Command, args []string) {
+	key := fmt.Sprintf("vars:%s", args[0])
+	val := args[1]
+
+	err := cli.SetVar(key, val)
+	if err != nil {
+		showError("set failed: ", err)
+		return
+	}
+
 	showSuccess("setting %s to %s\n", args[0], args[1])
-	cli.SetVar(args[0], args[1])
 }
 
 func (cli *CLI) cmdDel(cmd *cobra.Command, args []string) {
-	err := cli.DelVar(args[0])
+	key := fmt.Sprintf("vars:%s", args[0])
+
+	err := cli.DelVar(key)
 	if err != nil {
 		showError("del failed: %s\n", err)
 	}
 }
 
 func (cli *CLI) cmdGet(cmd *cobra.Command, args []string) {
-	val, err := cli.GetVar(args[0])
+	key := fmt.Sprintf("vars:%s", args[0])
+
+	val, err := cli.GetVar(key)
 	if err == nil {
 		showSuccess(val + "\n")
 	} else {
