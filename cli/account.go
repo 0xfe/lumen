@@ -106,7 +106,7 @@ func (cli *CLI) cmdNewAccount(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	showSuccess("added account %s %s:%s\n", name, pair.Address, pair.Seed)
+	showSuccess("added account %s %s %s\n", name, pair.Address, pair.Seed)
 }
 
 func (cli *CLI) cmdSetAccount(cmd *cobra.Command, args []string) {

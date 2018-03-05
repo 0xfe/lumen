@@ -94,3 +94,43 @@ lumen watch payments kelly --cursor
 # Watch for payments across multiple addresses
 lumen watch payments kelly mo bob
 ```
+
+#### Multisig accounts
+
+```bash
+# Create aliases for mary, sharon, and bob
+lumen account set mary GDRTX6RFQULJMB4RXDNNAUNIZPLLINISMNXV4WQVXQFQBHAMPMBEWLFT SDXWOG4ZNW5RLTROHPFKCDSKKEFVKZYI4SLZIO6TXM6FJ7CKUCO5NWYB
+lumen account set sharon GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ
+lumen account set bill GBJDIMENGOKR49V63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVOFI53G SBLPAE53C6JXKX6CK4UN7DIXMD4EXGA4QL6NB63YHGZRTG6NPXAPWQTC
+
+# Add sharon as a signer on mary's account with a weight of 1
+lumen signer add mary sharon 1
+
+# Add bill as a signer too
+lumen signer add mary bill 1
+
+# Set mary's low, medium, and high thresholds to require a minimum total weight of 2
+# for all transactions
+lumen thresholds set mary 2 2 2
+
+# Now mary needs atleast two signatures (including hers) to make payments
+lumen pay mary mo 4 --signers mary,bill
+lumen pay mary bob 10 USD --signers sharon,bill
+```
+
+#### Advanced
+
+```bash
+
+# Kill mary's master key
+lumen setmasterweight mary 0
+
+# Set mary's home domain
+lumen options set homedomain mary qubit.sh
+
+# Whoops! we killed her master key. Fortunately she has other signers on her account.
+lumen options set homedomain mary qubit.sh --signers bill,sharon
+
+# Who are mo's signers?
+lumen options get mo signers
+```
