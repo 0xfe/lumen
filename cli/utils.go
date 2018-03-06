@@ -36,7 +36,7 @@ func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string
 // to "address" or "seed" to specify the return value.
 func (cli *CLI) GetAccount(name, keyType string) (string, error) {
 	if keyType != "address" && keyType != "seed" {
-		return "", errors.Errorf("invalid key type: %s", keyType)
+		return name, errors.Errorf("invalid key type: %s", keyType)
 	}
 
 	key := fmt.Sprintf("account:%s:%s", name, keyType)
@@ -44,7 +44,7 @@ func (cli *CLI) GetAccount(name, keyType string) (string, error) {
 	code, err := cli.GetVar(key)
 
 	if err != nil {
-		return "", err
+		return name, err
 	}
 
 	return code, nil

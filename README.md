@@ -45,7 +45,7 @@ lumen account set bob SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ
 lumen pay 5 --from bob --to mo
 
 # What's Mo's address?
-lumen account get mo address
+lumen account address mo
 
 # Check Mo's balance
 lumen balance mo

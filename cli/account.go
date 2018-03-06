@@ -24,8 +24,9 @@ func (cli *CLI) getAccountCmd() *cobra.Command {
 
 	accountsCmd.AddCommand(cli.getAccountNewCmd())
 	accountsCmd.AddCommand(cli.getAccountSetCmd())
-	accountsCmd.AddCommand(cli.getAccountGetCmd())
 	accountsCmd.AddCommand(cli.getAccountDelCmd())
+	accountsCmd.AddCommand(cli.getAccountAddressCmd())
+	accountsCmd.AddCommand(cli.getAccountSeedCmd())
 
 	return accountsCmd
 }
@@ -69,7 +70,7 @@ func (cli *CLI) getAccountNewCmd() *cobra.Command {
 func (cli *CLI) getAccountSetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "set [name] [address|seed]...",
-		Short: "create a keypair named [name] with [address] and/and [seed]",
+		Short: "set address or seed of [name]",
 		Args:  cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
@@ -103,20 +104,40 @@ func (cli *CLI) getAccountSetCmd() *cobra.Command {
 	}
 }
 
-func (cli *CLI) getAccountGetCmd() *cobra.Command {
+func (cli *CLI) getAccountAddressCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "get [name] [address|seed]",
-		Short: "get the address or seed of keypair [name]",
-		Args:  cobra.MinimumNArgs(2),
+		Use:   "address [name]",
+		Short: "get the address of [name]",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			keyType := args[1]
-			key := fmt.Sprintf("account:%s:%s", name, keyType)
+			key := fmt.Sprintf("account:%s:address", name)
 
 			code, err := cli.GetVar(key)
 
 			if err != nil {
-				showError(logrus.Fields{"cmd": "account", "subcmd": "get"}, "could not get %s for account: %s", keyType, name)
+				showError(logrus.Fields{"cmd": "account", "subcmd": "address"}, "could not get address for account: %s", name)
+				return
+			}
+
+			showSuccess("%s\n", code)
+		},
+	}
+}
+
+func (cli *CLI) getAccountSeedCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "seed [name]",
+		Short: "get the seed of [name]",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+			key := fmt.Sprintf("account:%s:seed", name)
+
+			code, err := cli.GetVar(key)
+
+			if err != nil {
+				showError(logrus.Fields{"cmd": "account", "subcmd": "seed"}, "could not get seed for account: %s", name)
 				return
 			}
 

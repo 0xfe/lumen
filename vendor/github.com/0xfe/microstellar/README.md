@@ -239,6 +239,7 @@ Then: http://localhost:6060/pkg/github.com/0xfe/microstellar/
 ### Updating dependencies
 
 ```
+# Updates dependencies in vendor/ to latest tags/releases
 dep ensure -update
 
 # rinse and repeat

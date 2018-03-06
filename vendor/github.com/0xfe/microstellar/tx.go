@@ -54,8 +54,8 @@ func NewTx(networkName string, params ...Params) *Tx {
 
 	switch networkName {
 	case "public":
-		network = build.TestNetwork
-		client = horizon.DefaultTestNetClient
+		network = build.PublicNetwork
+		client = horizon.DefaultPublicNetClient
 	case "test":
 		network = build.TestNetwork
 		client = horizon.DefaultTestNetClient

@@ -3,102 +3,10 @@ package cli
 import (
 	"fmt"
 
-	"github.com/0xfe/lumen/store"
 	"github.com/0xfe/microstellar"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
-
-type CLI struct {
-	store   store.API
-	ms      *microstellar.MicroStellar
-	ns      string // namespace
-	rootCmd *cobra.Command
-}
-
-// NewCLI
-func NewCLI(rootCmd *cobra.Command, store store.API, ms *microstellar.MicroStellar) *CLI {
-	cli := &CLI{
-		store:   store,
-		ms:      ms,
-		ns:      "default",
-		rootCmd: rootCmd,
-	}
-
-	cli.Install()
-	return cli
-}
-
-func (cli *CLI) Execute() {
-	cli.rootCmd.Execute()
-}
-
-func (cli *CLI) Install() {
-	rootCmd := cli.rootCmd
-	rootCmd.AddCommand(cli.getPayCmd())
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "version",
-		Short: "Get version of lumen CLI",
-		Run:   cli.cmdVersion,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "set [key] [value]",
-		Short: "set variable",
-		Args:  cobra.MinimumNArgs(2),
-		Run:   cli.cmdSet,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "get [key]",
-		Short: "get variable",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdGet,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "del [key]",
-		Short: "delete variable",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdDel,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "watch [address]",
-		Short: "watch the address on the ledger",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdWatch,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "balance [address]",
-		Short: "get the balance of [address] in lumens",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdBalance,
-	})
-
-	rootCmd.AddCommand(cli.getAccountCmd())
-}
-
-// SetVar writes the kv pair to the storage backend
-func (cli *CLI) SetVar(key string, value string) error {
-	key = fmt.Sprintf("%s:%s", cli.ns, key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "SetVar"}).Debugf("setting %s: %s", key, value)
-	return cli.store.Set(key, value, 0)
-}
-
-func (cli *CLI) GetVar(key string) (string, error) {
-	key = fmt.Sprintf("%s:%s", cli.ns, key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "GetVar"}).Debugf("getting %s", key)
-	return cli.store.Get(key)
-}
-
-func (cli *CLI) DelVar(key string) error {
-	key = fmt.Sprintf("%s:%s", cli.ns, key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "DelVar"}).Debugf("deleting %s", key)
-	return cli.store.Delete(key)
-}
 
 func (cli *CLI) cmdVersion(cmd *cobra.Command, args []string) {
 	showSuccess("v0.1\n")
