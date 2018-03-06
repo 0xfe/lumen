@@ -67,3 +67,37 @@ func (cli *CLI) GetAccountOrSeed(name, keyType string) (string, error) {
 
 	return code, err
 }
+
+// GetAsset returns the asset with the given name
+func (cli *CLI) GetAsset(name string) (*microstellar.Asset, error) {
+	readField := func(field string) (string, error) {
+		key := fmt.Sprintf("asset:%s:%s", name, field)
+		val, err := cli.GetVar(key)
+		if err != nil {
+			return "", err
+		}
+
+		return val, nil
+	}
+
+	code, err1 := readField("code")
+	issuer, err2 := readField("issuer")
+	assetType, err3 := readField("type")
+
+	if err1 != nil || err2 != nil || err3 != nil {
+		return nil, errors.Errorf("could not read asset: %v, %v, %v", err1, err2, err3)
+	}
+
+	var asset *microstellar.Asset
+
+	if assetType == "credit4" {
+		asset = microstellar.NewAsset(code, issuer, microstellar.Credit4Type)
+	} else if assetType == "credit12" {
+		asset = microstellar.NewAsset(code, issuer, microstellar.Credit12Type)
+	} else {
+		asset = microstellar.NativeAsset
+	}
+
+	logrus.Debugf("got asset: %+v", asset)
+	return asset, nil
+}

@@ -14,7 +14,7 @@ func (cli *CLI) getAssetCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				showError(logrus.Fields{"cmd": "accounts"}, "unrecognized command: %s, expecting: new|set|get|del", args[0])
+				showError(logrus.Fields{"cmd": "asset"}, "unrecognized command: %s, expecting: set|del|code|issuer|type", args[0])
 				return
 			}
 		},
@@ -23,7 +23,7 @@ func (cli *CLI) getAssetCmd() *cobra.Command {
 	accountsCmd.AddCommand(cli.getAssetSetCmd())
 	accountsCmd.AddCommand(cli.getAssetCodeCmd())
 	accountsCmd.AddCommand(cli.getAssetIssuerCmd())
-	accountsCmd.AddCommand(cli.getAccountAddressCmd())
+	accountsCmd.AddCommand(cli.getAssetTypeCmd())
 	accountsCmd.AddCommand(cli.getAccountSeedCmd())
 
 	return accountsCmd
@@ -68,9 +68,7 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 							return
 						}
 					} else {
-						if !cmd.Flag("code").Changed {
-							assetType = "native"
-						} else if len(code) > 4 {
+						if len(code) > 4 {
 							assetType = "credit12"
 						} else {
 							assetType = "credit4"
@@ -133,6 +131,19 @@ func (cli *CLI) getAssetIssuerCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cli.showAsset(args[0], "issuer")
+		},
+	}
+
+	return cmd
+}
+
+func (cli *CLI) getAssetTypeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "type [name]",
+		Short: "get asset type of [name]",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			cli.showAsset(args[0], "type")
 		},
 	}
 

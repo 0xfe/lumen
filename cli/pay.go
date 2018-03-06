@@ -16,6 +16,14 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fields := logrus.Fields{"cmd": "pay"}
 			amount := args[0]
+			assetName := args[1]
+
+			asset, err := cli.GetAsset(assetName)
+			if err != nil {
+				logrus.WithFields(fields).Debugf("could not get asset %s: %v", assetName, err)
+				showError(fields, "bad asset: %s", assetName)
+			}
+
 			to, _ := cmd.Flags().GetString("to")
 			from, _ := cmd.Flags().GetString("from")
 
@@ -45,8 +53,8 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 				err = cli.ms.FundAccount(source, target, amount, opts)
 			} else {
 
-				logrus.WithFields(fields).Debugf("payment from %s to %s, opts: %+v", source, target, opts)
-				err = cli.ms.PayNative(source, target, amount) //, opts)
+				logrus.WithFields(fields).Debugf("paying %s %s/%s from %s to %s, opts: %+v", amount, asset.Code, asset.Issuer, source, target, opts)
+				err = cli.ms.Pay(source, target, amount, asset, opts)
 			}
 
 			if err != nil {
