@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 
+	"github.com/0xfe/microstellar"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -96,28 +98,19 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 	return cmd
 }
 
-func (cli *CLI) showAsset(name, field string) {
-	key := fmt.Sprintf("asset:%s:%s", name, field)
-
-	logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "get"}).Debugf("loading asset %s for %s", field, name)
-	val, err := cli.GetVar(key)
-
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "get"}).Debugf("%v", err)
-		showError(logrus.Fields{"cmd": "asset", "subcmd": "get"}, "could not load asset: %s", name)
-		return
-	}
-
-	showSuccess(val)
-}
-
 func (cli *CLI) getAssetCodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "code [name]",
 		Short: "get asset code of [name]",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			cli.showAsset(args[0], "code")
+			name := args[0]
+			if asset, err := cli.GetAsset(name); err != nil {
+				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "code"}).Debugf("%v", err)
+				showError(logrus.Fields{"cmd": "asset", "subcmd": "code"}, "could not load asset: %s", name)
+			} else {
+				showSuccess(asset.Code)
+			}
 		},
 	}
 
@@ -130,7 +123,13 @@ func (cli *CLI) getAssetIssuerCmd() *cobra.Command {
 		Short: "get asset issuer of [name]",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			cli.showAsset(args[0], "issuer")
+			name := args[0]
+			if asset, err := cli.GetAsset(name); err != nil {
+				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}).Debugf("%v", err)
+				showError(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}, "could not load asset: %s", name)
+			} else {
+				showSuccess(asset.Issuer)
+			}
 		},
 	}
 
@@ -143,7 +142,19 @@ func (cli *CLI) getAssetTypeCmd() *cobra.Command {
 		Short: "get asset type of [name]",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			cli.showAsset(args[0], "type")
+			name := args[0]
+			if asset, err := cli.GetAsset(name); err != nil {
+				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "type"}).Debugf("%v", err)
+				showError(logrus.Fields{"cmd": "asset", "subcmd": "type"}, "could not load asset: %s", name)
+			} else {
+				assetType := "native"
+				if asset.Type == microstellar.Credit4Type {
+					assetType = "credit4"
+				} else if asset.Type == microstellar.Credit12Type {
+					assetType = "credit12"
+				}
+				showSuccess(assetType)
+			}
 		},
 	}
 
