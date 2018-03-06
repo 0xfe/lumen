@@ -3,16 +3,17 @@
   <br/>
   <b>-- a production of [<a href="https://github.com/0xfe">0xfe industries</a>] --</b>
   <br/>
-  <a href="https://travis-ci.org/0xfe/microstellar"><img src="https://travis-ci.org/0xfe/microstellar.svg?branch=master"/></a>
 </p>
 
-MicroStellar is an easy-to-use Go client for the [Stellar](http://stellar.org) blockchain network. The API is simple and clean, without sacrificing flexibility.
+**MicroStellar** is an easy-to-use Go client for the [Stellar](http://stellar.org) blockchain network. The API is simple and clean, without sacrificing flexibility.
 
 MicroStellar is intended to be robust, well tested, and well documented -- we designed it for our Microbanking platform at @qubit-sh. It's also fun to use!
 
 To get started, follow the instructions below, or read the [API docs](https://godoc.org/github.com/0xfe/microstellar) for more.
 
-**MIT License: Copyright 2018 Mohit Muthanna Cheppudira**
+**MIT License:** Copyright 2018 Mohit Muthanna Cheppudira
+
+**Build Status:** <a href="https://travis-ci.org/0xfe/microstellar"><img src="https://travis-ci.org/0xfe/microstellar.svg?branch=master"/></a>
 
 ## QuickStart
 

@@ -39,21 +39,20 @@ func ErrorString(err error, showStackTrace ...bool) string {
 	herr, isHorizonError := errors.Cause(err).(*horizon.Error)
 
 	if isHorizonError {
-		errorString += fmt.Sprintf("Horizon error: \n")
+		errorString += fmt.Sprintf("%v: %v", herr.Problem.Status, herr.Problem.Title)
 
 		resultCodes, err := herr.ResultCodes()
 		if err == nil {
-			errorString += fmt.Sprintf("  error code: %v\n", resultCodes)
+			errorString += fmt.Sprintf(" (%v)", resultCodes)
 		}
-
-		errorString += fmt.Sprintf("  %v: %v\n  detail: %v\n  type: %v\n",
-			herr.Problem.Status,
-			herr.Problem.Title,
-			herr.Problem.Detail,
-			herr.Problem.Type)
+	} else {
+		errorString = fmt.Sprintf("%v", err)
 	}
 
 	if len(showStackTrace) > 0 {
+		if isHorizonError {
+			errorString += fmt.Sprintf("\nDetail: %s\nType: %s\n", herr.Problem.Detail, herr.Problem.Type)
+		}
 		errorString += fmt.Sprintf("\nStack trace:\n%+v\n", err)
 	}
 

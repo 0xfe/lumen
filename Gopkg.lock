@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "7460a6dccfe3374f92a1eb99d1491896c9e95491"
-  version = "v0.1.3"
+  revision = "b7a6dc963dcdc199e6aa7d9e067d0eb86c7d6f40"
+  version = "v0.1.4"
 
 [[projects]]
   branch = "master"
@@ -207,7 +207,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "0d276af676e575b5f29e047f88c7a774057765db"
+  revision = "840b69638af7dc1c3892c757f4e7d6f52b167cd6"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -234,7 +234,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "22ae77b79946ea320088417e4d50825671d82d57"
+  revision = "d25186b37f34ebdbbea8f488ef055638dfab272d"
 
 [[projects]]
   branch = "master"

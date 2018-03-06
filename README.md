@@ -23,7 +23,7 @@ go get github.com/0xfe/lumen
 
 ```bash
 # Pay 4 lumens from SCS... to GAU...
-lumen pay SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM 4
+lumen pay 4 --from SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ --to GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
 
 # Check your balance
 lumen balance GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
@@ -42,7 +42,7 @@ lumen account set mo GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
 lumen account set bob SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ
 
 # Bob pays Mo 5 XLM
-lumen pay bob mo 5
+lumen pay 5 --from bob --to mo
 
 # What's Mo's address?
 lumen account get mo address
@@ -63,22 +63,24 @@ lumen asset set USD-citi GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYU
 lumen asset set USD-chase GBGFCNBK5ITK5PTCXDTB3XPDYY4UHZAWMX77YXEEV5QPANLELZLC7MXA --asset-code USD
 
 # Pay with the asset
-lumen pay mo bob 5 USD-chase
+lumen pay --from mo --to bob 5 USD-chase
+
+# Check bob's USD balance
+lumen balance bob USD-chase
 ```
 
 #### Generate keys and create trust lines
 
 ```bash
-
 # Generate a new keypair (address and seed) with the alias mo
 lumen account new kelly
 
-# Fund it with some XLM to create a valid account
-lumen pay mo kelly 10 --fund
+# Use --fund to fund it with some XLM to create a valid account
+lumen pay 10 --from mo --to kelly --fund
 
 # Create a trustline for kelly to Citibank's USD, then pay her
-lumen trust kelly USD-citi
-lumen pay mo kelly 5 USD-citi --memotext "here's five bucks"
+lumen trust create --from kelly --to USD-citi
+lumen pay 5 USD-citi --from mo --to kelly --memotext "here's five bucks"
 ```
 
 #### Stream the ledger to watch for payments

@@ -78,7 +78,7 @@ func (cli *CLI) Install() {
 		Run:   cli.cmdBalance,
 	})
 
-	rootCmd.AddCommand(cli.getAccountsCmd())
+	rootCmd.AddCommand(cli.getAccountCmd())
 }
 
 // SetVar writes the kv pair to the storage backend
