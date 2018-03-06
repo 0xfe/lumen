@@ -10,7 +10,7 @@ import (
 )
 
 func showSuccess(msg string, args ...interface{}) {
-	fmt.Printf(msg, args...)
+	fmt.Printf(msg+"\n", args...)
 }
 
 func showError(fields logrus.Fields, msg string, args ...interface{}) {

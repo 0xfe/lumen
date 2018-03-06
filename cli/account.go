@@ -59,7 +59,7 @@ func (cli *CLI) getAccountNewCmd() *cobra.Command {
 				return
 			}
 
-			showSuccess("%s %s\n", pair.Address, pair.Seed)
+			showSuccess("%s %s", pair.Address, pair.Seed)
 		},
 	}
 
@@ -89,7 +89,7 @@ func (cli *CLI) getAccountSetCmd() *cobra.Command {
 				} else if microstellar.ValidSeed(code) == nil {
 					keyType = "seed"
 				} else {
-					logrus.WithFields(logrus.Fields{"cmd": "account", "subcmd": "sed"}).Errorf("skipping invalid seed or address: %v\n", code)
+					logrus.WithFields(logrus.Fields{"cmd": "account", "subcmd": "sed"}).Errorf("skipping invalid seed or address: %v", code)
 					continue
 				}
 
@@ -120,7 +120,7 @@ func (cli *CLI) getAccountAddressCmd() *cobra.Command {
 				return
 			}
 
-			showSuccess("%s\n", code)
+			showSuccess(code)
 		},
 	}
 }
@@ -141,7 +141,7 @@ func (cli *CLI) getAccountSeedCmd() *cobra.Command {
 				return
 			}
 
-			showSuccess("%s\n", code)
+			showSuccess(code)
 		},
 	}
 }

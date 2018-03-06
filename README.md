@@ -29,6 +29,18 @@ lumen pay 4 --from SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ --to
 lumen balance GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
 ```
 
+Lumen defaults to the test network for all operations. To use the public network, use the `--network public` flag,
+or call `lumen set config:network public`.
+
+```bash
+# Try it on the public network
+lumen balance GBDZI7NMPUMAIWMHUZWJK5EOGAQZTL3GKWMKX2LSQNYDE42NYY7SLJRB --network public
+
+# Or...
+lumen set config:network public
+lumen balance GBDZI7NMPUMAIWMHUZWJK5EOGAQZTL3GKWMKX2LSQNYDE42NYY7SLJRB
+```
+
 #### Create aliases
 
 It's a pain in the butt to keep typing in addresses and seeds. Lumen lets you create aliases for your
@@ -47,6 +59,9 @@ lumen pay 5 --from bob --to mo
 # What's Mo's address?
 lumen account address mo
 
+# What's Mo's seed?
+lumen account seed mo
+
 # Check Mo's balance
 lumen balance mo
 ```
@@ -54,7 +69,6 @@ lumen balance mo
 #### Work with assets
 
 ```bash
-
 # Create an alias for a new asset type. The asset code is derived from the alias (USD).
 lumen asset set USD GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
 
@@ -75,8 +89,12 @@ lumen balance bob USD-chase
 # Generate a new keypair (address and seed) with the alias mo
 lumen account new kelly
 
-# Use --fund to fund it with some XLM to create a valid account
-lumen pay 10 --from mo --to kelly --fund
+# What's kelly's address?
+lumen account address kelly
+
+# Use --fund to fund it with some XLM to create a valid account. This is required
+# for all new accounts before you can transact on them.
+lumen pay 1 --from mo --to kelly --fund
 
 # Create a trustline for kelly to Citibank's USD, then pay her
 lumen trust create --from kelly --to USD-citi

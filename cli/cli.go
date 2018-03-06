@@ -106,6 +106,8 @@ func (cli *CLI) init() {
 	rootCmd.PersistentFlags().String("ns", "default", "namespace to use (default)")
 
 	rootCmd.AddCommand(cli.getPayCmd())
+	rootCmd.AddCommand(cli.getAccountCmd())
+	rootCmd.AddCommand(cli.getAssetCmd())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -147,8 +149,6 @@ func (cli *CLI) init() {
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cli.cmdBalance,
 	})
-
-	rootCmd.AddCommand(cli.getAccountCmd())
 }
 
 // SetVar writes the kv pair to the storage backend

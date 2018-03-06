@@ -21,8 +21,6 @@ func (cli *CLI) cmdSet(cmd *cobra.Command, args []string) {
 		showError(logrus.Fields{"cmd": "set"}, "set failed: ", err)
 		return
 	}
-
-	showSuccess("setting %s to %s\n", args[0], args[1])
 }
 
 func (cli *CLI) cmdDel(cmd *cobra.Command, args []string) {
@@ -39,7 +37,7 @@ func (cli *CLI) cmdGet(cmd *cobra.Command, args []string) {
 
 	val, err := cli.GetVar(key)
 	if err == nil {
-		showSuccess(val + "\n")
+		showSuccess(val)
 	} else {
 		showError(logrus.Fields{"cmd": "get"}, "no such variable: %s\n", args[0])
 	}
@@ -56,7 +54,7 @@ func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
 	}
 
 	for p := range watcher.Ch {
-		showSuccess("%v %v from %v to %v\n", p.Amount, p.AssetCode, p.From, p.To)
+		showSuccess("%v %v from %v to %v", p.Amount, p.AssetCode, p.From, p.To)
 	}
 
 	if watcher.Err != nil {
@@ -73,6 +71,6 @@ func (cli *CLI) cmdBalance(cmd *cobra.Command, args []string) {
 	if err != nil {
 		showError(logrus.Fields{"cmd": "balance"}, "payment failed: %v", microstellar.ErrorString(err))
 	} else {
-		showSuccess("%v\n", account.GetNativeBalance())
+		showSuccess(account.GetNativeBalance())
 	}
 }
