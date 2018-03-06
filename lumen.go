@@ -64,30 +64,24 @@ func setup(cmd *cobra.Command, args []string) {
 	}
 }
 
-var rootCmd = &cobra.Command{
-	Use:              "lumen",
-	Short:            "Lumen is a commandline client for the Stellar blockchain",
-	Run:              help,
-	PersistentPreRun: setup,
-}
-
 func Start() {
-	// Add global flags
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
-
 	// Load config and setup CLI
 	config := readConfig(os.Getenv("LUMEN_ENV"))
-	store, _ := store.NewStore(config.storageDriver, config.storageParams)
-	cli := cli.NewCLI(store, microstellar.New("test"))
 
 	if config.verbose {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	// Install the CLI
-	cli.Install(rootCmd)
+	store, _ := store.NewStore(config.storageDriver, config.storageParams)
 
-	if err := rootCmd.Execute(); err != nil {
-		// fmt.Fprintf(os.Stderr, "error: %v", err)
+	var rootCmd = &cobra.Command{
+		Use:              "lumen",
+		Short:            "Lumen is a commandline client for the Stellar blockchain",
+		Run:              help,
+		PersistentPreRun: setup,
 	}
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
+
+	cli := cli.NewCLI(rootCmd, store, microstellar.New("test"))
+	cli.Execute()
 }

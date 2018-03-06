@@ -10,21 +10,33 @@ import (
 )
 
 type CLI struct {
-	store store.API
-	ms    *microstellar.MicroStellar
-	ns    string // namespace
+	store   store.API
+	ms      *microstellar.MicroStellar
+	ns      string // namespace
+	rootCmd *cobra.Command
 }
 
 // NewCLI
-func NewCLI(store store.API, ms *microstellar.MicroStellar) *CLI {
-	return &CLI{
-		store: store,
-		ms:    ms,
-		ns:    "default",
+func NewCLI(rootCmd *cobra.Command, store store.API, ms *microstellar.MicroStellar) *CLI {
+	cli := &CLI{
+		store:   store,
+		ms:      ms,
+		ns:      "default",
+		rootCmd: rootCmd,
 	}
+
+	cli.Install()
+	return cli
 }
 
-func (cli *CLI) Install(rootCmd *cobra.Command) {
+func (cli *CLI) Execute() {
+	cli.rootCmd.Execute()
+}
+
+func (cli *CLI) Install() {
+	rootCmd := cli.rootCmd
+	rootCmd.AddCommand(cli.getPayCmd())
+
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Get version of lumen CLI",
@@ -57,13 +69,6 @@ func (cli *CLI) Install(rootCmd *cobra.Command) {
 		Short: "watch the address on the ledger",
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cli.cmdWatch,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "pay [source] [target] [amount]",
-		Short: "pay [amount] lumens from [source] to [target]",
-		Args:  cobra.MinimumNArgs(3),
-		Run:   cli.cmdPay,
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
@@ -148,19 +153,6 @@ func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
 
 	if watcher.Err != nil {
 		showError(logrus.Fields{"cmd": "watch"}, "%+v\n", *watcher.Err)
-	}
-}
-
-func (cli *CLI) cmdPay(cmd *cobra.Command, args []string) {
-	fields := logrus.Fields{"cmd": "pay"}
-	source := cli.validateAddressOrSeed(fields, args[0], "seed")
-	target := cli.validateAddressOrSeed(fields, args[1], "address")
-
-	amount := args[2]
-	err := cli.ms.PayNative(source, target, amount)
-
-	if err != nil {
-		showError(fields, "payment failed: %v", microstellar.ErrorString(err))
 	}
 }
 
