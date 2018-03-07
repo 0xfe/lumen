@@ -101,6 +101,29 @@ lumen trust create --from kelly --to USD-citi
 lumen pay 5 USD-citi --from mo --to kelly --memotext "here's five bucks"
 ```
 
+#### Working with namespaces
+You can use namespaces to work on multiple projects at the same time. The default namespace is called `default`.
+
+```bash
+# Lookup the current namespace
+lumen ns
+
+# Change to namespace prod (creates a new namespace, if necessary)
+lumen ns prod
+
+# Associate this namespace with the public horizon servers
+lumen set config:network public
+
+# Setup a new account in this namespace
+lumen account set corp GBPQN4UDRR7BVTSSBQFUEQ5UIJS5EJ4LRXP4TJZF5Q6IDY6OBCB6UPZR SAQBE63WGYQACOXGDSW4JEG6IXGRRRCGFW6ET3F5T4STKXSQSKRRAH2I
+
+# Switch back to default namespace
+lumen ns default
+
+# The corp account should not exist
+lumen account address corp
+```
+
 #### Stream the ledger to watch for payments
 
 ```bash
@@ -118,6 +141,9 @@ lumen watch payments kelly mo bob
 #### Multisig accounts
 
 ```bash
+# Lets switch to a new namespace for this
+lumen ns multisig
+
 # Create aliases for mary, sharon, and bob
 lumen account set mary GDRTX6RFQULJMB4RXDNNAUNIZPLLINISMNXV4WQVXQFQBHAMPMBEWLFT SDXWOG4ZNW5RLTROHPFKCDSKKEFVKZYI4SLZIO6TXM6FJ7CKUCO5NWYB
 lumen account set sharon GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ

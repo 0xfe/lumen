@@ -12,6 +12,22 @@ func (cli *CLI) cmdVersion(cmd *cobra.Command, args []string) {
 	showSuccess("v0.1")
 }
 
+func (cli *CLI) cmdNS(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		ns := args[0]
+
+		err := cli.SetGlobalVar("ns", ns)
+		if err != nil {
+			showError(logrus.Fields{"cmd": "setNS"}, "set failed: ", err)
+			return
+		}
+
+		cli.ns = ns
+	} else {
+		showSuccess(cli.ns)
+	}
+}
+
 func (cli *CLI) cmdSet(cmd *cobra.Command, args []string) {
 	key := fmt.Sprintf("vars:%s", args[0])
 	val := args[1]

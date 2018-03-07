@@ -70,7 +70,11 @@ func (cli *CLI) setupStore(driver, params string) {
 
 		parts := strings.Split(store, ":")
 		driver = parts[0]
-		params = parts[1]
+		if len(parts) > 1 {
+			params = parts[1]
+		} else {
+			params = ""
+		}
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("selecting store driver: %s params: %s", driver, params)
 	} else {
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default store")
@@ -92,7 +96,13 @@ func (cli *CLI) setupNameSpace() {
 		cli.ns = ns
 	} else {
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default namespace")
-		cli.ns = "default"
+		ns, err := cli.GetGlobalVar("ns")
+		if err != nil {
+			logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default namespace")
+			cli.ns = "default"
+		} else {
+			cli.ns = ns
+		}
 	}
 }
 
@@ -111,8 +121,8 @@ func (cli *CLI) setupNetwork() {
 	}
 }
 
-// test is not thread-safe
-func (cli *CLI) test(args ...string) (out string, err string) {
+// Rest is not thread-safe
+func (cli *CLI) Run(args ...string) (out string, err string) {
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
@@ -127,6 +137,12 @@ func (cli *CLI) test(args ...string) (out string, err string) {
 	var stdOut bytes.Buffer
 	io.Copy(&stdOut, r)
 	return stdOut.String(), stdErr.String()
+}
+
+// Test is not thread-safe
+func (cli *CLI) Test(args ...string) (out string, err string) {
+	args = append(args, []string{"--store", "internal"}...)
+	return cli.Run(args...)
 }
 
 // RootCmd returns the cobra root comman for this instance
@@ -160,8 +176,15 @@ func (cli *CLI) init() {
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
-		Short: "Get version of lumen CLI",
+		Short: "get version of lumen CLI",
 		Run:   cli.cmdVersion,
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "ns [namespace]",
+		Short: "set namespace to [namespace]",
+		Args:  cobra.MinimumNArgs(0),
+		Run:   cli.cmdNS,
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
@@ -198,6 +221,20 @@ func (cli *CLI) init() {
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cli.cmdBalance,
 	})
+}
+
+// SetGlobalVar writes the kv pair to the global namespace in the storage backend
+func (cli *CLI) SetGlobalVar(key string, value string) error {
+	key = fmt.Sprintf("global:%s", key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "SetGlobalVar"}).Debugf("setting %s: %s", key, value)
+	return cli.store.Set(key, value, 0)
+}
+
+// GetGlobalVar reads global var "key"
+func (cli *CLI) GetGlobalVar(key string) (string, error) {
+	key = fmt.Sprintf("global:%s", key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "GetGlobalVar"}).Debugf("getting %s", key)
+	return cli.store.Get(key)
 }
 
 // SetVar writes the kv pair to the storage backend
