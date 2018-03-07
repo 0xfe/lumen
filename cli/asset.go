@@ -40,7 +40,7 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 			name := args[0]
 			issuer := args[1]
 			code := "XLM"
-			assetType := "native"
+			assetType := string(microstellar.NativeType)
 
 			for _, part := range []string{"issuer", "code", "type"} {
 				key := fmt.Sprintf("asset:%s:%s", name, part)
@@ -63,7 +63,10 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 					if cmd.Flag("type").Changed {
 						assetType, _ = cmd.Flags().GetString("type")
 						switch assetType {
-						case "credit4", "credit12", "native":
+						case
+							string(microstellar.Credit12Type),
+							string(microstellar.Credit4Type),
+							string(microstellar.NativeType):
 							break
 						default:
 							showError(logrus.Fields{"cmd": "asset", "subcmd": "set"}, "bad asset type: %s", assetType)
@@ -93,7 +96,7 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 	}
 
 	cmd.Flags().String("code", "XLM", "specify asset code")
-	cmd.Flags().String("type", "native", "specify asset type (credit4, credit12, native)")
+	cmd.Flags().String("type", string(microstellar.NativeType), "specify asset type (credit_alphanum4, credit_alphanum12, native)")
 
 	return cmd
 }
@@ -147,13 +150,13 @@ func (cli *CLI) getAssetTypeCmd() *cobra.Command {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "type"}).Debugf("%v", err)
 				showError(logrus.Fields{"cmd": "asset", "subcmd": "type"}, "could not load asset: %s", name)
 			} else {
-				assetType := "native"
+				assetType := microstellar.NativeType
 				if asset.Type == microstellar.Credit4Type {
-					assetType = "credit4"
+					assetType = microstellar.Credit4Type
 				} else if asset.Type == microstellar.Credit12Type {
-					assetType = "credit12"
+					assetType = microstellar.Credit12Type
 				}
-				showSuccess(assetType)
+				showSuccess(string(assetType))
 			}
 		},
 	}

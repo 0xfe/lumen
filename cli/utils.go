@@ -90,9 +90,9 @@ func (cli *CLI) GetAsset(name string) (*microstellar.Asset, error) {
 
 	var asset *microstellar.Asset
 
-	if assetType == "credit4" {
+	if assetType == string(microstellar.Credit4Type) {
 		asset = microstellar.NewAsset(code, issuer, microstellar.Credit4Type)
-	} else if assetType == "credit12" {
+	} else if assetType == string(microstellar.Credit12Type) {
 		asset = microstellar.NewAsset(code, issuer, microstellar.Credit12Type)
 	} else {
 		asset = microstellar.NativeAsset
