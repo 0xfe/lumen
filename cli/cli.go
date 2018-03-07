@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/0xfe/lumen/store"
 	"github.com/0xfe/microstellar"
@@ -54,10 +55,31 @@ func (cli *CLI) setup(cmd *cobra.Command, args []string) {
 	}
 
 	logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using storage driver %s with %s", config.storageDriver, config.storageParams)
-	cli.store, _ = store.NewStore(config.storageDriver, config.storageParams)
 
+	cli.setupStore(config.storageDriver, config.storageParams)
 	cli.setupNameSpace()
 	cli.setupNetwork()
+}
+
+func (cli *CLI) setupStore(driver, params string) {
+	if cli.rootCmd.Flag("store").Changed {
+		store, _ := cli.rootCmd.Flags().GetString("store")
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using store %s", store)
+
+		parts := strings.Split(store, ":")
+		driver = parts[0]
+		params = parts[1]
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("selecting store driver: %s params: %s", driver, params)
+	} else {
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default store")
+	}
+
+	var err error
+	cli.store, err = store.NewStore(driver, params)
+
+	if err != nil {
+		showError(logrus.Fields{"type": "setup"}, "could not initialize filestore: %s:%s", driver, params)
+	}
 }
 
 func (cli *CLI) setupNameSpace() {
@@ -86,6 +108,11 @@ func (cli *CLI) setupNetwork() {
 	}
 }
 
+// RootCmd returns the cobra root comman for this instance
+func (cli *CLI) RootCmd() *cobra.Command {
+	return cli.rootCmd
+}
+
 // Execute parses the command line and processes it
 func (cli *CLI) Execute() {
 	cli.rootCmd.Execute()
@@ -100,10 +127,11 @@ func (cli *CLI) init() {
 	}
 
 	cli.rootCmd = rootCmd
-
+	home := os.Getenv("HOME")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output (false)")
 	rootCmd.PersistentFlags().String("network", "test", "network to use (test)")
 	rootCmd.PersistentFlags().String("ns", "default", "namespace to use (default)")
+	rootCmd.PersistentFlags().String("store", fmt.Sprintf("file:%s/.lumen-data.yml", home), "namespace to use (default)")
 
 	rootCmd.AddCommand(cli.getPayCmd())
 	rootCmd.AddCommand(cli.getAccountCmd())
