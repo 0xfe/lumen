@@ -13,13 +13,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CLI represents a command-line interface
+// CLI represents a command-line interface. This class is
+// not threadsafe.
 type CLI struct {
 	store   store.API
 	ms      *microstellar.MicroStellar
 	ns      string // namespace
 	rootCmd *cobra.Command
 	version string
+	testing bool
 }
 
 // NewCLI returns an initialized CLI
@@ -30,6 +32,7 @@ func NewCLI() *CLI {
 		ns:      "",
 		rootCmd: nil,
 		version: "v0.0",
+		testing: false,
 	}
 
 	cli.init()
@@ -43,6 +46,16 @@ func (cli *CLI) SetStore(store store.API) {
 
 func (cli *CLI) help(cmd *cobra.Command, args []string) {
 	fmt.Fprint(os.Stderr, cmd.UsageString())
+}
+
+func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) {
+	showError(logFields, msg, args...)
+
+	if !cli.testing {
+		os.Exit(-1)
+	} else {
+		fmt.Println("error")
+	}
 }
 
 func (cli *CLI) setup(cmd *cobra.Command, args []string) {
@@ -137,25 +150,29 @@ func (cli *CLI) setupNetwork() {
 	}
 }
 
-// Rest is not thread-safe
-func (cli *CLI) Run(args ...string) (out string, err string) {
+// Run executes CLI with the given arguments. Used for testing. Not thread safe.
+func (cli *CLI) Run(args ...string) string {
 	oldStdout := os.Stdout
+
 	r, w, _ := os.Pipe()
+
 	os.Stdout = w
 
-	stdErr := new(bytes.Buffer)
-	cli.rootCmd.SetOutput(stdErr)
+	cli.testing = true
 	cli.rootCmd.SetArgs(args)
 	cli.rootCmd.Execute()
+	cli.testing = false
 
 	w.Close()
+
 	os.Stdout = oldStdout
+
 	var stdOut bytes.Buffer
 	io.Copy(&stdOut, r)
-	return stdOut.String(), stdErr.String()
+	return stdOut.String()
 }
 
-func (cli *CLI) RunCommand(command string) (out string, err string) {
+func (cli *CLI) RunCommand(command string) string {
 	return cli.Run(strings.Fields(command)...)
 }
 

@@ -14,16 +14,16 @@ func showSuccess(msg string, args ...interface{}) {
 
 func showError(fields logrus.Fields, msg string, args ...interface{}) {
 	logrus.WithFields(fields).Errorf(msg, args...)
-	logrus.WithFields(logrus.Fields{"type": "exit"}).Debugf("bailing on error")
 }
 
 func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string, keyType string) (string, error) {
 	var err error
+	key := addressOrSeed
 
 	if !microstellar.ValidAddressOrSeed(addressOrSeed) {
 		addressOrSeed, err = cli.GetAccountOrSeed(addressOrSeed, keyType)
 		if err != nil {
-			showError(fields, "invalid address, seed, or account name: %s", addressOrSeed)
+			logrus.WithFields(fields).Debugf("invalid address, seed, or account name: %s", key)
 			return "", err
 		}
 	}
@@ -69,6 +69,10 @@ func (cli *CLI) GetAccountOrSeed(name, keyType string) (string, error) {
 
 // GetAsset returns the asset with the given name
 func (cli *CLI) GetAsset(name string) (*microstellar.Asset, error) {
+	if name == "" {
+		return microstellar.NativeAsset, nil
+	}
+
 	readField := func(field string) (string, error) {
 		key := fmt.Sprintf("asset:%s:%s", name, field)
 		val, err := cli.GetVar(key)

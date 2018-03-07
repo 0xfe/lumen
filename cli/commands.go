@@ -18,7 +18,7 @@ func (cli *CLI) cmdNS(cmd *cobra.Command, args []string) {
 
 		err := cli.SetGlobalVar("ns", ns)
 		if err != nil {
-			showError(logrus.Fields{"cmd": "setNS"}, "set failed: ", err)
+			cli.error(logrus.Fields{"cmd": "setNS"}, "set failed: ", err)
 			return
 		}
 
@@ -34,7 +34,7 @@ func (cli *CLI) cmdSet(cmd *cobra.Command, args []string) {
 
 	err := cli.SetVar(key, val)
 	if err != nil {
-		showError(logrus.Fields{"cmd": "set"}, "set failed: ", err)
+		cli.error(logrus.Fields{"cmd": "set"}, "set failed: ", err)
 		return
 	}
 }
@@ -44,7 +44,7 @@ func (cli *CLI) cmdDel(cmd *cobra.Command, args []string) {
 
 	err := cli.DelVar(key)
 	if err != nil {
-		showError(logrus.Fields{"cmd": "del"}, "del failed: %s\n", err)
+		cli.error(logrus.Fields{"cmd": "del"}, "del failed: %s\n", err)
 		return
 	}
 }
@@ -56,7 +56,7 @@ func (cli *CLI) cmdGet(cmd *cobra.Command, args []string) {
 	if err == nil {
 		showSuccess(val)
 	} else {
-		showError(logrus.Fields{"cmd": "get"}, "no such variable: %s\n", args[0])
+		cli.error(logrus.Fields{"cmd": "get"}, "no such variable: %s\n", args[0])
 		return
 	}
 }
@@ -67,7 +67,7 @@ func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
 	watcher, err := cli.ms.WatchPayments(address)
 
 	if err != nil {
-		showError(logrus.Fields{"cmd": "watch"}, "can't watch address: %+v\n", err)
+		cli.error(logrus.Fields{"cmd": "watch"}, "can't watch address: %+v\n", err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
 	}
 
 	if watcher.Err != nil {
-		showError(logrus.Fields{"cmd": "watch"}, "%+v\n", *watcher.Err)
+		cli.error(logrus.Fields{"cmd": "watch"}, "%+v\n", *watcher.Err)
 		return
 	}
 }
@@ -92,7 +92,7 @@ func (cli *CLI) cmdBalance(cmd *cobra.Command, args []string) {
 	account, err := cli.ms.LoadAccount(address)
 
 	if err != nil {
-		showError(logrus.Fields{"cmd": "balance"}, "payment failed: %v", microstellar.ErrorString(err))
+		cli.error(logrus.Fields{"cmd": "balance"}, "payment failed: %v", microstellar.ErrorString(err))
 		// must return
 	} else {
 		showSuccess(account.GetNativeBalance())

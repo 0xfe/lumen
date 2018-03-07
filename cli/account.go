@@ -96,7 +96,7 @@ func (cli *CLI) getAccountSetCmd() *cobra.Command {
 				err := cli.SetVar(key+keyType, code)
 
 				if err != nil {
-					showError(logrus.Fields{"cmd": "account", "subcmd": "set"}, "could not save account: %s", name)
+					cli.error(logrus.Fields{"cmd": "account", "subcmd": "set"}, "could not save account: %s", name)
 					return
 				}
 			}
@@ -116,7 +116,7 @@ func (cli *CLI) getAccountAddressCmd() *cobra.Command {
 			code, err := cli.GetVar(key)
 
 			if err != nil {
-				showError(logrus.Fields{"cmd": "account", "subcmd": "address"}, "could not get address for account: %s", name)
+				cli.error(logrus.Fields{"cmd": "account", "subcmd": "address"}, "could not get address for account: %s", name)
 				return
 			}
 
@@ -137,7 +137,7 @@ func (cli *CLI) getAccountSeedCmd() *cobra.Command {
 			code, err := cli.GetVar(key)
 
 			if err != nil {
-				showError(logrus.Fields{"cmd": "account", "subcmd": "seed"}, "could not get seed for account: %s", name)
+				cli.error(logrus.Fields{"cmd": "account", "subcmd": "seed"}, "could not get seed for account: %s", name)
 				return
 			}
 
@@ -158,7 +158,7 @@ func (cli *CLI) getAccountDelCmd() *cobra.Command {
 			err = cli.DelVar(fmt.Sprintf("account:%s:address", name))
 
 			if err != nil {
-				showError(logrus.Fields{"cmd": "account", "subcmd": "del"}, "could not delete account: %s", name)
+				cli.error(logrus.Fields{"cmd": "account", "subcmd": "del"}, "could not delete account: %s", name)
 				return
 			}
 		},

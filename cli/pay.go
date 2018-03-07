@@ -16,12 +16,15 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fields := logrus.Fields{"cmd": "pay"}
 			amount := args[0]
-			assetName := args[1]
+			assetName := ""
+			if len(args) > 1 {
+				assetName = args[1]
+			}
 
 			asset, err := cli.GetAsset(assetName)
 			if err != nil {
 				logrus.WithFields(fields).Debugf("could not get asset %s: %v", assetName, err)
-				showError(fields, "bad asset: %s", assetName)
+				cli.error(fields, "bad asset: %s", assetName)
 				return
 			}
 
@@ -32,6 +35,7 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 			target, err := cli.validateAddressOrSeed(fields, to, "address")
 
 			if err != nil {
+				cli.error(fields, "bad source or target address")
 				return
 			}
 
@@ -45,7 +49,7 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 				id, err := strconv.ParseUint(memoid, 10, 64)
 				if err != nil {
 					logrus.WithFields(fields).Debugf("memoid ParseUint: %v", err)
-					showError(fields, "bad memoid: %v", memoid)
+					cli.error(fields, "bad memoid: %v", memoid)
 					return
 				}
 				opts = opts.WithMemoID(id)
@@ -57,13 +61,12 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 				logrus.WithFields(fields).Debugf("initial fund from %s to %s, opts: %+v", source, target, opts)
 				err = cli.ms.FundAccount(source, target, amount, opts)
 			} else {
-
 				logrus.WithFields(fields).Debugf("paying %s %s/%s from %s to %s, opts: %+v", amount, asset.Code, asset.Issuer, source, target, opts)
 				err = cli.ms.Pay(source, target, amount, asset, opts)
 			}
 
 			if err != nil {
-				showError(fields, "payment failed: %v", microstellar.ErrorString(err))
+				cli.error(fields, "payment failed: %v", microstellar.ErrorString(err))
 				return
 			}
 		},

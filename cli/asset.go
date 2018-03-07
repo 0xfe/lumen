@@ -39,7 +39,7 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
 			issuer := args[1]
-			code := "XLM"
+			code := name
 			assetType := string(microstellar.NativeType)
 
 			for _, part := range []string{"issuer", "code", "type"} {
@@ -48,14 +48,20 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 
 				if part == "issuer" {
 					value = issuer
+					if microstellar.ValidAddress(issuer) != nil {
+						var err error
+						value, err = cli.GetAccount(issuer, "address")
+						if err != nil {
+							cli.error(logrus.Fields{"cmd": "asset", "subcmd": "set"}, "invalid issuer: %s", issuer)
+						}
+					}
 				}
 
 				if part == "code" {
 					if cmd.Flag("code").Changed {
 						code, _ = cmd.Flags().GetString("code")
-					} else {
-						code = name
 					}
+
 					value = code
 				}
 
@@ -74,9 +80,9 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 						}
 					} else {
 						if len(code) > 4 {
-							assetType = "credit12"
+							assetType = string(microstellar.Credit12Type)
 						} else {
-							assetType = "credit4"
+							assetType = string(microstellar.Credit4Type)
 						}
 					}
 
