@@ -19,6 +19,7 @@ type CLI struct {
 	ms      *microstellar.MicroStellar
 	ns      string // namespace
 	rootCmd *cobra.Command
+	version string
 }
 
 // NewCLI returns an initialized CLI
@@ -28,10 +29,16 @@ func NewCLI() *CLI {
 		ms:      nil,
 		ns:      "",
 		rootCmd: nil,
+		version: "v0.0",
 	}
 
 	cli.init()
 	return cli
+}
+
+// Set the data store (used for testing.)
+func (cli *CLI) SetStore(store store.API) {
+	cli.store = store
 }
 
 func (cli *CLI) help(cmd *cobra.Command, args []string) {
@@ -64,6 +71,11 @@ func (cli *CLI) setup(cmd *cobra.Command, args []string) {
 }
 
 func (cli *CLI) setupStore(driver, params string) {
+	if cli.store != nil {
+		// Custom store takes precedence
+		return
+	}
+
 	if cli.rootCmd.Flag("store").Changed {
 		store, _ := cli.rootCmd.Flags().GetString("store")
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using store %s", store)
@@ -90,6 +102,10 @@ func (cli *CLI) setupStore(driver, params string) {
 }
 
 func (cli *CLI) setupNameSpace() {
+	if cli.ns != "" {
+		return
+	}
+
 	if cli.rootCmd.Flag("ns").Changed {
 		ns, _ := cli.rootCmd.Flags().GetString("ns")
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using namespace %s", ns)
@@ -139,10 +155,8 @@ func (cli *CLI) Run(args ...string) (out string, err string) {
 	return stdOut.String(), stdErr.String()
 }
 
-// Test is not thread-safe
-func (cli *CLI) Test(args ...string) (out string, err string) {
-	args = append(args, []string{"--store", "internal"}...)
-	return cli.Run(args...)
+func (cli *CLI) RunCommand(command string) (out string, err string) {
+	return cli.Run(strings.Fields(command)...)
 }
 
 // RootCmd returns the cobra root comman for this instance

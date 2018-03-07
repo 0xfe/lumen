@@ -9,7 +9,7 @@ import (
 )
 
 func (cli *CLI) cmdVersion(cmd *cobra.Command, args []string) {
-	showSuccess("v0.1")
+	showSuccess(cli.version)
 }
 
 func (cli *CLI) cmdNS(cmd *cobra.Command, args []string) {
