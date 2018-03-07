@@ -67,6 +67,7 @@ func (cli *CLI) setup(cmd *cobra.Command, args []string) {
 	if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
 		logrus.SetOutput(os.Stderr)
 		logrus.SetLevel(logrus.DebugLevel)
+		logrus.SetFormatter(&logrus.TextFormatter{})
 	}
 
 	env := os.Getenv("LUMEN_ENV")
@@ -78,9 +79,11 @@ func (cli *CLI) setup(cmd *cobra.Command, args []string) {
 
 	config := readConfig(env)
 
+	// Do this again if the configuration file says so
 	if config.verbose {
 		logrus.SetOutput(os.Stderr)
 		logrus.SetLevel(logrus.DebugLevel)
+		logrus.SetFormatter(&logrus.TextFormatter{})
 	}
 
 	logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using storage driver %s with %s", config.storageDriver, config.storageParams)

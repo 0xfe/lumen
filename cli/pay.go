@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strconv"
-
 	"github.com/0xfe/microstellar"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -39,20 +37,11 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 				return
 			}
 
-			opts := microstellar.Opts()
+			opts, err := cli.genTxOptions(cmd, fields)
 
-			if memotext, err := cmd.Flags().GetString("memotext"); err == nil && memotext != "" {
-				opts = opts.WithMemoText(memotext)
-			}
-
-			if memoid, err := cmd.Flags().GetString("memoid"); err == nil && memoid != "" {
-				id, err := strconv.ParseUint(memoid, 10, 64)
-				if err != nil {
-					logrus.WithFields(fields).Debugf("memoid ParseUint: %v", err)
-					cli.error(fields, "bad memoid: %v", memoid)
-					return
-				}
-				opts = opts.WithMemoID(id)
+			if err != nil {
+				cli.error(fields, "can't generate payment: %v", err)
+				return
 			}
 
 			fund, err := cmd.Flags().GetBool("fund")
@@ -74,11 +63,13 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 
 	payCmd.Flags().String("from", "", "source account seed or name")
 	payCmd.Flags().String("to", "", "target account address or name")
-	payCmd.Flags().String("memotext", "", "memo text")
-	payCmd.Flags().String("memoid", "", "memo ID")
 	payCmd.Flags().Bool("fund", false, "fund a new account")
-
 	payCmd.MarkFlagRequired("from")
 	payCmd.MarkFlagRequired("to")
+
+	// Transaction envelope options
+	payCmd.Flags().String("memotext", "", "memo text")
+	payCmd.Flags().String("memoid", "", "memo ID")
+
 	return payCmd
 }

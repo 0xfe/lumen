@@ -132,7 +132,7 @@ lumen account address corp
 lumen watch payments kelly
 
 # Watch for payments from a known starting point
-lumen watch payments kelly --cursor
+lumen watch payments kelly --cursor ABCD
 
 # Watch for payments across multiple addresses
 lumen watch payments kelly mo bob
@@ -167,7 +167,6 @@ lumen pay mary bob 10 USD --signers sharon,bill
 #### Advanced
 
 ```bash
-
 # Kill mary's master key
 lumen setmasterweight mary 0
 

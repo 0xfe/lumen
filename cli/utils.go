@@ -2,6 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
+
+	"github.com/spf13/cobra"
 
 	"github.com/0xfe/microstellar"
 	"github.com/pkg/errors"
@@ -29,6 +32,25 @@ func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string
 	}
 
 	return addressOrSeed, nil
+}
+
+func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*microstellar.TxOptions, error) {
+	opts := microstellar.Opts()
+
+	if memotext, err := cmd.Flags().GetString("memotext"); err == nil && memotext != "" {
+		opts = opts.WithMemoText(memotext)
+	}
+
+	if memoid, err := cmd.Flags().GetString("memoid"); err == nil && memoid != "" {
+		id, err := strconv.ParseUint(memoid, 10, 64)
+		if err != nil {
+			logrus.WithFields(logFields).Debugf("error parsing memoid: %v", err)
+			return nil, errors.Errorf("bad memoid: %s", memoid)
+		}
+		opts = opts.WithMemoID(id)
+	}
+
+	return opts, nil
 }
 
 // GetAccount returns the account address or seed for "name". Set keyType
