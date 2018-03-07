@@ -111,6 +111,7 @@ func (cli *CLI) getAssetCodeCmd() *cobra.Command {
 			if asset, err := cli.GetAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "code"}).Debugf("%v", err)
 				showError(logrus.Fields{"cmd": "asset", "subcmd": "code"}, "could not load asset: %s", name)
+				return
 			} else {
 				showSuccess(asset.Code)
 			}
@@ -130,6 +131,7 @@ func (cli *CLI) getAssetIssuerCmd() *cobra.Command {
 			if asset, err := cli.GetAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}).Debugf("%v", err)
 				showError(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}, "could not load asset: %s", name)
+				return
 			} else {
 				showSuccess(asset.Issuer)
 			}
@@ -149,6 +151,7 @@ func (cli *CLI) getAssetTypeCmd() *cobra.Command {
 			if asset, err := cli.GetAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "type"}).Debugf("%v", err)
 				showError(logrus.Fields{"cmd": "asset", "subcmd": "type"}, "could not load asset: %s", name)
+				return
 			} else {
 				assetType := microstellar.NativeType
 				if asset.Type == microstellar.Credit4Type {

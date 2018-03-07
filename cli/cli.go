@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -79,6 +81,7 @@ func (cli *CLI) setupStore(driver, params string) {
 
 	if err != nil {
 		showError(logrus.Fields{"type": "setup"}, "could not initialize filestore: %s:%s", driver, params)
+		return
 	}
 }
 
@@ -106,6 +109,24 @@ func (cli *CLI) setupNetwork() {
 			cli.ms = microstellar.New(network)
 		}
 	}
+}
+
+// test is not thread-safe
+func (cli *CLI) test(args ...string) (out string, err string) {
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	stdErr := new(bytes.Buffer)
+	cli.rootCmd.SetOutput(stdErr)
+	cli.rootCmd.SetArgs(args)
+	cli.rootCmd.Execute()
+
+	w.Close()
+	os.Stdout = oldStdout
+	var stdOut bytes.Buffer
+	io.Copy(&stdOut, r)
+	return stdOut.String(), stdErr.String()
 }
 
 // RootCmd returns the cobra root comman for this instance

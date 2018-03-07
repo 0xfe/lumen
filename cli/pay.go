@@ -22,13 +22,18 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 			if err != nil {
 				logrus.WithFields(fields).Debugf("could not get asset %s: %v", assetName, err)
 				showError(fields, "bad asset: %s", assetName)
+				return
 			}
 
 			to, _ := cmd.Flags().GetString("to")
 			from, _ := cmd.Flags().GetString("from")
 
-			source := cli.validateAddressOrSeed(fields, from, "seed")
-			target := cli.validateAddressOrSeed(fields, to, "address")
+			source, err := cli.validateAddressOrSeed(fields, from, "seed")
+			target, err := cli.validateAddressOrSeed(fields, to, "address")
+
+			if err != nil {
+				return
+			}
 
 			opts := microstellar.Opts()
 
@@ -59,6 +64,7 @@ func (cli *CLI) getPayCmd() *cobra.Command {
 
 			if err != nil {
 				showError(fields, "payment failed: %v", microstellar.ErrorString(err))
+				return
 			}
 		},
 	}

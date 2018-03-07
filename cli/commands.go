@@ -9,7 +9,7 @@ import (
 )
 
 func (cli *CLI) cmdVersion(cmd *cobra.Command, args []string) {
-	showSuccess("v0.1\n")
+	showSuccess("v0.1")
 }
 
 func (cli *CLI) cmdSet(cmd *cobra.Command, args []string) {
@@ -29,6 +29,7 @@ func (cli *CLI) cmdDel(cmd *cobra.Command, args []string) {
 	err := cli.DelVar(key)
 	if err != nil {
 		showError(logrus.Fields{"cmd": "del"}, "del failed: %s\n", err)
+		return
 	}
 }
 
@@ -40,6 +41,7 @@ func (cli *CLI) cmdGet(cmd *cobra.Command, args []string) {
 		showSuccess(val)
 	} else {
 		showError(logrus.Fields{"cmd": "get"}, "no such variable: %s\n", args[0])
+		return
 	}
 }
 
@@ -59,17 +61,23 @@ func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
 
 	if watcher.Err != nil {
 		showError(logrus.Fields{"cmd": "watch"}, "%+v\n", *watcher.Err)
+		return
 	}
 }
 
 func (cli *CLI) cmdBalance(cmd *cobra.Command, args []string) {
 	fields := logrus.Fields{"cmd": "balance"}
-	address := cli.validateAddressOrSeed(fields, args[0], "address")
+	address, err := cli.validateAddressOrSeed(fields, args[0], "address")
+
+	if err != nil {
+		return
+	}
 
 	account, err := cli.ms.LoadAccount(address)
 
 	if err != nil {
 		showError(logrus.Fields{"cmd": "balance"}, "payment failed: %v", microstellar.ErrorString(err))
+		// must return
 	} else {
 		showSuccess(account.GetNativeBalance())
 	}

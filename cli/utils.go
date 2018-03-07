@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/0xfe/microstellar"
 	"github.com/pkg/errors"
@@ -15,21 +14,21 @@ func showSuccess(msg string, args ...interface{}) {
 
 func showError(fields logrus.Fields, msg string, args ...interface{}) {
 	logrus.WithFields(fields).Errorf(msg, args...)
-	os.Exit(-1)
+	logrus.WithFields(logrus.Fields{"type": "exit"}).Debugf("bailing on error")
 }
 
-func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string, keyType string) string {
+func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string, keyType string) (string, error) {
 	var err error
 
 	if !microstellar.ValidAddressOrSeed(addressOrSeed) {
 		addressOrSeed, err = cli.GetAccountOrSeed(addressOrSeed, keyType)
 		if err != nil {
 			showError(fields, "invalid address, seed, or account name: %s", addressOrSeed)
-			os.Exit(-1)
+			return "", err
 		}
 	}
 
-	return addressOrSeed
+	return addressOrSeed, nil
 }
 
 // GetAccount returns the account address or seed for "name". Set keyType
