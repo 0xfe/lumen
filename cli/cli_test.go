@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+// Note: add -v to any of these commands to enable verbose logging
+
 func TestVariables(t *testing.T) {
 	cli, _ := newTestCLI()
 	cli.RunCommand("ns test")

@@ -2,6 +2,8 @@ package cli
 
 import "testing"
 
+// Note: add -v to any of these commands to enable verbose logging
+
 func TestAssets(t *testing.T) {
 	cli, _ := newTestCLI()
 	cli.RunCommand("ns test")
@@ -19,4 +21,10 @@ func TestAssets(t *testing.T) {
 	expectOutput(t, cli, "", "asset set USD-chase GBY7XDYKXBDHQ2B523SF7K6BNJNRYHVQMWY7AYAEKTYLCQMYVFHL57UM --code USD")
 	expectOutput(t, cli, "USD", "asset code USD-chase")
 	expectOutput(t, cli, "GBY7XDYKXBDHQ2B523SF7K6BNJNRYHVQMWY7AYAEKTYLCQMYVFHL57UM", "asset issuer USD-chase")
+
+	expectOutput(t, cli, "error", "asset set USD-bad GBY7XDYKXBDHQ2B523SF7K6BNJNRYHVQMWY7AYAEKTYLCQMYVFHL57UM --type credit16")
+	expectOutput(t, cli, "", "asset set USD-bad GBY7XDYKXBDHQ2B523SF7K6BNJNRYHVQMWY7AYAEKTYLCQMYVFHL57UM --type native")
+
+	cli.RunCommand("asset del USD-chase")
+	expectOutput(t, cli, "error", "asset issuer USD-chase")
 }

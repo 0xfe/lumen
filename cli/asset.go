@@ -16,7 +16,7 @@ func (cli *CLI) getAssetCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				showError(logrus.Fields{"cmd": "asset"}, "unrecognized command: %s, expecting: set|del|code|issuer|type", args[0])
+				cli.error(logrus.Fields{"cmd": "asset"}, "unrecognized command: %s, expecting: set|del|code|issuer|type", args[0])
 				return
 			}
 		},
@@ -26,7 +26,7 @@ func (cli *CLI) getAssetCmd() *cobra.Command {
 	accountsCmd.AddCommand(cli.getAssetCodeCmd())
 	accountsCmd.AddCommand(cli.getAssetIssuerCmd())
 	accountsCmd.AddCommand(cli.getAssetTypeCmd())
-	accountsCmd.AddCommand(cli.getAccountSeedCmd())
+	accountsCmd.AddCommand(cli.getAssetDelCmd())
 
 	return accountsCmd
 }
@@ -75,7 +75,7 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 							string(microstellar.NativeType):
 							break
 						default:
-							showError(logrus.Fields{"cmd": "asset", "subcmd": "set"}, "bad asset type: %s", assetType)
+							cli.error(logrus.Fields{"cmd": "asset", "subcmd": "set"}, "bad asset type: %s", assetType)
 							return
 						}
 					} else {
@@ -94,7 +94,7 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 
 				if err != nil {
 					logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "set"}).Debugf("%v", err)
-					showError(logrus.Fields{"cmd": "asset", "subcmd": "set"}, "could not save asset: %s", name)
+					cli.error(logrus.Fields{"cmd": "asset", "subcmd": "set"}, "could not save asset: %s", name)
 					return
 				}
 			}
@@ -116,7 +116,7 @@ func (cli *CLI) getAssetCodeCmd() *cobra.Command {
 			name := args[0]
 			if asset, err := cli.GetAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "code"}).Debugf("%v", err)
-				showError(logrus.Fields{"cmd": "asset", "subcmd": "code"}, "could not load asset: %s", name)
+				cli.error(logrus.Fields{"cmd": "asset", "subcmd": "code"}, "could not load asset: %s", name)
 				return
 			} else {
 				showSuccess(asset.Code)
@@ -136,7 +136,7 @@ func (cli *CLI) getAssetIssuerCmd() *cobra.Command {
 			name := args[0]
 			if asset, err := cli.GetAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}).Debugf("%v", err)
-				showError(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}, "could not load asset: %s", name)
+				cli.error(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}, "could not load asset: %s", name)
 				return
 			} else {
 				showSuccess(asset.Issuer)
@@ -156,7 +156,7 @@ func (cli *CLI) getAssetTypeCmd() *cobra.Command {
 			name := args[0]
 			if asset, err := cli.GetAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "type"}).Debugf("%v", err)
-				showError(logrus.Fields{"cmd": "asset", "subcmd": "type"}, "could not load asset: %s", name)
+				cli.error(logrus.Fields{"cmd": "asset", "subcmd": "type"}, "could not load asset: %s", name)
 				return
 			} else {
 				assetType := microstellar.NativeType
@@ -166,6 +166,23 @@ func (cli *CLI) getAssetTypeCmd() *cobra.Command {
 					assetType = microstellar.Credit12Type
 				}
 				showSuccess(string(assetType))
+			}
+		},
+	}
+
+	return cmd
+}
+
+func (cli *CLI) getAssetDelCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "del [name]",
+		Short: "delete asset named [name]",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+			for _, part := range []string{"issuer", "code", "type"} {
+				key := fmt.Sprintf("asset:%s:%s", name, part)
+				cli.DelVar(key)
 			}
 		},
 	}

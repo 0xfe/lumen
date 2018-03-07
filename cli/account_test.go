@@ -2,6 +2,8 @@ package cli
 
 import "testing"
 
+// Note: add -v to any of these commands to enable verbose logging
+
 func TestAccounts(t *testing.T) {
 	cli, _ := newTestCLI()
 	cli.RunCommand("ns test")
@@ -20,11 +22,10 @@ func TestAccounts(t *testing.T) {
 		t.Error("not a seed: ", result)
 	}
 
-	result = cli.RunCommand("set config:network fake")
-	expectOutput(t, cli, "error", "pay 4 --from nobody --to worker")
-	expectOutput(t, cli, "", "pay 4 --from master --to worker")
-
-	result = cli.RunCommand("set config:network fake")
 	cli.RunCommand("ns other")
-	expectOutput(t, cli, "error", "pay 4 --from master --to worker")
+	expectOutput(t, cli, "error", "account address master")
+
+	cli.RunCommand("ns test")
+	cli.RunCommand("account del master")
+	expectOutput(t, cli, "error", "account address master")
 }

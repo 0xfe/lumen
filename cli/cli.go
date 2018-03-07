@@ -59,7 +59,13 @@ func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) 
 }
 
 func (cli *CLI) setup(cmd *cobra.Command, args []string) {
+	if cli.testing {
+		buf := new(bytes.Buffer)
+		logrus.SetOutput(buf)
+	}
+
 	if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
+		logrus.SetOutput(os.Stderr)
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
@@ -73,6 +79,7 @@ func (cli *CLI) setup(cmd *cobra.Command, args []string) {
 	config := readConfig(env)
 
 	if config.verbose {
+		logrus.SetOutput(os.Stderr)
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
