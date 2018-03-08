@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (cli *CLI) getTrust() *cobra.Command {
+func (cli *CLI) getTrustCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "trust [create|remove]",
 		Short: "manage trustlines between accounts and assets",

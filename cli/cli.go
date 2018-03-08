@@ -214,6 +214,7 @@ func (cli *CLI) init() {
 	rootCmd.AddCommand(cli.getPayCmd())
 	rootCmd.AddCommand(cli.getAccountCmd())
 	rootCmd.AddCommand(cli.getAssetCmd())
+	rootCmd.AddCommand(cli.getTrustCmd())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
