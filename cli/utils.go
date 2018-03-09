@@ -34,6 +34,12 @@ func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string
 	return addressOrSeed, nil
 }
 
+func buildFlagsForTxOptions(cmd *cobra.Command) {
+	cmd.Flags().String("memotext", "", "memo text")
+	cmd.Flags().String("memoid", "", "memo ID")
+	cmd.Flags().StringSlice("signers", []string{}, "alternate signers (comma separated)")
+}
+
 func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*microstellar.TxOptions, error) {
 	opts := microstellar.Opts()
 
@@ -48,6 +54,20 @@ func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*micr
 			return nil, errors.Errorf("bad memoid: %s", memoid)
 		}
 		opts = opts.WithMemoID(id)
+	}
+
+	if signers, err := cmd.Flags().GetStringSlice("signers"); err == nil && len(signers) > 0 {
+		for _, signer := range signers {
+			logrus.WithFields(logFields).Debugf("adding signer: %s", signer)
+			address, err := cli.validateAddressOrSeed(logFields, signer, "seed")
+
+			if err != nil {
+				logrus.WithFields(logFields).Debugf("bad signer %s: %v", signer, err)
+				return nil, errors.Errorf("bad signer: %s", signer)
+			}
+
+			opts = opts.WithSigner(address)
+		}
 	}
 
 	return opts, nil

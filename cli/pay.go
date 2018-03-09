@@ -7,7 +7,7 @@ import (
 )
 
 func (cli *CLI) buildPayCmd() *cobra.Command {
-	payCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "pay [amount] [asset] --from [source] --to [target]",
 		Short: "send [amount] of [asset] from [source] to [target]",
 		Args:  cobra.MinimumNArgs(1),
@@ -61,15 +61,12 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 		},
 	}
 
-	payCmd.Flags().String("from", "", "source account seed or name")
-	payCmd.Flags().String("to", "", "target account address or name")
-	payCmd.Flags().Bool("fund", false, "fund a new account")
-	payCmd.MarkFlagRequired("from")
-	payCmd.MarkFlagRequired("to")
+	buildFlagsForTxOptions(cmd)
+	cmd.Flags().String("from", "", "source account seed or name")
+	cmd.Flags().String("to", "", "target account address or name")
+	cmd.Flags().Bool("fund", false, "fund a new account")
+	cmd.MarkFlagRequired("from")
+	cmd.MarkFlagRequired("to")
 
-	// Transaction envelope options
-	payCmd.Flags().String("memotext", "", "memo text")
-	payCmd.Flags().String("memoid", "", "memo ID")
-
-	return payCmd
+	return cmd
 }

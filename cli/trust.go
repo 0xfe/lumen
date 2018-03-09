@@ -67,10 +67,7 @@ func (cli *CLI) buildTrustCreateCmd() *cobra.Command {
 		},
 	}
 
-	// Transaction envelope options
-	cmd.Flags().String("memotext", "", "memo text")
-	cmd.Flags().String("memoid", "", "memo ID")
-
+	buildFlagsForTxOptions(cmd)
 	return cmd
 }
 
@@ -111,9 +108,6 @@ func (cli *CLI) buildTrustRemoveCmd() *cobra.Command {
 		},
 	}
 
-	// Transaction envelope options
-	cmd.Flags().String("memotext", "", "memo text")
-	cmd.Flags().String("memoid", "", "memo ID")
-
+	buildFlagsForTxOptions(cmd)
 	return cmd
 }
