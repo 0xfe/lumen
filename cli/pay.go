@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (cli *CLI) getPayCmd() *cobra.Command {
+func (cli *CLI) buildPayCmd() *cobra.Command {
 	payCmd := &cobra.Command{
 		Use:   "pay [amount] [asset] --from [source] --to [target]",
 		Short: "send [amount] of [asset] from [source] to [target]",

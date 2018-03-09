@@ -9,29 +9,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (cli *CLI) getAssetCmd() *cobra.Command {
-	accountsCmd := &cobra.Command{
+func (cli *CLI) buildAssetCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "asset [set|del|code|issuer|type]",
 		Short: "manage stellar assets",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				cli.error(logrus.Fields{"cmd": "asset"}, "unrecognized command: %s, expecting: set|del|code|issuer|type", args[0])
+				cli.error(logrus.Fields{"cmd": "asset"}, "unrecognized asset command: %s, expecting: set|del|code|issuer|type", args[0])
 				return
 			}
 		},
 	}
 
-	accountsCmd.AddCommand(cli.getAssetSetCmd())
-	accountsCmd.AddCommand(cli.getAssetCodeCmd())
-	accountsCmd.AddCommand(cli.getAssetIssuerCmd())
-	accountsCmd.AddCommand(cli.getAssetTypeCmd())
-	accountsCmd.AddCommand(cli.getAssetDelCmd())
+	cmd.AddCommand(cli.buildAssetSetCmd())
+	cmd.AddCommand(cli.buildAssetCodeCmd())
+	cmd.AddCommand(cli.buildAssetIssuerCmd())
+	cmd.AddCommand(cli.buildAssetTypeCmd())
+	cmd.AddCommand(cli.buildAssetDelCmd())
 
-	return accountsCmd
+	return cmd
 }
 
-func (cli *CLI) getAssetSetCmd() *cobra.Command {
+func (cli *CLI) buildAssetSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set [name] [issuer]",
 		Short: "set asset issuer of asset [name]",
@@ -107,7 +107,7 @@ func (cli *CLI) getAssetSetCmd() *cobra.Command {
 	return cmd
 }
 
-func (cli *CLI) getAssetCodeCmd() *cobra.Command {
+func (cli *CLI) buildAssetCodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "code [name]",
 		Short: "get asset code of [name]",
@@ -127,7 +127,7 @@ func (cli *CLI) getAssetCodeCmd() *cobra.Command {
 	return cmd
 }
 
-func (cli *CLI) getAssetIssuerCmd() *cobra.Command {
+func (cli *CLI) buildAssetIssuerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "issuer [name]",
 		Short: "get asset issuer of [name]",
@@ -147,7 +147,7 @@ func (cli *CLI) getAssetIssuerCmd() *cobra.Command {
 	return cmd
 }
 
-func (cli *CLI) getAssetTypeCmd() *cobra.Command {
+func (cli *CLI) buildAssetTypeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "type [name]",
 		Short: "get asset type of [name]",
@@ -173,7 +173,7 @@ func (cli *CLI) getAssetTypeCmd() *cobra.Command {
 	return cmd
 }
 
-func (cli *CLI) getAssetDelCmd() *cobra.Command {
+func (cli *CLI) buildAssetDelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "del [name]",
 		Short: "delete asset named [name]",

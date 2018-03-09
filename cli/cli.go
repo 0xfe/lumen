@@ -211,10 +211,10 @@ func (cli *CLI) init() {
 	rootCmd.PersistentFlags().String("ns", "default", "namespace to use (default)")
 	rootCmd.PersistentFlags().String("store", fmt.Sprintf("file:%s/.lumen-data.yml", home), "namespace to use (default)")
 
-	rootCmd.AddCommand(cli.getPayCmd())
-	rootCmd.AddCommand(cli.getAccountCmd())
-	rootCmd.AddCommand(cli.getAssetCmd())
-	rootCmd.AddCommand(cli.getTrustCmd())
+	rootCmd.AddCommand(cli.buildPayCmd())
+	rootCmd.AddCommand(cli.buildAccountCmd())
+	rootCmd.AddCommand(cli.buildAssetCmd())
+	rootCmd.AddCommand(cli.buildTrustCmd())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -262,6 +262,32 @@ func (cli *CLI) init() {
 		Short: "get the balance of [address] in lumens",
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cli.cmdBalance,
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "friendbot [address]",
+		Short: "fund [address] on the test network with friendbot",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+
+			logFields := logrus.Fields{"cmd": "trust", "subcmd": "create"}
+			address, err := cli.validateAddressOrSeed(logFields, name, "address")
+
+			if err != nil {
+				cli.error(logFields, "invalid account: %s", name)
+				return
+			}
+
+			response, err := microstellar.FundWithFriendBot(address)
+
+			if err != nil {
+				cli.error(logFields, "friendbot error: %v", err)
+				return
+			}
+
+			showSuccess("friendbot says:\n %v", response)
+		},
 	})
 }
 

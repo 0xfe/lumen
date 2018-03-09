@@ -9,29 +9,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (cli *CLI) getAccountCmd() *cobra.Command {
-	accountsCmd := &cobra.Command{
-		Use:   "account [new|set|get|del]",
+func (cli *CLI) buildAccountCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "account [new|set|address|seed|del]",
 		Short: "manage stellar keypairs and accounts",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				showError(logrus.Fields{"cmd": "accounts"}, "unrecognized command: %s, expecting: new|set|get|del", args[0])
+				showError(logrus.Fields{"cmd": "accounts"}, "unrecognized account command: %s, expecting: new|set|address|seed|del", args[0])
 				return
 			}
 		},
 	}
 
-	accountsCmd.AddCommand(cli.getAccountNewCmd())
-	accountsCmd.AddCommand(cli.getAccountSetCmd())
-	accountsCmd.AddCommand(cli.getAccountDelCmd())
-	accountsCmd.AddCommand(cli.getAccountAddressCmd())
-	accountsCmd.AddCommand(cli.getAccountSeedCmd())
+	cmd.AddCommand(cli.buildAccountNewCmd())
+	cmd.AddCommand(cli.buildAccountSetCmd())
+	cmd.AddCommand(cli.buildAccountDelCmd())
+	cmd.AddCommand(cli.buildAccountAddressCmd())
+	cmd.AddCommand(cli.buildAccountSeedCmd())
 
-	return accountsCmd
+	return cmd
 }
 
-func (cli *CLI) getAccountNewCmd() *cobra.Command {
+func (cli *CLI) buildAccountNewCmd() *cobra.Command {
 	accountNewCmd := &cobra.Command{
 		Use:   "new [name]",
 		Short: "create a new random keypair named [name]",
@@ -67,7 +67,7 @@ func (cli *CLI) getAccountNewCmd() *cobra.Command {
 	return accountNewCmd
 }
 
-func (cli *CLI) getAccountSetCmd() *cobra.Command {
+func (cli *CLI) buildAccountSetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "set [name] [address|seed]...",
 		Short: "set address or seed of [name]",
@@ -104,7 +104,7 @@ func (cli *CLI) getAccountSetCmd() *cobra.Command {
 	}
 }
 
-func (cli *CLI) getAccountAddressCmd() *cobra.Command {
+func (cli *CLI) buildAccountAddressCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "address [name]",
 		Short: "get the address of [name]",
@@ -125,7 +125,7 @@ func (cli *CLI) getAccountAddressCmd() *cobra.Command {
 	}
 }
 
-func (cli *CLI) getAccountSeedCmd() *cobra.Command {
+func (cli *CLI) buildAccountSeedCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "seed [name]",
 		Short: "get the seed of [name]",
@@ -146,7 +146,7 @@ func (cli *CLI) getAccountSeedCmd() *cobra.Command {
 	}
 }
 
-func (cli *CLI) getAccountDelCmd() *cobra.Command {
+func (cli *CLI) buildAccountDelCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "del [name]",
 		Short: "delete keypair",
