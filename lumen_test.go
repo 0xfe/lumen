@@ -103,4 +103,30 @@ func TestPayments(t *testing.T) {
 
 	expectOutput(t, cli, "", "pay 100 --from mo --to kelly --memotext hi --fund")
 	expectOutput(t, cli, "", "pay 1 --from kelly --to mo --memotext yo -v")
+
+	balance := getBalance(cli, "kelly")
+
+	if balance > 99 {
+		t.Fatalf("expected balance <= 99 got %v", balance)
+	}
+}
+
+func TestAssets(t *testing.T) {
+	cli, cleanupFunc := newCLI()
+	defer cleanupFunc()
+
+	createFundedAccount(t, cli, "mo")
+
+	// Create a USD asset issued by citibank
+	run(cli, "account new citibank")
+	expectOutput(t, cli, "", "pay 100 --from mo --to citibank --memoid 1 --fund")
+	run(cli, "asset set USD citibank")
+
+	// Create a trustline between kelly and citibank with a $1000 limit, then
+	// send her $100
+	run(cli, "account new kelly")
+	expectOutput(t, cli, "", "pay 10 --from mo --to kelly --memotext initial --fund")
+
+	expectOutput(t, cli, "", "trust create kelly USD 1000")
+	expectOutput(t, cli, "", "pay 100 USD --from citibank --to kelly")
 }

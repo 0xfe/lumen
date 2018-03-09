@@ -33,6 +33,7 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.AddCommand(cli.buildAccountCmd())
 	rootCmd.AddCommand(cli.buildAssetCmd())
 	rootCmd.AddCommand(cli.buildTrustCmd())
+	rootCmd.AddCommand(cli.buildSignerCmd())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",

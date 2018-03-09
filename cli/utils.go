@@ -22,6 +22,12 @@ func showError(fields logrus.Fields, msg string, args ...interface{}) {
 
 func (cli *CLI) help(cmd *cobra.Command, args []string) {
 	fmt.Fprint(os.Stderr, cmd.UsageString())
+
+	if !cli.testing {
+		os.Exit(-1)
+	} else {
+		fmt.Println("error")
+	}
 }
 
 func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) {
