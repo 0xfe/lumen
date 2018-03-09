@@ -67,7 +67,7 @@ func (data *fileData) sync(fileName string) error {
 	}
 
 	logrus.WithFields(logrus.Fields{"type": "filestore", "method": "sync"}).Debugf("writing to file: %s", fileName)
-	err = ioutil.WriteFile(fileName, jsonData, 0644)
+	err = ioutil.WriteFile(fileName, jsonData, 0600)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"type": "filestore", "method": "sync"}).Errorf("write error: %v", err)
 		return errors.Errorf("could not write to file: %v", err)

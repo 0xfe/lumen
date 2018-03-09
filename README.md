@@ -1,15 +1,41 @@
 <p align="center">
   <img src="https://imgur.com/Y59vox1.png" width="400"/>
   <br/>
-  <b>-- a production of [<a href="https://github.com/0xfe">0xfe industries</a>] --</b>
-</p
+</p>
 
 Lumen is a batteries-included commandline client for the Stellar blockchain. It's designed to
-be easy-to-use, robust and embeddable (in both shell scripts and other Go applications.)
+be easy-to-use, robust, and embeddable (in both shell scripts and other Go applications.)
 
-Some notable features:
+```bash
+lumen set config:network test
+lumen account new mary
+lumen account new bob
 
-*
+# Fund Mary via friendbot
+lumen friendbot mary
+
+# Friend bob via mary (we use the --fund flag to specify that this is a new account)
+lumen pay 1000 --from mary --to bob --fund
+
+# Pay Mary back
+lumen pay 5 --from bob --to mary --memotext 'thanks for the fish'
+
+# Check bob's balance
+lumen balance bob
+```
+
+#### Some notable features:
+
+* Use account and asset names instead of addresses directly in your commands.
+  * `lumen pay 10 USD-chase --from kelly --to bob`
+* Use namespaces to work on different projects at the same time.
+  * `lumen ns manhattan_project`
+  * `lumen pay 100000 USD --from president --to terrorist`
+* Share addresses and encrypted seeds with other users via Redis.
+  * `export LUMEN_STORE="redis:localhost:3400"`
+  * `lumen account new ally`
+  * `lumen friendbot ally`
+* Supports almost all MicroStellar operations (multisig, streaming, etc.)
 
 Lumen is based on MicroStellar, and is designed for the @qubit-sh Microbanking platform.
 
@@ -22,6 +48,8 @@ go get github.com/0xfe/lumen
 ```
 
 ### Usage
+
+#### Create two accounts on the test network and fund it
 
 #### Make a payment and check your balance
 
@@ -90,7 +118,7 @@ lumen balance bob USD-chase
 #### Generate keys and create trust lines
 
 ```bash
-# Generate a new keypair (address and seed) with the alias mo
+# Generate a new random keypair (address and seed) with the alias mo
 lumen account new kelly
 
 # What's kelly's address?
@@ -186,6 +214,4 @@ lumen options get mo signers
 
 ### Configuring Lumen
 
-* Config file
-* Change backend
-* Namespaces
+### Embedding Lumen
