@@ -80,9 +80,9 @@ $ lumen balance bob
   }
   ```
 
-* Supports almost all MicroStellar operations (multisig, streaming, etc.)
+* Supports almost all [MicroStellar](https://github.com/0xfe/microstellar) operations (multisig, streaming, etc.)
 
-Lumen is based on MicroStellar, and is designed for the @qubit-sh Microbanking platform.
+Lumen is based on [MicroStellar](https://github.com/0xfe/microstellar), and is designed for the @qubit-sh Microbanking platform.
 
 ## QuickStart
 
@@ -299,3 +299,60 @@ You can switch namespaces by (in order of preference):
 * The `LUMEN_NS` environment variable.
 
 You can get the current namespace with `lumen ns`. The default namespace is `default`.
+
+## Hacking on Lumen
+
+### Contribution Guidelines
+
+* We're managing dependencies with [dep](https://github.com/golang/dep).
+  * Add a new dependency with `dep ensure -add ...`
+* If you're adding a new feature:
+  * Add unit tests
+  * Add godoc comments
+  * If necessary, update the integration test in `lumen_test.go`
+
+### Environment Setup
+
+This package uses [dep](https://github.com/golang/dep) to manage dependencies. Before
+hacking on this package, install all dependencies:
+
+```
+dep ensure
+```
+
+### Run tests
+
+Run all unit tests:
+
+```
+go test -v ./...
+```
+
+To update dependencies:
+
+```
+# Updates dependencies in vendor/ to latest tags/releases
+dep ensure -update
+
+# rinse and repeat
+go test -v ./...
+```
+
+### Versioning
+
+This package uses semantic versioning:
+
+```
+git tag v0.1.0
+git push --tags
+```
+
+## MIT License
+
+Copyright Mohit Muthanna Cheppudira 2018 <mohit@muthanna.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
