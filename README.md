@@ -7,34 +7,75 @@ Lumen is a batteries-included commandline client for the Stellar blockchain. It'
 be easy-to-use, robust, and embeddable (in both shell scripts and other Go applications.)
 
 ```bash
-lumen set config:network test
-lumen account new mary
-lumen account new bob
+# Switch to the test network
+$ lumen set config:network test
+
+# Create two new accounts: bob and mary
+$ lumen account new mary
+# GDGO2Z2556NQ2JXFHQH2CUIF3E54KTHZIDA7EGUZSG4TJXPV6YZ4MEI4 SBJ24KK6HWOF44MWFH3J7VPAGOMFOFO7O23YW6H37MYZU6F44JBYKLMU
+
+$ lumen account new bob
+# GC7BE5UFOO3BFHMNS6G66ANMLP4K22KIIIZAY6L6X67RWQA5GVHNBVNG SAHBBWKIX3CBXXCY6R6NNFCJMB33GNOTFVMUZ3WGVCWL5WXHU7HOOJLI
 
 # Fund Mary via friendbot
-lumen friendbot mary
+$ lumen friendbot mary
 
 # Friend bob via mary (we use the --fund flag to specify that this is a new account)
-lumen pay 1000 --from mary --to bob --fund
+$ lumen pay 1000 --from mary --to bob --fund
 
 # Pay Mary back
-lumen pay 5 --from bob --to mary --memotext 'thanks for the fish'
+$ lumen pay 5 --from bob --to mary --memotext 'thanks for the fish'
 
-# Check bob's balance
-lumen balance bob
+# Check Bob's balance
+$ lumen balance bob
+# 994.99990
 ```
 
 #### Some notable features:
 
 * Use account and asset names instead of addresses directly in your commands.
-  * `lumen pay 10 USD-chase --from kelly --to bob`
+  ```bash
+  lumen asset set USD-chase SBJ24KK6HWOF44MWFH3J7VPAGOMFOFO7O23YW6H37MYZU6F44JBYKLMU --code USD
+  lumen pay 10 USD-chase --from kelly --to bob
+
+  lumen account set issuer_chase SBJ24KK6HWOF44MWFH3J7VPAGOMFOFO7O23YW6H37MYZU6F44JBYKLMU
+  lumen asset set USD issuer_chase
+  lumen pay 10 USD --from kelly --to bob
+  ```
 * Use namespaces to work on different projects at the same time.
-  * `lumen ns manhattan_project`
-  * `lumen pay 100000 USD --from president --to terrorist`
+  ```bash
+  lumen ns manhattan_project
+  lumen pay 100000 USD --from president --to terrorist
+  ```
 * Share addresses and encrypted seeds with other users via Redis.
-  * `export LUMEN_STORE="redis:localhost:3400"`
-  * `lumen account new ally`
-  * `lumen friendbot ally`
+  ```bash
+  export LUMEN_STORE="redis,localhost:3400"
+
+  # Aliases are loaded and saved from redis
+  lumen account new ally
+  lumen friendbot ally
+  ```
+* Embed Lumen into your own Go applications
+  ```go
+  import (
+    "fmt"
+    "io/ioutil"
+    "log"
+    "os"
+    "strconv"
+    "strings"
+    "testing"
+
+    "github.com/0xfe/lumen/cli"
+    "github.com/sirupsen/logrus"
+  )
+
+  func main() {
+    lumen := cli.NewCLI().Embeddable()
+    lumen.RunCommand("pay 10 --from mo --to bob")
+  }
+  ```
+
 * Supports almost all MicroStellar operations (multisig, streaming, etc.)
 
 Lumen is based on MicroStellar, and is designed for the @qubit-sh Microbanking platform.
@@ -48,8 +89,6 @@ go get github.com/0xfe/lumen
 ```
 
 ### Usage
-
-#### Create two accounts on the test network and fund it
 
 #### Make a payment and check your balance
 

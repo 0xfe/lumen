@@ -50,7 +50,7 @@ func expectOutput(t *testing.T, cli *cli.CLI, want string, command string) {
 
 func newCLI() (*cli.CLI, func()) {
 	file, cleanupFunc := getTempFile()
-	os.Setenv("LUMEN_STORE", "file:"+file)
+	os.Setenv("LUMEN_STORE", "file,"+file)
 
 	lumen := cli.NewCLI()
 	lumen.TestCommand("version")
@@ -73,8 +73,6 @@ func getBalance(cli *cli.CLI, account string) float64 {
 
 	return balance
 }
-
-// This package runs integration tests for Lumen
 
 // Create new funded test account
 func createFundedAccount(t *testing.T, cli *cli.CLI, name string) {

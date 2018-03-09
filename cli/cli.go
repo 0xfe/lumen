@@ -49,6 +49,13 @@ func (cli *CLI) SetStore(store store.API) {
 	cli.store = store
 }
 
+// Embeddable returns a CLI that you can embed into your own Go programs. This
+// is not thread-safe.
+func (cli *CLI) Embeddable() *CLI {
+	cli.testing = true
+	return cli
+}
+
 // Run executes CLI with the given arguments. Used for testing. Not thread safe.
 func (cli *CLI) Run(args ...string) string {
 	oldStdout := os.Stdout
@@ -165,10 +172,10 @@ func (cli *CLI) setupStore(driver, params string) {
 
 	parseStoreParams := func(store string) {
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using store %s", store)
-		parts := strings.Split(store, ":")
-		driver = parts[0]
+		parts := strings.Split(store, ",")
+		driver = strings.TrimSpace(parts[0])
 		if len(parts) > 1 {
-			params = parts[1]
+			params = strings.TrimSpace(parts[1])
 		} else {
 			params = ""
 		}
