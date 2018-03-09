@@ -31,6 +31,8 @@ $ lumen balance bob
 # 994.99990
 ```
 
+**Build status**: <a href="https://travis-ci.org/0xfe/lumen"><img src="https://travis-ci.org/0xfe/lumen.svg?branch=master"/></a>
+
 #### Some notable features:
 
 * Use account and asset aliases instead of addresses directly in your commands.
