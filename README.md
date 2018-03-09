@@ -88,7 +88,15 @@ Lumen is based on [MicroStellar](https://github.com/0xfe/microstellar), and is d
 
 ## QuickStart
 
-### Installation
+### Download and install
+
+Download a release from the [Releases](https://github.com/0xfe/lumen/releases) tab and copy it to your path.
+
+```bash
+sudo cp ~/Downloads/lumen.macos /usr/bin/lumen
+```
+
+To get the Go library via `go get`:
 
 ```bash
 go get github.com/0xfe/lumen
@@ -303,10 +311,11 @@ You can get the current namespace with `lumen ns`. The default namespace is `def
 ### Environment Setup
 
 This package uses [dep](https://github.com/golang/dep) to manage dependencies. Before
-hacking on this package, install all dependencies:
+hacking on this package, install all dependencies and build.
 
 ```
 dep ensure
+make
 ```
 
 ### Run tests
