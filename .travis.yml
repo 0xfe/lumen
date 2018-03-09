@@ -1,0 +1,8 @@
+language: go
+go_import_path: github.com/0xfe/lumen
+go:
+  - 1.9.x
+  - tip
+
+script:
+  - make test
