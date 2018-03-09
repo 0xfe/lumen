@@ -33,18 +33,22 @@ $ lumen balance bob
 
 #### Some notable features:
 
-* Use account and asset names instead of addresses directly in your commands.
+* Use account and asset aliases instead of addresses directly in your commands.
   ```bash
   lumen asset set USD-chase SBJ24KK6HWOF44MWFH3J7VPAGOMFOFO7O23YW6H37MYZU6F44JBYKLMU --code USD
   lumen pay 10 USD-chase --from kelly --to bob
 
-  lumen account set issuer_chase SBJ24KK6HWOF44MWFH3J7VPAGOMFOFO7O23YW6H37MYZU6F44JBYKLMU
-  lumen asset set USD issuer_chase
-  lumen pay 10 USD --from kelly --to bob
+  lumen account set issuer_tdbank SD3EEU6KJYE6DSEQQYXEXKNOAKZWPNT5OROUGZ5OT2CPFGSLD2JF4ZGY
+  lumen asset set CAD issuer_tdbank
+  lumen pay 10 CAD --from kelly --to bob
   ```
-* Use namespaces to work on different projects at the same time.
+* Segregate your aliases and configuration using namespaces.
   ```bash
+  # Create and switch to new namespace
   lumen ns manhattan_project
+
+  # This namespace always operates on the public network
+  lumen set config:network public
   lumen pay 100000 USD --from president --to terrorist
   ```
 * Share addresses and encrypted seeds with other users via Redis.
@@ -253,4 +257,45 @@ lumen options get mo signers
 
 ### Configuring Lumen
 
-### Embedding Lumen
+Lumen looks for a configuration file called `.lumen-config.yml` in one of the following locations (in order of preference):
+
+
+* The current directory: `.`
+* The parent directory: `..`
+* Your home directory: `$HOME/.lumen/`
+* In `/etc/lumen`
+
+Setting `$LUMEN_ENV` to `prod` or `test`, switches the config file name to `.lumen-config-prod.yml` or `.lumen-config-test.yml` respectively.
+
+The supported configuration format:
+
+```yaml
+# Where to store lumen data.
+store:
+  driver: "file"  # Other options: redis, internal (memdb for testing)
+  params: "/home/mo/.lumen-data.json" # If redis, then host:port
+
+# You can also use the -v flag to enable verbose logging.
+verbose: false
+```
+
+### Data storage
+
+By default Lumen stores data in `$HOME/.lumen-data.json`. You can change the data location by (in order of preference):
+
+* The `--store` flag. (E.g., `lumen balance mo --store ./test.json`)
+* The `LUMEN_STORE` environment variable: `export LUMEN_STORE="/etc/lumen/data.json"`
+* The configuration file (see above.)
+
+### Namespaces
+
+Namespaces are a convenience feature that allow you to work on different projects at the same time. Namespaces
+are tied to a data file, so each file can contain multiple namespaces. The pointer to the current namespace
+is also stored in the data file.
+
+You can switch namespaces by (in order of preference):
+
+* The `--ns` flag.
+* The `LUMEN_NS` environment variable.
+
+You can get the current namespace with `lumen ns`. The default namespace is `default`.
