@@ -4,7 +4,9 @@
 </p>
 
 Lumen is a batteries-included commandline client for the Stellar blockchain. It's designed to
-be easy-to-use, robust, and embeddable (in both shell scripts and other Go applications.)
+be easy-to-use, robust, and embeddable (in both shell scripts and other Go applications.) [You can download Lumen here.](https://github.com/0xfe/lumen/releases)
+
+<a href="https://travis-ci.org/0xfe/lumen"><img src="https://travis-ci.org/0xfe/lumen.svg?branch=master"/></a>
 
 ```bash
 # Switch to the test network
@@ -30,8 +32,6 @@ $ lumen pay 5 --from bob --to mary --memotext 'thanks for the fish'
 $ lumen balance bob
 # 994.99990
 ```
-
-**Build status**: <a href="https://travis-ci.org/0xfe/lumen"><img src="https://travis-ci.org/0xfe/lumen.svg?branch=master"/></a>
 
 #### Some notable features:
 
