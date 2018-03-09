@@ -5,7 +5,11 @@
 </p
 
 Lumen is a batteries-included commandline client for the Stellar blockchain. It's designed to
-be robust, easy-to-use, and embeddable in shell scripts.
+be easy-to-use, robust and embeddable (in both shell scripts and other Go applications.)
+
+Some notable features:
+
+*
 
 Lumen is based on MicroStellar, and is designed for the @qubit-sh Microbanking platform.
 

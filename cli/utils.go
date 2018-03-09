@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -17,6 +18,20 @@ func showSuccess(msg string, args ...interface{}) {
 
 func showError(fields logrus.Fields, msg string, args ...interface{}) {
 	logrus.WithFields(fields).Errorf(msg, args...)
+}
+
+func (cli *CLI) help(cmd *cobra.Command, args []string) {
+	fmt.Fprint(os.Stderr, cmd.UsageString())
+}
+
+func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) {
+	showError(logFields, msg, args...)
+
+	if !cli.testing {
+		os.Exit(-1)
+	} else {
+		fmt.Println("error")
+	}
 }
 
 func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string, keyType string) (string, error) {

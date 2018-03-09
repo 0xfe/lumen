@@ -39,25 +39,88 @@ func NewCLI() *CLI {
 	return cli
 }
 
-// Set the data store (used for testing.)
+// Execute parses the command line and processes it.
+func (cli *CLI) Execute() {
+	cli.rootCmd.Execute()
+}
+
+// SetStore lets you set the data store (used for testing.)
 func (cli *CLI) SetStore(store store.API) {
 	cli.store = store
 }
 
-func (cli *CLI) help(cmd *cobra.Command, args []string) {
-	fmt.Fprint(os.Stderr, cmd.UsageString())
+// Run executes CLI with the given arguments. Used for testing. Not thread safe.
+func (cli *CLI) Run(args ...string) string {
+	oldStdout := os.Stdout
+
+	r, w, _ := os.Pipe()
+
+	os.Stdout = w
+
+	cli.rootCmd.SetArgs(args)
+	cli.rootCmd.Execute()
+	cli.buildRootCmd()
+
+	w.Close()
+
+	os.Stdout = oldStdout
+
+	var stdOut bytes.Buffer
+	io.Copy(&stdOut, r)
+	return stdOut.String()
 }
 
-func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) {
-	showError(logFields, msg, args...)
-
-	if !cli.testing {
-		os.Exit(-1)
-	} else {
-		fmt.Println("error")
-	}
+// RunCommand is a helper that lets you send a full command line to Run, so you don't
+// have to break up your arguments.
+func (cli *CLI) RunCommand(command string) string {
+	result := cli.Run(strings.Fields(command)...)
+	return result
 }
 
+// TestCommand is a helper function that calls Run(...) in test mode. When running
+// in test mode, os.Exit is not called on errors.
+func (cli *CLI) TestCommand(command string) string {
+	cli.testing = true
+	result := cli.Run(strings.Fields(command)...)
+	cli.testing = false
+	return result
+}
+
+// SetGlobalVar writes the kv pair to the global namespace in the storage backend
+func (cli *CLI) SetGlobalVar(key string, value string) error {
+	key = fmt.Sprintf("global:%s", key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "SetGlobalVar"}).Debugf("setting %s: %s", key, value)
+	return cli.store.Set(key, value, 0)
+}
+
+// GetGlobalVar reads global var "key"
+func (cli *CLI) GetGlobalVar(key string) (string, error) {
+	key = fmt.Sprintf("global:%s", key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "GetGlobalVar"}).Debugf("getting %s", key)
+	return cli.store.Get(key)
+}
+
+// SetVar writes the kv pair to the storage backend
+func (cli *CLI) SetVar(key string, value string) error {
+	key = fmt.Sprintf("%s:%s", cli.ns, key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "SetVar"}).Debugf("setting %s: %s", key, value)
+	return cli.store.Set(key, value, 0)
+}
+
+func (cli *CLI) GetVar(key string) (string, error) {
+	key = fmt.Sprintf("%s:%s", cli.ns, key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "GetVar"}).Debugf("getting %s", key)
+	return cli.store.Get(key)
+}
+
+func (cli *CLI) DelVar(key string) error {
+	key = fmt.Sprintf("%s:%s", cli.ns, key)
+	logrus.WithFields(logrus.Fields{"type": "cli", "method": "DelVar"}).Debugf("deleting %s", key)
+	return cli.store.Delete(key)
+}
+
+// setup turns up the CLI environment, and gets called by Cobra before
+// a command is executed.
 func (cli *CLI) setup(cmd *cobra.Command, args []string) {
 	if cli.testing {
 		buf := new(bytes.Buffer)
@@ -93,6 +156,7 @@ func (cli *CLI) setup(cmd *cobra.Command, args []string) {
 	cli.setupNetwork()
 }
 
+// setupStore sets up the storage backend.
 func (cli *CLI) setupStore(driver, params string) {
 	if cli.store != nil {
 		// Custom store takes precedence
@@ -112,9 +176,11 @@ func (cli *CLI) setupStore(driver, params string) {
 	}
 
 	if cli.rootCmd.Flag("store").Changed {
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using store from flag --store")
 		store, _ := cli.rootCmd.Flags().GetString("store")
 		parseStoreParams(store)
 	} else if os.Getenv("LUMEN_STORE") != "" {
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using store from env LUMEN_STORE")
 		parseStoreParams(os.Getenv("LUMEN_STORE"))
 	} else {
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default store")
@@ -129,6 +195,7 @@ func (cli *CLI) setupStore(driver, params string) {
 	}
 }
 
+// setupNameSpace makes sure that storage commands used the correct namespace.
 func (cli *CLI) setupNameSpace() {
 	if cli.ns != "" {
 		return
@@ -136,20 +203,23 @@ func (cli *CLI) setupNameSpace() {
 
 	if cli.rootCmd.Flag("ns").Changed {
 		ns, _ := cli.rootCmd.Flags().GetString("ns")
-		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using namespace %s", ns)
+		cli.ns = ns
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using namespace from flag --ns")
+	} else if ns := os.Getenv("LUMEN_NS"); ns != "" {
+		cli.ns = ns
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using namespace from env LUMEN_NS")
+	} else if ns, err := cli.GetGlobalVar("ns"); err == nil {
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using namespace from store")
 		cli.ns = ns
 	} else {
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default namespace")
-		ns, err := cli.GetGlobalVar("ns")
-		if err != nil {
-			logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default namespace")
-			cli.ns = "default"
-		} else {
-			cli.ns = ns
-		}
+		cli.ns = "default"
 	}
+
+	logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("namespace: %s", cli.ns)
 }
 
+// setupNetwork ensures that lumen is operating on the correct network.
 func (cli *CLI) setupNetwork() {
 	if cli.rootCmd.Flag("network").Changed {
 		network, _ := cli.rootCmd.Flags().GetString("network")
@@ -163,180 +233,4 @@ func (cli *CLI) setupNetwork() {
 			cli.ms = microstellar.New(network)
 		}
 	}
-}
-
-// Run executes CLI with the given arguments. Used for testing. Not thread safe.
-func (cli *CLI) Run(args ...string) string {
-	oldStdout := os.Stdout
-
-	r, w, _ := os.Pipe()
-
-	os.Stdout = w
-
-	cli.rootCmd.SetArgs(args)
-	cli.rootCmd.Execute()
-	cli.buildRootCmd()
-
-	w.Close()
-
-	os.Stdout = oldStdout
-
-	var stdOut bytes.Buffer
-	io.Copy(&stdOut, r)
-	return stdOut.String()
-}
-
-func (cli *CLI) TestCommand(command string) string {
-	cli.testing = true
-	result := cli.Run(strings.Fields(command)...)
-	cli.testing = false
-	return result
-}
-
-func (cli *CLI) RunCommand(command string) string {
-	result := cli.Run(strings.Fields(command)...)
-	return result
-}
-
-// RootCmd returns the cobra root comman for this instance
-func (cli *CLI) RootCmd() *cobra.Command {
-	return cli.rootCmd
-}
-
-// Execute parses the command line and processes it
-func (cli *CLI) Execute() {
-	cli.rootCmd.Execute()
-}
-
-func (cli *CLI) buildRootCmd() {
-	if cli.rootCmd != nil {
-		cli.rootCmd.ResetFlags()
-		cli.rootCmd.ResetCommands()
-	}
-
-	rootCmd := &cobra.Command{
-		Use:              "lumen",
-		Short:            "Lumen is a commandline client for the Stellar blockchain",
-		Run:              cli.help,
-		PersistentPreRun: cli.setup,
-	}
-	cli.rootCmd = rootCmd
-
-	home := os.Getenv("HOME")
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output (false)")
-	rootCmd.PersistentFlags().String("network", "test", "network to use (test)")
-	rootCmd.PersistentFlags().String("ns", "default", "namespace to use (default)")
-	rootCmd.PersistentFlags().String("store", fmt.Sprintf("file:%s/.lumen-data.yml", home), "namespace to use (default)")
-
-	rootCmd.AddCommand(cli.buildPayCmd())
-	rootCmd.AddCommand(cli.buildAccountCmd())
-	rootCmd.AddCommand(cli.buildAssetCmd())
-	rootCmd.AddCommand(cli.buildTrustCmd())
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "version",
-		Short: "get version of lumen CLI",
-		Run:   cli.cmdVersion,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "ns [namespace]",
-		Short: "set namespace to [namespace]",
-		Args:  cobra.MinimumNArgs(0),
-		Run:   cli.cmdNS,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "set [key] [value]",
-		Short: "set variable",
-		Args:  cobra.MinimumNArgs(2),
-		Run:   cli.cmdSet,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "get [key]",
-		Short: "get variable",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdGet,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "del [key]",
-		Short: "delete variable",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdDel,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "watch [address]",
-		Short: "watch the address on the ledger",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdWatch,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "balance [address]",
-		Short: "get the balance of [address] in lumens",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdBalance,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "friendbot [address]",
-		Short: "fund [address] on the test network with friendbot",
-		Args:  cobra.MinimumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-
-			logFields := logrus.Fields{"cmd": "trust", "subcmd": "create"}
-			address, err := cli.validateAddressOrSeed(logFields, name, "address")
-
-			if err != nil {
-				cli.error(logFields, "invalid account: %s", name)
-				return
-			}
-
-			response, err := microstellar.FundWithFriendBot(address)
-
-			if err != nil {
-				cli.error(logFields, "friendbot error: %v", err)
-				return
-			}
-
-			showSuccess("friendbot says:\n %v", response)
-		},
-	})
-}
-
-// SetGlobalVar writes the kv pair to the global namespace in the storage backend
-func (cli *CLI) SetGlobalVar(key string, value string) error {
-	key = fmt.Sprintf("global:%s", key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "SetGlobalVar"}).Debugf("setting %s: %s", key, value)
-	return cli.store.Set(key, value, 0)
-}
-
-// GetGlobalVar reads global var "key"
-func (cli *CLI) GetGlobalVar(key string) (string, error) {
-	key = fmt.Sprintf("global:%s", key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "GetGlobalVar"}).Debugf("getting %s", key)
-	return cli.store.Get(key)
-}
-
-// SetVar writes the kv pair to the storage backend
-func (cli *CLI) SetVar(key string, value string) error {
-	key = fmt.Sprintf("%s:%s", cli.ns, key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "SetVar"}).Debugf("setting %s: %s", key, value)
-	return cli.store.Set(key, value, 0)
-}
-
-func (cli *CLI) GetVar(key string) (string, error) {
-	key = fmt.Sprintf("%s:%s", cli.ns, key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "GetVar"}).Debugf("getting %s", key)
-	return cli.store.Get(key)
-}
-
-func (cli *CLI) DelVar(key string) error {
-	key = fmt.Sprintf("%s:%s", cli.ns, key)
-	logrus.WithFields(logrus.Fields{"type": "cli", "method": "DelVar"}).Debugf("deleting %s", key)
-	return cli.store.Delete(key)
 }
