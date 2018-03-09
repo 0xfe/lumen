@@ -45,6 +45,7 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 			}
 
 			fund, err := cmd.Flags().GetBool("fund")
+			logrus.WithFields(fields).Debugf("fund: %v, err %v", fund, err)
 
 			if fund {
 				logrus.WithFields(fields).Debugf("initial fund from %s to %s, opts: %+v", source, target, opts)

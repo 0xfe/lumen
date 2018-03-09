@@ -35,7 +35,7 @@ func NewCLI() *CLI {
 		testing: false,
 	}
 
-	cli.init()
+	cli.buildRootCmd()
 	return cli
 }
 
@@ -99,10 +99,8 @@ func (cli *CLI) setupStore(driver, params string) {
 		return
 	}
 
-	if cli.rootCmd.Flag("store").Changed {
-		store, _ := cli.rootCmd.Flags().GetString("store")
+	parseStoreParams := func(store string) {
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using store %s", store)
-
 		parts := strings.Split(store, ":")
 		driver = parts[0]
 		if len(parts) > 1 {
@@ -111,6 +109,13 @@ func (cli *CLI) setupStore(driver, params string) {
 			params = ""
 		}
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("selecting store driver: %s params: %s", driver, params)
+	}
+
+	if cli.rootCmd.Flag("store").Changed {
+		store, _ := cli.rootCmd.Flags().GetString("store")
+		parseStoreParams(store)
+	} else if os.Getenv("LUMEN_STORE") != "" {
+		parseStoreParams(os.Getenv("LUMEN_STORE"))
 	} else {
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using default store")
 	}
@@ -119,7 +124,7 @@ func (cli *CLI) setupStore(driver, params string) {
 	cli.store, err = store.NewStore(driver, params)
 
 	if err != nil {
-		showError(logrus.Fields{"type": "setup"}, "could not initialize filestore: %s:%s", driver, params)
+		logrus.WithFields(logrus.Fields{"type": "setup"}).Fatalf("could not initialize filestore: %s:%s", driver, params)
 		return
 	}
 }
@@ -168,10 +173,9 @@ func (cli *CLI) Run(args ...string) string {
 
 	os.Stdout = w
 
-	cli.testing = true
 	cli.rootCmd.SetArgs(args)
 	cli.rootCmd.Execute()
-	cli.testing = false
+	cli.buildRootCmd()
 
 	w.Close()
 
@@ -182,8 +186,16 @@ func (cli *CLI) Run(args ...string) string {
 	return stdOut.String()
 }
 
+func (cli *CLI) TestCommand(command string) string {
+	cli.testing = true
+	result := cli.Run(strings.Fields(command)...)
+	cli.testing = false
+	return result
+}
+
 func (cli *CLI) RunCommand(command string) string {
-	return cli.Run(strings.Fields(command)...)
+	result := cli.Run(strings.Fields(command)...)
+	return result
 }
 
 // RootCmd returns the cobra root comman for this instance
@@ -196,15 +208,20 @@ func (cli *CLI) Execute() {
 	cli.rootCmd.Execute()
 }
 
-func (cli *CLI) init() {
+func (cli *CLI) buildRootCmd() {
+	if cli.rootCmd != nil {
+		cli.rootCmd.ResetFlags()
+		cli.rootCmd.ResetCommands()
+	}
+
 	rootCmd := &cobra.Command{
 		Use:              "lumen",
 		Short:            "Lumen is a commandline client for the Stellar blockchain",
 		Run:              cli.help,
 		PersistentPreRun: cli.setup,
 	}
-
 	cli.rootCmd = rootCmd
+
 	home := os.Getenv("HOME")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output (false)")
 	rootCmd.PersistentFlags().String("network", "test", "network to use (test)")

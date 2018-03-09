@@ -8,20 +8,20 @@ import (
 
 func TestVariables(t *testing.T) {
 	cli, _ := newTestCLI()
-	cli.RunCommand("ns test")
+	cli.TestCommand("ns test")
 	expectOutput(t, cli, "test", "ns")
 
-	cli.RunCommand("set foo bar")
+	cli.TestCommand("set foo bar")
 	expectOutput(t, cli, "bar", "get foo")
 
-	cli.RunCommand("ns default")
+	cli.TestCommand("ns default")
 	expectOutput(t, cli, "error", "get foo")
 
-	cli.RunCommand("set foo haha")
+	cli.TestCommand("set foo haha")
 	expectOutput(t, cli, "haha", "get foo")
 
-	cli.RunCommand("ns test")
+	cli.TestCommand("ns test")
 	expectOutput(t, cli, "bar", "get foo")
-	cli.RunCommand("del foo")
+	cli.TestCommand("del foo")
 	expectOutput(t, cli, "error", "get foo")
 }

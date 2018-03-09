@@ -8,7 +8,7 @@ import (
 )
 
 func expectOutput(t *testing.T, cli *CLI, want string, command string) {
-	got := cli.RunCommand(command)
+	got := cli.TestCommand(command)
 
 	if strings.TrimSpace(got) != want {
 		t.Errorf("(%s) wrong output: want %v, got %v", command, want, got)
