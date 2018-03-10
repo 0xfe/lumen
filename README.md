@@ -61,6 +61,11 @@ $ lumen balance bob
   lumen account new ally
   lumen friendbot ally
   ```
+* Use federated addresses directly in your transactions
+  ```bash
+  lumen pay 10 --from kelly --to mo*qubit.sh
+  lumen balance mo*qubit.sh
+  ```
 * Embed Lumen into your own Go applications
   ```go
   import (
@@ -141,6 +146,9 @@ lumen account set bob SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ
 # Generate a new random keypair (address and seed) with the alias mo
 lumen account new mary
 
+# What's Mary's address?
+lumen account address mary
+
 # Use --fund to fund it with some XLM to create a valid account. This is required
 # for all new accounts before you can transact on them.
 lumen pay 1 --from mo --to mary --fund
@@ -148,10 +156,11 @@ lumen pay 1 --from mo --to mary --fund
 # Bob pays Mo 5 XLM
 lumen pay 5 --from bob --to mo
 
-# What's Mary's address?
-lumen account address mary
+# Lookup federated addresses
+lumen account address mo*qubit.sh
+lumin account set mo mo*qubit.sh
 
-# Check Mo's balance
+# Check Mo's balance (this shows the balance of mo*qubit.sh)
 lumen balance mo
 ```
 

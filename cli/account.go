@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/0xfe/microstellar"
 
@@ -84,7 +85,7 @@ func (cli *CLI) buildAccountSetCmd() *cobra.Command {
 				keyType := ""
 
 				key := fmt.Sprintf("account:%s:", name)
-				if microstellar.ValidAddress(code) == nil {
+				if microstellar.ValidAddress(code) == nil || strings.Contains(code, "*") {
 					keyType = "address"
 				} else if microstellar.ValidSeed(code) == nil {
 					keyType = "seed"
@@ -111,11 +112,9 @@ func (cli *CLI) buildAccountAddressCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			key := fmt.Sprintf("account:%s:address", name)
+			code, err := cli.validateAddressOrSeed(logrus.Fields{"cmd": "account", "subcmd": "address"}, name, "address")
 
-			code, err := cli.GetVar(key)
-
-			if err != nil {
+			if err != nil || microstellar.ValidSeed(code) == nil {
 				cli.error(logrus.Fields{"cmd": "account", "subcmd": "address"}, "could not get address for account: %s", name)
 				return
 			}

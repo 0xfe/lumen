@@ -51,6 +51,7 @@ func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string
 
 		if err == nil {
 			logrus.WithFields(fields).Debugf("got address: %s = %s", lookupKey, resolvedAddr)
+			addressOrSeed = resolvedAddr
 			lookupKey = resolvedAddr
 		}
 	}
@@ -60,6 +61,10 @@ func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string
 		if err != nil {
 			logrus.WithFields(fields).Debugf("invalid address, seed, or account name: %s", lookupKey)
 			return "", err
+		}
+
+		if strings.Contains(addressOrSeed, "*") {
+			return cli.validateAddressOrSeed(fields, addressOrSeed, keyType)
 		}
 	}
 
