@@ -345,6 +345,26 @@ git tag v0.1.0
 git push --tags
 ```
 
+### Releasing
+
+We're managing releases with [gothub](https://github.com/itchio/gothub).
+
+```bash
+go get github.com/itchio/gothub
+
+# find token in ~/.git-credentials
+export GITHUB_TOKEN=...
+
+# test, commit, and build binaries
+git test ./...
+git commit -a
+git push
+make
+
+# push new release
+./release.sh vA.B.C
+```
+
 ## MIT License
 
 Copyright Mohit Muthanna Cheppudira 2018 <mohit@muthanna.com>
