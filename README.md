@@ -216,11 +216,8 @@ lumen account address corp
 # there's a payment
 lumen watch payments kelly
 
-# Watch for payments from a known starting point
-lumen watch payments kelly --cursor ABCD
-
-# Watch for payments across multiple addresses
-lumen watch payments kelly mo bob
+# Stream payments all the way from when the account was created
+lumen watch payments kelly --cursor start
 ```
 
 #### Multisig accounts
