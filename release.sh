@@ -4,13 +4,14 @@ TAG=$1
 
 if [ "$TAG" == "" ]; then
     echo Usage: $0 tag
-    echo Current tag: `git tag`
+    echo Current tag: `git tag | tail -n 1`
     exit 1
 fi
 
+git pull tags
 git status
 echo
-echo Current tag: `git tag`
+echo Current tag: `git tag | tail -n 1`
 echo Hit return to release: $TAG
 read
 
