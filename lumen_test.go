@@ -130,3 +130,54 @@ func TestAssets(t *testing.T) {
 	expectOutput(t, cli, "", "trust create kelly USD 1000")
 	expectOutput(t, cli, "", "pay 100 USD --from citibank --to kelly")
 }
+
+func TestMultisig(t *testing.T) {
+	cli, cleanupFunc := newCLI()
+	defer cleanupFunc()
+
+	createFundedAccount(t, cli, "mo")
+
+	// Create four accounts
+	run(cli, "account new sharon")
+	run(cli, "account new bob")
+	run(cli, "account new mary")
+	run(cli, "account new fred")
+
+	expectOutput(t, cli, "", "pay 100 --from mo --to sharon --memoid 1 --fund")
+
+	/*
+		// Start watching sharon's ledger
+		address := run(cli, "account address sharon")
+		var done func()
+		go func(address string) {
+			cli, cleanupFunc := newCLI()
+			defer cleanupFunc()
+			done = cli.StopWatcher
+
+			run(cli, "watch -v --cursor start --format struct "+address)
+		}(address)
+	*/
+
+	expectOutput(t, cli, "", "pay 100 --from mo --to bob --memoid 1 --fund")
+	expectOutput(t, cli, "", "pay 100 --from mo --to mary --memoid 1 --fund")
+	expectOutput(t, cli, "", "pay 100 --from mo --to fred --memoid 1 --fund")
+
+	// Add bob and mary as sharon's signers
+	expectOutput(t, cli, "", "signer add bob 1 --to sharon")
+	expectOutput(t, cli, "", "signer add mary 1 --to sharon")
+
+	// Raise the signing thresholds for sharon
+	expectOutput(t, cli, "", "signer thresholds sharon 2 2 2")
+
+	// Make a multisig payment
+	expectOutput(t, cli, "", "pay 10 --from sharon --to fred --signers bob,mary")
+
+	// Remove Bob as a signer (also multisig)
+	expectOutput(t, cli, "", "signer remove bob --from sharon --signers sharon,bob")
+
+	// Make another multisig payment
+	expectOutput(t, cli, "", "pay 10 --from sharon --to fred --signers sharon,mary")
+
+	// Stop watching sharon's ledger
+	// done()
+}

@@ -95,6 +95,12 @@ func (cli *CLI) TestCommand(command string) string {
 	return result
 }
 
+// Stop an existing watcher from streaming.
+func (cli *CLI) StopWatcher() {
+	cli.stopWatcher()
+	cli.stopWatcher = func() {}
+}
+
 // SetGlobalVar writes the kv pair to the global namespace in the storage backend
 func (cli *CLI) SetGlobalVar(key string, value string) error {
 	key = fmt.Sprintf("global:%s", key)

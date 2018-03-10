@@ -8,7 +8,12 @@ if [ "$TAG" == "" ]; then
     exit 1
 fi
 
-git pull tags
+if [ "$GITHUB_TOKEN" == "" ]; then
+    echo error: GITHUB_TOKEN not set.
+    exit 1
+fi
+
+git pull --tags
 git status
 echo
 echo Current tag: `git tag | tail -n 1`

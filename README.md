@@ -232,21 +232,21 @@ lumen account set sharon GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYU
 lumen account set bill GBJDIMENGOKR49V63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVOFI53G SBLPAE53C6JXKX6CK4UN7DIXMD4EXGA4QL6NB63YHGZRTG6NPXAPWQTC
 
 # Add sharon as a signer on mary's account with a weight of 1
-lumen signer add sharon --to mary --weight 1
+lumen signer add sharon --to mary 1
 
 # Add bill as a signer too
-lumen signer add bill --to mary --weight 1
+lumen signer add bill --to mary 1
 
 # Set mary's low, medium, and high thresholds to require a minimum total weight of 2
 # for all transactions
-lumen thresholds set mary 2 2 2
+lumen signer thresholds mary 2 2 2
 
 # Now mary needs atleast two signatures (including hers) to make payments
 lumen pay mary mo 4 --signers mary,bill
 lumen pay mary bob 10 USD --signers sharon,bill
 
 # Remove bill as a signer
-lumen signer remove bill --from mary
+lumen signer remove bill --from mary --signers mary,bill
 ```
 
 ### Configuring Lumen

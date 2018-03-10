@@ -17,7 +17,7 @@ func TestPayments(t *testing.T) {
 	expectOutput(t, cli, "", "pay 4 --from master --to GBH6GGAPBFH6IXCQBPJ7WSN2WMUFU7PO346BIVZXS6Q22YNFBUNVJS4U")
 	expectOutput(t, cli, "", "pay 4 --from master --to worker --memotext hello")
 
-	expectOutput(t, cli, "error", "pay 4 --from master --to worker --memoid hello -v")
+	expectOutput(t, cli, "error", "pay 4 --from master --to worker --memoid hello")
 	expectOutput(t, cli, "", "pay 4 --from master --to worker --memoid 234883")
 
 	cli.TestCommand("ns other")

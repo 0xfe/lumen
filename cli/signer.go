@@ -10,12 +10,12 @@ import (
 
 func (cli *CLI) buildSignerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signer [add|remove]",
+		Use:   "signer [add|remove|thresholds]",
 		Short: "manage signers on account",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				showError(logrus.Fields{"cmd": "signer"}, "unrecognized signer command: %s, expecting: add|remove", args[0])
+				cli.error(logrus.Fields{"cmd": "signer"}, "unrecognized signer command: %s, expecting: add|remove", args[0])
 				return
 			}
 		},
@@ -23,15 +23,16 @@ func (cli *CLI) buildSignerCmd() *cobra.Command {
 
 	cmd.AddCommand(cli.buildSignerAddCmd())
 	cmd.AddCommand(cli.buildSignerRemoveCmd())
+	cmd.AddCommand(cli.buildSignerThresholdsCmd())
 
 	return cmd
 }
 
 func (cli *CLI) buildSignerAddCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add [signer_address] --to [account] [weight]",
+		Use:   "add [signer_address] [weight] --to [account]",
 		Short: "add signer_address as a signer on [account] with key weight [weight]",
-		Args:  cobra.MinimumNArgs(2),
+		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			signerAddress := args[0]
 			weight := args[1]
@@ -84,7 +85,7 @@ func (cli *CLI) buildSignerRemoveCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove [signer_address] --from [account]",
 		Short: "remove signer_address as a signer from [account]",
-		Args:  cobra.MinimumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			signerAddress := args[0]
 
@@ -121,6 +122,64 @@ func (cli *CLI) buildSignerRemoveCmd() *cobra.Command {
 
 	cmd.Flags().String("from", "", "account seed of signee")
 	cmd.MarkFlagRequired("from")
+
+	buildFlagsForTxOptions(cmd)
+	return cmd
+}
+
+func (cli *CLI) buildSignerThresholdsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "thresholds [account] [low] [medium] [high]",
+		Short: "set low, medium, and high thresholds for [account]",
+		Args:  cobra.ExactArgs(4),
+		Run: func(cmd *cobra.Command, args []string) {
+			account := args[0]
+			lowString := args[1]
+			mediumString := args[2]
+			highString := args[3]
+
+			logFields := logrus.Fields{"cmd": "signer", "subcmd": "thresholds"}
+			address, err := cli.validateAddressOrSeed(logFields, account, "seed")
+
+			if err != nil {
+				cli.error(logFields, "invalid account: %s", account)
+				return
+			}
+
+			low, err := strconv.ParseUint(lowString, 10, 32)
+			if err != nil {
+				logrus.WithFields(logFields).Errorf("threshold parse error: %v", err)
+				cli.error(logFields, "bad threshold (low): %s", lowString)
+				return
+			}
+
+			medium, err := strconv.ParseUint(mediumString, 10, 32)
+			if err != nil {
+				logrus.WithFields(logFields).Errorf("threshold parse error: %v", err)
+				cli.error(logFields, "bad threshold (medium): %s", mediumString)
+				return
+			}
+
+			high, err := strconv.ParseUint(highString, 10, 32)
+			if err != nil {
+				logrus.WithFields(logFields).Errorf("threshold parse error: %v", err)
+				cli.error(logFields, "bad threshold (high): %s", highString)
+				return
+			}
+
+			opts, err := cli.genTxOptions(cmd, logFields)
+			if err != nil {
+				cli.error(logFields, "can't generate transaction: %v", err)
+				return
+			}
+
+			err = cli.ms.SetThresholds(address, uint32(low), uint32(medium), uint32(high), opts)
+			if err != nil {
+				cli.error(logFields, "failed to set thresholds for %s: %v", account, microstellar.ErrorString(err))
+				return
+			}
+		},
+	}
 
 	buildFlagsForTxOptions(cmd)
 	return cmd
