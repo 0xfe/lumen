@@ -17,9 +17,10 @@ git pull --tags
 git status
 echo
 echo Current tag: `git tag | tail -n 1`
-echo Hit return to release: $TAG
+echo Hit return to build and push release: $TAG
 read
 
+make
 git tag $TAG
 git push --tags
 gothub -v release -u 0xfe -r lumen --tag $TAG --name "release: $TAG"
