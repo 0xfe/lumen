@@ -42,6 +42,11 @@ type MicroStellar struct {
 	fake        bool
 }
 
+// Error wraps underlying errors (e.g., horizon)
+type Error struct {
+	HorizonError horizon.Error
+}
+
 // Params lets you add optional parameters to New and NewTx.
 type Params map[string]interface{}
 
@@ -242,6 +247,59 @@ func (ms *MicroStellar) SetMasterWeight(sourceSeed string, weight uint32, option
 	return tx.Err()
 }
 
+// AccountFlags are used by issuers of assets.
+type AccountFlags int32
+
+const (
+	// FlagAuthRequired requires the issuing account to give the receiving
+	// account permission to hold the asset.
+	FlagAuthRequired = AccountFlags(1)
+
+	// FlagAuthRevocable allows the issuer to revoke the credit held by another
+	// account.
+	FlagAuthRevocable = AccountFlags(2)
+
+	// FlagAuthImmutable means that the other auth parameters can never be set
+	// and the issuer's account can never be deleted.
+	FlagAuthImmutable = AccountFlags(4)
+)
+
+// SetFlags changes the flags for the account.
+func (ms *MicroStellar) SetFlags(sourceSeed string, flags AccountFlags, options ...*TxOptions) error {
+	if !ValidAddressOrSeed(sourceSeed) {
+		return errors.Errorf("can't set flags: invalid source address or seed: %s", sourceSeed)
+	}
+
+	tx := NewTx(ms.networkName, ms.params)
+
+	if len(options) > 0 {
+		tx.SetOptions(options[0])
+	}
+
+	tx.Build(sourceAccount(sourceSeed), build.SetFlag(int32(flags)))
+	tx.Sign(sourceSeed)
+	tx.Submit()
+	return tx.Err()
+}
+
+// SetHomeDomain changes the home domain of sourceSeed.
+func (ms *MicroStellar) SetHomeDomain(sourceSeed string, domain string, options ...*TxOptions) error {
+	if !ValidAddressOrSeed(sourceSeed) {
+		return errors.Errorf("can't set home domain: invalid source address or seed: %s", sourceSeed)
+	}
+
+	tx := NewTx(ms.networkName, ms.params)
+
+	if len(options) > 0 {
+		tx.SetOptions(options[0])
+	}
+
+	tx.Build(sourceAccount(sourceSeed), build.HomeDomain(domain))
+	tx.Sign(sourceSeed)
+	tx.Submit()
+	return tx.Err()
+}
+
 // AddSigner adds signerAddress as a signer to sourceSeed's account with weight signerWeight.
 func (ms *MicroStellar) AddSigner(sourceSeed string, signerAddress string, signerWeight uint32, options ...*TxOptions) error {
 	if !ValidAddressOrSeed(sourceSeed) {
@@ -320,8 +378,8 @@ type PaymentWatcher struct {
 	// Ch gets a *Payment everytime there's a new entry in the ledger.
 	Ch chan *Payment
 
-	// Call Cancelfunc to stop watching the ledger. This closes Ch.
-	CancelFunc func()
+	// Call Done to stop watching the ledger. This closes Ch.
+	Done func()
 
 	// This is set if the stream terminates unexpectedly. Safe to check
 	// after Ch is closed.
@@ -375,6 +433,7 @@ func (ms *MicroStellar) WatchPayments(address string, options ...*TxOptions) (*P
 			}
 		} else {
 			err := tx.GetClient().StreamPayments(ctx, address, cursor, func(payment horizon.Payment) {
+				tx.GetClient().LoadMemo(&payment)
 				ch <- NewPaymentFromHorizon(&payment)
 			})
 

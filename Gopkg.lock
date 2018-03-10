@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "3008f596c0bac6b79ad259f7ca8cd0d460e4ecdf"
-  version = "v0.1.5"
+  revision = "5e01771e7410aebdfd79347820123cf5e1ef978e"
+  version = "v0.1.8"
 
 [[projects]]
   branch = "master"
@@ -58,8 +58,8 @@
     "internal/singleflight",
     "internal/util"
   ]
-  revision = "68362cfda1eeb3a69316e7bc00169a9a8de4823a"
-  version = "v6.9.2"
+  revision = "9133634a132e00309476e2d9acbf0c8058d4c888"
+  version = "v6.10.0"
 
 [[projects]]
   branch = "master"
@@ -207,7 +207,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "840b69638af7dc1c3892c757f4e7d6f52b167cd6"
+  revision = "07636e06a0545beb0c59dccfe769100ea48f5e64"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -228,13 +228,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "91a49db82a88618983a78a06c1cbd4e00ab749ab"
+  revision = "c7dcf104e3a7a1417abc0230cb0d5240d764159d"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "d25186b37f34ebdbbea8f488ef055638dfab272d"
+  revision = "d0aafc73d5cdc42264b0af071c261abac580695e"
 
 [[projects]]
   branch = "master"
@@ -243,7 +243,7 @@
     "unix",
     "windows"
   ]
-  revision = "dd2ff4accc098aceecb86b36eaa7829b2a17b1c9"
+  revision = "7dca6fe1f43775aa6d1334576870ff63f978f539"
 
 [[projects]]
   name = "golang.org/x/text"

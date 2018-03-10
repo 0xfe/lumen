@@ -34,6 +34,7 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.AddCommand(cli.buildAssetCmd())
 	rootCmd.AddCommand(cli.buildTrustCmd())
 	rootCmd.AddCommand(cli.buildSignerCmd())
+	rootCmd.AddCommand(cli.buildWatchCmd())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -67,13 +68,6 @@ func (cli *CLI) buildRootCmd() {
 		Short: "delete variable",
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cli.cmdDel,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "watch [address]",
-		Short: "watch the address on the ledger",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdWatch,
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
@@ -159,26 +153,6 @@ func (cli *CLI) cmdGet(cmd *cobra.Command, args []string) {
 		showSuccess(val)
 	} else {
 		cli.error(logrus.Fields{"cmd": "get"}, "no such variable: %s\n", args[0])
-		return
-	}
-}
-
-func (cli *CLI) cmdWatch(cmd *cobra.Command, args []string) {
-	address := args[0]
-
-	watcher, err := cli.ms.WatchPayments(address)
-
-	if err != nil {
-		cli.error(logrus.Fields{"cmd": "watch"}, "can't watch address: %+v\n", err)
-		return
-	}
-
-	for p := range watcher.Ch {
-		showSuccess("%v %v from %v to %v", p.Amount, p.AssetCode, p.From, p.To)
-	}
-
-	if watcher.Err != nil {
-		cli.error(logrus.Fields{"cmd": "watch"}, "%+v\n", *watcher.Err)
 		return
 	}
 }

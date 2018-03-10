@@ -16,23 +16,25 @@ import (
 // CLI represents a command-line interface. This class is
 // not threadsafe.
 type CLI struct {
-	store   store.API
-	ms      *microstellar.MicroStellar
-	ns      string // namespace
-	rootCmd *cobra.Command
-	version string
-	testing bool
+	store       store.API
+	ms          *microstellar.MicroStellar
+	ns          string // namespace
+	rootCmd     *cobra.Command
+	version     string
+	testing     bool
+	stopWatcher func()
 }
 
 // NewCLI returns an initialized CLI
 func NewCLI() *CLI {
 	cli := &CLI{
-		store:   nil,
-		ms:      nil,
-		ns:      "",
-		rootCmd: nil,
-		version: "v0.0",
-		testing: false,
+		store:       nil,
+		ms:          nil,
+		ns:          "",
+		rootCmd:     nil,
+		version:     "v0.0",
+		testing:     false,
+		stopWatcher: func() {},
 	}
 
 	cli.buildRootCmd()
