@@ -138,20 +138,24 @@ lumen account set mo GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
 # Make an alias for Bob. Again, Lumen knows it's a seed and not an address.
 lumen account set bob SCSJQEK352QDSXZWELWC2NKKQL6BAUKE7EVS56CKKRDQGY6KCYLRWCVQ
 
+# Generate a new random keypair (address and seed) with the alias mo
+lumen account new mary
+
+# Use --fund to fund it with some XLM to create a valid account. This is required
+# for all new accounts before you can transact on them.
+lumen pay 1 --from mo --to mary --fund
+
 # Bob pays Mo 5 XLM
 lumen pay 5 --from bob --to mo
 
-# What's Mo's address?
-lumen account address mo
-
-# What's Mo's seed?
-lumen account seed mo
+# What's Mary's address?
+lumen account address mary
 
 # Check Mo's balance
 lumen balance mo
 ```
 
-#### Work with assets
+#### Work with credit assets
 
 ```bash
 # Create an alias for a new asset type. The asset code is derived from the alias (USD).
@@ -161,25 +165,8 @@ lumen asset set USD GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
 lumen asset set USD-citi GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM --asset-code USD
 lumen asset set USD-chase GBGFCNBK5ITK5PTCXDTB3XPDYY4UHZAWMX77YXEEV5QPANLELZLC7MXA --asset-code USD
 
-# Pay with the asset
-lumen pay --from mo --to bob 5 USD-chase
-
 # Check bob's USD balance
 lumen balance bob USD-chase
-```
-
-#### Generate keys and create trust lines
-
-```bash
-# Generate a new random keypair (address and seed) with the alias mo
-lumen account new kelly
-
-# What's kelly's address?
-lumen account address kelly
-
-# Use --fund to fund it with some XLM to create a valid account. This is required
-# for all new accounts before you can transact on them.
-lumen pay 1 --from mo --to kelly --fund
 
 # Create a trustline for kelly to Citibank's USD, then pay her
 lumen trust create kelly USD-citi
