@@ -4,8 +4,14 @@
 [[projects]]
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "5e01771e7410aebdfd79347820123cf5e1ef978e"
-  version = "v0.1.8"
+  revision = "d715412ca4da7d8cd30e01334d903470527c4dea"
+  version = "v0.1.9"
+
+[[projects]]
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
+  version = "v0.3.0"
 
 [[projects]]
   branch = "master"
@@ -15,6 +21,12 @@
     "edwards25519"
   ]
   revision = "5312a61534124124185d41f09206b9fef1d88403"
+
+[[projects]]
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  revision = "521b25f4b05fd26bec69d9dedeb8f9c9a83939a8"
+  version = "v8"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
@@ -192,14 +204,18 @@
   branch = "master"
   name = "github.com/stellar/go"
   packages = [
+    "address",
     "amount",
     "build",
+    "clients/federation",
     "clients/horizon",
+    "clients/stellartoml",
     "crc16",
     "hash",
     "keypair",
     "network",
     "price",
+    "protocols/federation",
     "strkey",
     "support/errors",
     "support/http/mutil",

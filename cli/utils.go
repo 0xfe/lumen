@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -42,12 +43,22 @@ func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) 
 
 func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string, keyType string) (string, error) {
 	var err error
-	key := addressOrSeed
+	lookupKey := addressOrSeed
 
-	if !microstellar.ValidAddressOrSeed(addressOrSeed) {
-		addressOrSeed, err = cli.GetAccountOrSeed(addressOrSeed, keyType)
+	if strings.Contains(lookupKey, "*") {
+		logrus.WithFields(fields).Debugf("resolving federation address: %s", lookupKey)
+		resolvedAddr, err := cli.ms.Resolve(lookupKey)
+
+		if err == nil {
+			logrus.WithFields(fields).Debugf("got address: %s = %s", lookupKey, resolvedAddr)
+			lookupKey = resolvedAddr
+		}
+	}
+
+	if !microstellar.ValidAddressOrSeed(lookupKey) {
+		addressOrSeed, err = cli.GetAccountOrSeed(lookupKey, keyType)
 		if err != nil {
-			logrus.WithFields(fields).Debugf("invalid address, seed, or account name: %s", key)
+			logrus.WithFields(fields).Debugf("invalid address, seed, or account name: %s", lookupKey)
 			return "", err
 		}
 	}

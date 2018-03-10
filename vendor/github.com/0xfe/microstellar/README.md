@@ -9,7 +9,7 @@ MicroStellar is intended to be robust, well tested, and well documented -- we de
 
 To get started, follow the instructions below, or read the [API docs](https://godoc.org/github.com/0xfe/microstellar) for more.
 
-**Build Status:** <a href="https://travis-ci.org/0xfe/microstellar"><img src="https://travis-ci.org/0xfe/microstellar.svg?branch=master"/></a>
+<a href="https://travis-ci.org/0xfe/microstellar"><img src="https://travis-ci.org/0xfe/microstellar.svg?branch=master"/></a>
 
 ## QuickStart
 

@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
+  version = "v0.3.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/agl/ed25519"
   packages = [
@@ -9,6 +15,12 @@
     "edwards25519"
   ]
   revision = "5312a61534124124185d41f09206b9fef1d88403"
+
+[[projects]]
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  revision = "521b25f4b05fd26bec69d9dedeb8f9c9a83939a8"
+  version = "v8"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
@@ -86,14 +98,18 @@
   branch = "master"
   name = "github.com/stellar/go"
   packages = [
+    "address",
     "amount",
     "build",
+    "clients/federation",
     "clients/horizon",
+    "clients/stellartoml",
     "crc16",
     "hash",
     "keypair",
     "network",
     "price",
+    "protocols/federation",
     "strkey",
     "support/errors",
     "support/http/mutil",
@@ -142,6 +158,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cd959106f85dc21ecbb4a1217d854b2857f0a1345c4c08d5d57d156d106b8060"
+  inputs-digest = "d5e017be294e1c4ec63456d4d498da3339f8363a68a7df6f568fa31c3072aa32"
   solver-name = "gps-cdcl"
   solver-version = 1

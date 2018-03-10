@@ -26,11 +26,15 @@ package microstellar
 
 import (
 	"context"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stellar/go/build"
+	"github.com/stellar/go/clients/federation"
 	"github.com/stellar/go/clients/horizon"
+	"github.com/stellar/go/clients/stellartoml"
 	"github.com/stellar/go/keypair"
 )
 
@@ -133,6 +137,28 @@ func (ms *MicroStellar) LoadAccount(address string) (*Account, error) {
 	}
 
 	return newAccountFromHorizon(account), nil
+}
+
+// Resolve looks up a federated address
+func (ms *MicroStellar) Resolve(address string) (string, error) {
+	if !strings.Contains(address, "*") {
+		return "", errors.Errorf("not a fedaration address: %s", address)
+	}
+
+	// Create a new federation client and lookup address
+	var fedClient = &federation.Client{
+		HTTP:        http.DefaultClient,
+		Horizon:     NewTx(ms.networkName, ms.params).GetClient(),
+		StellarTOML: stellartoml.DefaultClient,
+	}
+
+	resp, err := fedClient.LookupByAddress(address)
+
+	if err != nil {
+		return "", errors.Wrapf(err, "resolve error")
+	}
+
+	return resp.AccountID, nil
 }
 
 // PayNative makes a native asset payment of amount from source to target.
