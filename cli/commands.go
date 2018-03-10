@@ -35,6 +35,7 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.AddCommand(cli.buildTrustCmd())
 	rootCmd.AddCommand(cli.buildSignerCmd())
 	rootCmd.AddCommand(cli.buildWatchCmd())
+	rootCmd.AddCommand(cli.buildBalanceCmd())
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -68,13 +69,6 @@ func (cli *CLI) buildRootCmd() {
 		Short: "delete variable",
 		Args:  cobra.MinimumNArgs(1),
 		Run:   cli.cmdDel,
-	})
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "balance [address]",
-		Short: "get the balance of [address] in lumens",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   cli.cmdBalance,
 	})
 
 	rootCmd.AddCommand(&cobra.Command{
@@ -154,23 +148,5 @@ func (cli *CLI) cmdGet(cmd *cobra.Command, args []string) {
 	} else {
 		cli.error(logrus.Fields{"cmd": "get"}, "no such variable: %s\n", args[0])
 		return
-	}
-}
-
-func (cli *CLI) cmdBalance(cmd *cobra.Command, args []string) {
-	fields := logrus.Fields{"cmd": "balance"}
-	address, err := cli.validateAddressOrSeed(fields, args[0], "address")
-
-	if err != nil {
-		return
-	}
-
-	account, err := cli.ms.LoadAccount(address)
-
-	if err != nil {
-		cli.error(logrus.Fields{"cmd": "balance"}, "payment failed: %v", microstellar.ErrorString(err))
-		// must return
-	} else {
-		showSuccess(account.GetNativeBalance())
 	}
 }

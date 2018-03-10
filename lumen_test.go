@@ -129,6 +129,9 @@ func TestAssets(t *testing.T) {
 
 	expectOutput(t, cli, "", "trust create kelly USD 1000")
 	expectOutput(t, cli, "", "pay 100 USD --from citibank --to kelly")
+
+	// Verify balance on kelly's account
+	expectOutput(t, cli, "100.0000000", "balance kelly USD")
 }
 
 func TestMultisig(t *testing.T) {

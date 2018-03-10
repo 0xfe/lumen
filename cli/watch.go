@@ -21,7 +21,7 @@ func (cli *CLI) buildWatchCmd() *cobra.Command {
 			address, err := cli.validateAddressOrSeed(logFields, name, "address")
 
 			if err != nil {
-				cli.error(logFields, "invalid address: %s", address)
+				cli.error(logFields, "invalid address: %s", name)
 				return
 			}
 
@@ -35,7 +35,7 @@ func (cli *CLI) buildWatchCmd() *cobra.Command {
 			watcher, err := cli.ms.WatchPayments(address, opts)
 
 			if err != nil {
-				cli.error(logrus.Fields{"cmd": "watch"}, "can't watch address: %v", microstellar.ErrorString(err))
+				cli.error(logFields, "can't watch address: %v", microstellar.ErrorString(err))
 				return
 			}
 
