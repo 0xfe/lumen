@@ -63,7 +63,7 @@ func newCLI() (*cli.CLI, func()) {
 }
 
 func getBalance(cli *cli.CLI, account string) float64 {
-	balanceString := run(cli, "balance mo")
+	balanceString := run(cli, "balance "+account)
 
 	balance, err := strconv.ParseFloat(balanceString, 64)
 
