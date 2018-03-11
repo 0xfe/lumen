@@ -22,6 +22,7 @@ func TestVariables(t *testing.T) {
 
 	cli.TestCommand("ns test")
 	expectOutput(t, cli, "bar", "get foo")
+
 	cli.TestCommand("del foo")
 	expectOutput(t, cli, "error", "get foo")
 }
