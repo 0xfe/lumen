@@ -184,3 +184,59 @@ func TestMultisig(t *testing.T) {
 	// Stop watching sharon's ledger
 	// done()
 }
+
+func TestDex(t *testing.T) {
+	cli, cleanupFunc := newCLI()
+	defer cleanupFunc()
+
+	// Get funds from friendbot
+	createFundedAccount(t, cli, "mo")
+
+	run(cli, "account new issuer")
+	run(cli, "account new citibank")
+	run(cli, "account new chase")
+	run(cli, "account new bob")
+
+	// Fund new accounts via mo
+	expectOutput(t, cli, "", "pay 100 --from mo --to issuer --memoid 1 --fund")
+	expectOutput(t, cli, "", "pay 100 --from mo --to citibank --memoid 1 --fund")
+	expectOutput(t, cli, "", "pay 100 --from mo --to chase --memoid 1 --fund")
+	expectOutput(t, cli, "", "pay 100 --from mo --to bob --memoid 1 --fund")
+
+	// Create new assets
+	run(cli, "asset set USD issuer")
+	run(cli, "asset set EUR issuer")
+
+	// Create a trustlines and issue funds
+	for _, account := range []string{"mo", "bob", "citibank", "chas"} {
+		expectOutput(t, cli, "", fmt.Sprintf("trust create %s USD 1000000", account))
+		expectOutput(t, cli, "", fmt.Sprintf("pay 100000 USD --from issuer --to %s", account))
+		expectOutput(t, cli, "", fmt.Sprintf("trust create %s EUR 1000000", account))
+		expectOutput(t, cli, "", fmt.Sprintf("pay 100000 EUR --from issuer --to %s", account))
+	}
+
+	// Create two offers at different prices
+	expectOutput(t, cli, "", "dex trade mo --sell USD --buy EUR --amount 5 --price 1")
+	expectOutput(t, cli, "", "dex trade bob --sell USD --buy EUR --amount 5 --price 2")
+
+	// List their transactions
+	out := run(cli, "dex list mo")
+	if out == "" {
+		t.Errorf("unexpected result, want offers, got nothing")
+	}
+
+	out = run(cli, "dex list bob")
+	if out == "" {
+		t.Errorf("unexpected result, want offers, got nothing")
+	}
+
+	// Create counterparty offers
+	expectOutput(t, cli, "", "dex trade citibank --sell EUR --buy USD --amount 10 --price 0.5")
+	expectOutput(t, cli, "error", "dex trade chase --sell EUR --buy USD --amount 2 --price 1")
+
+	run(cli, "dex list mo")
+	run(cli, "dex list bob")
+
+	expectOutput(t, cli, "99995.0000000", "balance mo USD")
+	expectOutput(t, cli, "100005.0000000", "balance bob EUR")
+}

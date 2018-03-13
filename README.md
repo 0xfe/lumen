@@ -66,6 +66,14 @@ $ lumen balance bob
   lumen pay 10 --from kelly --to mo*qubit.sh
   lumen balance mo*qubit.sh
   ```
+* Trade assets on the DEX
+  ```bash
+  # Sell 10 USD for EUR at 2 EUR/USD (i.e, buy 5 EUR for 10 USD)
+  lumen dex trade bob --sell USD --buy EUR --amount 10 --price 2
+
+  # List bobs trade offers
+  lumen dex list bob --limit 5
+  ```
 * Embed Lumen into your own Go applications
   ```go
   import (

@@ -160,8 +160,8 @@ func (cli *CLI) buildDexListCmd() *cobra.Command {
 				} else if format == "struct" {
 					showSuccess("%+v", offer)
 				} else {
-					showSuccess("%s selling %s %s for %s at %s %s/%s",
-						offer.Seller, offer.Amount, offer.Selling.Code, offer.Buying.Code, offer.Price, offer.Buying.Code, offer.Selling.Code)
+					showSuccess("(%v) selling %s %s for %s at %s %s/%s",
+						offer.ID, offer.Amount, offer.Selling.Code, offer.Buying.Code, offer.Price, offer.Buying.Code, offer.Selling.Code)
 				}
 			}
 		},
