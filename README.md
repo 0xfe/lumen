@@ -77,7 +77,7 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   # List bobs trade offers
   lumen dex list bob --limit 5
 
-  # Cross-asset payments (path payments)
+  # Cross-asset payments (path payments) via the DEX
   lumen pay 20 USD --from bob --to mary --with EUR --max 10 --path XLM,INR
   ```
 * Embed Lumen into your own Go applications
