@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"encoding/json"
+
 	"github.com/0xfe/microstellar"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -20,7 +22,7 @@ func (cli *CLI) buildDexCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(cli.buildDexTradeCmd())
-	// cmd.AddCommand(cli.buildDexListCmd())
+	cmd.AddCommand(cli.buildDexListCmd())
 
 	return cmd
 }
@@ -107,5 +109,68 @@ func (cli *CLI) buildDexTradeCmd() *cobra.Command {
 	cmd.MarkFlagRequired("price")
 
 	buildFlagsForTxOptions(cmd)
+	return cmd
+}
+
+func (cli *CLI) buildDexListCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list [account]",
+		Short: "list trade offers made by [account]",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+
+			logFields := logrus.Fields{"cmd": "dex", "subcmd": "list"}
+
+			address, err := cli.validateAddressOrSeed(logFields, name, "address")
+
+			if err != nil {
+				cli.error(logFields, "invalid account: %s", name)
+				return
+			}
+
+			cursor, _ := cmd.Flags().GetString("cursor")
+			limit, _ := cmd.Flags().GetUint("limit")
+			desc, _ := cmd.Flags().GetBool("desc")
+
+			sortOrder := microstellar.SortAscending
+			if desc {
+				sortOrder = microstellar.SortDescending
+			}
+
+			opts := microstellar.Opts().WithLimit(limit).WithSortOrder(sortOrder).WithCursor(cursor)
+			offers, err := cli.ms.LoadOffers(address, opts)
+
+			if err != nil {
+				cli.error(logFields, "can't load offers: %v", microstellar.ErrorString(err))
+				return
+			}
+
+			format, err := cmd.Flags().GetString("format")
+
+			for _, offer := range offers {
+				if format == "json" {
+					data, err := json.MarshalIndent(offer, "", "  ")
+
+					if err != nil {
+						logrus.WithFields(logFields).Errorf("skipping bad data: %v", err)
+					} else {
+						showSuccess("%v", string(data))
+					}
+				} else if format == "struct" {
+					showSuccess("%+v", offer)
+				} else {
+					showSuccess("%s selling %s %s for %s at %s %s/%s",
+						offer.Seller, offer.Amount, offer.Selling.Code, offer.Buying.Code, offer.Price, offer.Buying.Code, offer.Selling.Code)
+				}
+			}
+		},
+	}
+
+	cmd.Flags().String("format", "line", "output format (json, struct, line)")
+	cmd.Flags().String("cursor", "", "start listing from paging token")
+	cmd.Flags().Uint("limit", 10, "return at most this many results")
+	cmd.Flags().Bool("desc", false, "descending order")
+
 	return cmd
 }
