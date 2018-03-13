@@ -36,3 +36,23 @@ func TestPayments(t *testing.T) {
 	expectOutput(t, cli, "", "pay 4 USD --from master --to worker")
 	expectOutput(t, cli, "", "pay 4 USD-citi --from master --to worker")
 }
+
+func TestPathPayments(t *testing.T) {
+	cli, _ := newTestCLI()
+	cli.TestCommand("ns test")
+	cli.TestCommand("set config:network fake")
+
+	cli.TestCommand("account new issuer")
+	cli.TestCommand("account new mary")
+	cli.TestCommand("account new kelly")
+
+	cli.TestCommand("asset set XLM issuer --type native")
+	cli.TestCommand("asset set USD issuer")
+	cli.TestCommand("asset set EUR issuer")
+	cli.TestCommand("asset set INR issuer")
+
+	expectOutput(t, cli, "", "pay 4 USD --from mary --to kelly --with XLM --max 20 --path EUR,INR")
+	expectOutput(t, cli, "", "pay 4 USD --from mary --to kelly --with XLM --max 20")
+	expectOutput(t, cli, "error", "pay 4 USD --from mary --to kelly --with XLM --path EUR,INR")
+	expectOutput(t, cli, "error", "pay 4 USD --from mary --to kelly --with XLM --path BAD")
+}

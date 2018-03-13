@@ -101,8 +101,8 @@ func (cli *CLI) buildAssetSetCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String("code", "XLM", "specify asset code")
-	cmd.Flags().String("type", string(microstellar.NativeType), "specify asset type (credit_alphanum4, credit_alphanum12, native)")
+	cmd.Flags().String("code", "", "specify asset code")
+	cmd.Flags().String("type", "", "specify asset type (credit_alphanum4, credit_alphanum12, native)")
 
 	return cmd
 }
