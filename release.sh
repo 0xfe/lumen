@@ -22,6 +22,7 @@ read
 
 make
 git tag $TAG
+git push
 git push --tags
 gothub -v release -u 0xfe -r lumen --tag $TAG --name "release: $TAG"
 
