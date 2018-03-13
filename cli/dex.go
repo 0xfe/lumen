@@ -53,11 +53,13 @@ func (cli *CLI) buildDexTradeCmd() *cobra.Command {
 			buyAsset, err := cli.GetAsset(buy)
 			if err != nil {
 				cli.error(logFields, "invalid buy asset: %s", buy)
+				return
 			}
 
 			sellAsset, err := cli.GetAsset(sell)
 			if err != nil {
 				cli.error(logFields, "invalid sell asset: %s", sell)
+				return
 			}
 
 			offerType := microstellar.OfferCreate

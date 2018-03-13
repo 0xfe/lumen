@@ -28,24 +28,62 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 
 			to, _ := cmd.Flags().GetString("to")
 			from, _ := cmd.Flags().GetString("from")
-
 			source, err := cli.validateAddressOrSeed(fields, from, "seed")
-			target, err := cli.validateAddressOrSeed(fields, to, "address")
-
 			if err != nil {
-				cli.error(fields, "bad source or target address")
+				cli.error(fields, "bad --from address: %s", from)
+				return
+			}
+
+			target, err := cli.validateAddressOrSeed(fields, to, "address")
+			if err != nil {
+				cli.error(fields, "bad --to address: ", to)
 				return
 			}
 
 			opts, err := cli.genTxOptions(cmd, fields)
-
 			if err != nil {
 				cli.error(fields, "can't generate payment: %v", err)
 				return
 			}
 
+			// Is this a fund request?
 			fund, err := cmd.Flags().GetBool("fund")
-			logrus.WithFields(fields).Debugf("fund: %v, err %v", fund, err)
+			debugf(fields, "fund: %v, err %v", fund, err)
+
+			// If --with is set, then this is a path payment
+			with, _ := cmd.Flags().GetString("with")
+			if with != "" {
+				max, _ := cmd.Flags().GetString("max")
+				path, _ := cmd.Flags().GetStringSlice("path")
+
+				debugf(fields, "path payment with %s (max %s) through %+v", with, max, path)
+
+				var withAsset *microstellar.Asset
+				var assetPath []*microstellar.Asset
+
+				withAsset, err = cli.GetAsset(with)
+				if err != nil {
+					cli.error(fields, "bad --with asset: %s", with)
+					return
+				}
+
+				if max == "" {
+					cli.error(fields, "--max is required for path payments")
+					return
+				}
+
+				for _, a := range path {
+					pathAsset, err := cli.GetAsset(a)
+					if err != nil {
+						cli.error(fields, "bad --path asset: %s", a)
+						return
+					}
+
+					assetPath = append(assetPath, pathAsset)
+				}
+
+				opts = opts.WithAsset(withAsset, max).Through(assetPath...)
+			}
 
 			if fund {
 				logrus.WithFields(fields).Debugf("initial fund from %s to %s, opts: %+v", source, target, opts)
@@ -65,6 +103,10 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 	buildFlagsForTxOptions(cmd)
 	cmd.Flags().String("from", "", "source account seed or name")
 	cmd.Flags().String("to", "", "target account address or name")
+	cmd.Flags().String("with", "", "make a path payment with this asset")
+	cmd.Flags().String("max", "", "spend no more than this much during path payments")
+	cmd.Flags().StringSlice("path", []string{}, "comma-separated list of paths")
+
 	cmd.Flags().Bool("fund", false, "fund a new account")
 	cmd.MarkFlagRequired("from")
 	cmd.MarkFlagRequired("to")
