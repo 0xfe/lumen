@@ -31,6 +31,9 @@ $ lumen pay 5 --from bob --to mary --memotext 'thanks for the fish'
 # Check Bob's balance
 $ lumen balance bob
 # 994.99990
+
+# Make cross currency payments. Bob pays Mary 20 USD with EUR (spending no more than 10 EUR.)
+$ lumen pay 20 USD --from bob --to mary --with EUR --max 10
 ```
 
 #### Some notable features:
@@ -66,13 +69,16 @@ $ lumen balance bob
   lumen pay 10 --from kelly --to mo*qubit.sh
   lumen balance mo*qubit.sh
   ```
-* Trade assets on the DEX
+* Trade assets on the DEX and make path payments
   ```bash
   # Sell 10 USD for EUR at 2 EUR/USD (i.e, buy 5 EUR for 10 USD)
   lumen dex trade bob --sell USD --buy EUR --amount 10 --price 2
 
   # List bobs trade offers
   lumen dex list bob --limit 5
+
+  # Cross-asset payments (path payments)
+  lumen pay 20 USD --from bob --to mary --with EUR --max 10 --path XLM,INR
   ```
 * Embed Lumen into your own Go applications
   ```go

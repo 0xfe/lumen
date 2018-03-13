@@ -204,11 +204,12 @@ func TestDex(t *testing.T) {
 	expectOutput(t, cli, "", "pay 100 --from mo --to bob --memoid 1 --fund")
 
 	// Create new assets
+	run(cli, "asset set XLM issuer --type native")
 	run(cli, "asset set USD issuer")
 	run(cli, "asset set EUR issuer")
 
 	// Create a trustlines and issue funds
-	for _, account := range []string{"mo", "bob", "citibank", "chas"} {
+	for _, account := range []string{"mo", "bob", "citibank", "chase"} {
 		expectOutput(t, cli, "", fmt.Sprintf("trust create %s USD 1000000", account))
 		expectOutput(t, cli, "", fmt.Sprintf("pay 100000 USD --from issuer --to %s", account))
 		expectOutput(t, cli, "", fmt.Sprintf("trust create %s EUR 1000000", account))
@@ -232,11 +233,17 @@ func TestDex(t *testing.T) {
 
 	// Create counterparty offers
 	expectOutput(t, cli, "", "dex trade citibank --sell EUR --buy USD --amount 10 --price 0.5")
-	expectOutput(t, cli, "error", "dex trade chase --sell EUR --buy USD --amount 2 --price 1")
+	expectOutput(t, cli, "", "dex trade chase --sell EUR --buy USD --amount 2 --price 1")
 
 	run(cli, "dex list mo")
 	run(cli, "dex list bob")
 
 	expectOutput(t, cli, "99995.0000000", "balance mo USD")
 	expectOutput(t, cli, "100005.0000000", "balance bob EUR")
+
+	// Try a path payment
+	expectOutput(t, cli, "", "dex trade citibank --sell USD --buy XLM --amount 10 --price 1")
+	expectOutput(t, cli, "", "pay 1 EUR --to bob --from mo --with XLM --max 20 --path USD")
+
+	expectOutput(t, cli, "100006.0000000", "balance bob EUR")
 }
