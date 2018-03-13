@@ -1,10 +1,8 @@
 package microstellar
 
 import (
-	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stellar/go/build"
@@ -24,7 +22,7 @@ type Tx struct {
 	networkName string
 	network     build.Network
 	fake        bool
-	options     *TxOptions
+	options     *Options
 	builder     *build.TransactionBuilder
 	payload     string
 	submitted   bool
@@ -90,12 +88,12 @@ func NewTx(networkName string, params ...Params) *Tx {
 }
 
 // SetOptions sets the Tx options
-func (tx *Tx) SetOptions(options *TxOptions) {
+func (tx *Tx) SetOptions(options *Options) {
 	tx.options = options
 }
 
 // WithOptions sets the Tx options and returns the Tx
-func (tx *Tx) WithOptions(options *TxOptions) *Tx {
+func (tx *Tx) WithOptions(options *Options) *Tx {
 	tx.SetOptions(options)
 	return tx
 }
@@ -112,10 +110,10 @@ func (tx *Tx) Err() error {
 
 // Response returns the horison response for the submitted operation.
 func (tx *Tx) Response() string {
-	return fmt.Sprintf("%v", tx.response)
+	return fmt.Sprintf("%+v", tx.response)
 }
 
-// Reset clears all internal state, so you can run a new operation.
+// Reset clears all internal sate, so you can run a new operation.
 func (tx *Tx) Reset() {
 	tx.options = nil
 	tx.builder = nil
@@ -198,6 +196,7 @@ func (tx *Tx) Sign(keys ...string) error {
 	var txe build.TransactionEnvelopeBuilder
 	var err error
 
+	debugf("Tx.Sign", "signing transaction, seq: %v", tx.builder.TX.SeqNum)
 	if tx.options != nil && len(tx.options.signerSeeds) > 0 {
 		txe, err = tx.builder.Sign(tx.options.signerSeeds...)
 	} else {
@@ -210,6 +209,7 @@ func (tx *Tx) Sign(keys ...string) error {
 	}
 
 	tx.payload, err = txe.Base64()
+	debugf("Tx.Sign", "signed transaction, payload: %s", tx.payload)
 
 	if err != nil {
 		tx.err = errors.Wrap(err, "base64 conversion error")
@@ -240,96 +240,17 @@ func (tx *Tx) Submit() error {
 		return nil
 	}
 
+	debugf("Tx.Submit", "submitting transaction to network %s", tx.networkName)
 	resp, err := tx.client.SubmitTransaction(tx.payload)
 
 	if err != nil {
+		debugf("Tx.Submit", "submit failed: %s", ErrorString(err))
 		tx.err = errors.Wrap(err, "could not submit transaction")
 		return tx.err
 	}
 
+	debugf("Tx.Submit", "transaction submitted to ledger %d with hash %s", int32(resp.Ledger), resp.Hash)
 	tx.response = &resp
 	tx.submitted = true
 	return nil
-}
-
-// MemoType sets the memotype field on the payment request.
-type MemoType int
-
-const (
-	MemoNone   = MemoType(0) // No memo
-	MemoID     = MemoType(1) // ID memo
-	MemoText   = MemoType(2) // Text memo (max 28 chars)
-	MemoHash   = MemoType(3) // Hash memo
-	MemoReturn = MemoType(4) // Return hash memo
-)
-
-// TxOptions are additional parameters for a transaction. Use Opts() or NewTxOptions()
-// to create a new instance.
-type TxOptions struct {
-	// Use With* methods to set these options
-	hasFee bool
-	fee    uint32
-
-	hasTimeBounds bool
-	timeBounds    time.Duration
-
-	memoType MemoType // defaults to no memo
-	memoText string   // additional memo text
-	memoID   uint64   // additional memo ID
-
-	signerSeeds []string
-
-	// Microstellar options
-	hasCursor bool
-	cursor    string
-	ctx       context.Context
-}
-
-// NewTxOptions creates a new options structure for Tx.
-func NewTxOptions() *TxOptions {
-	return &TxOptions{
-		hasFee:        false,
-		hasTimeBounds: false,
-		memoType:      MemoNone,
-		hasCursor:     false,
-		ctx:           nil,
-	}
-}
-
-// Opts is just an alias for NewTxOptions
-func Opts() *TxOptions {
-	return NewTxOptions()
-}
-
-// WithMemoText sets the memoType and memoText fields on Payment p
-func (o *TxOptions) WithMemoText(text string) *TxOptions {
-	o.memoType = MemoText
-	o.memoText = text
-	return o
-}
-
-// WithMemoID sets the memoType and memoID fields on Payment p
-func (o *TxOptions) WithMemoID(id uint64) *TxOptions {
-	o.memoType = MemoID
-	o.memoID = id
-	return o
-}
-
-// WithSigner adds a signer to Payment p
-func (o *TxOptions) WithSigner(signerSeed string) *TxOptions {
-	o.signerSeeds = append(o.signerSeeds, signerSeed)
-	return o
-}
-
-// WithContext sets the context.Context for the connection
-func (o *TxOptions) WithContext(context context.Context) *TxOptions {
-	o.ctx = context
-	return o
-}
-
-// WithCursor sets the cursor for watchers
-func (o *TxOptions) WithCursor(cursor string) *TxOptions {
-	o.hasCursor = true
-	o.cursor = cursor
-	return o
 }

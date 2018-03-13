@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/0xfe/microstellar"
-  version = "0.1.2"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/go-redis/redis"

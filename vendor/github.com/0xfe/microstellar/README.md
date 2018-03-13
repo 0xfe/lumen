@@ -55,16 +55,7 @@ ms.FundAccount(
 microstellar.FundWithFriendBot(pair.Address)
 ```
 
-#### Check balances
-
-```go
-// Now load the account details from the ledger.
-account, _ := ms.LoadAccount(pair.Address)
-
-log.Printf("Native Balance: %v XLM", account.GetNativeBalance())
-```
-
-#### Make payments
+#### Make payments and check balances
 
 ```go
 // Pay someone 3 lumens.
@@ -78,6 +69,11 @@ ms.Pay(
   "S6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // from
   "GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM", // to
   "3", microstellar.Opts().WithMemoText("thanks for the fish"))
+
+// Now load the account details from the ledger.
+account, _ := ms.LoadAccount(pair.Address)
+
+log.Printf("Native Balance: %v XLM", account.GetNativeBalance())
 ```
 
 #### Work with credit assets
@@ -135,6 +131,29 @@ ms.PayNative(
 
 ```
 
+#### Trade assets on the Stellar DEX and make path payments
+```go
+// This is equivalent to an offer to buy 100 USD worth of lumens at 2 lumens/USD.
+err := ms.CreateOffer("SCSMBQYTXKZYY7CLVT6NPPYWVDQYDOQ6BB3QND4OIXC7762JYJYZ3RMK",
+  USD, NativeAsset, "2", "100",
+  Opts().MakePassive())
+
+// No takers, update the offer.
+err := ms.UpdateOffer("SCSMBQYTXKZYY7CLVT6NPPYWVDQYDOQ6BB3QND4OIXC7762JYJYZ3RMK",
+  USD, NativeAsset, "3", "150",
+  Opts().MakePassive())
+
+// Path payments let you transparently convert currencies. Pay 5000 INR with XLM,
+// going through USD and EUR. Spend no more than 40 lumens on this transaction.
+err := ms.Pay(
+  "SAED4QHN3USETFHECASIM2LRI3H4QTVKZK44D2RC27IICZPZQEGXGXFC", // from
+  "GAGTJGMT55IDNTFTF2F553VQBWRBLGTWLU4YOOIFYBR2F6H6S4AEC45E", // to
+  "5000", INR, // destination receives 5000 INR
+  Opts().
+    WithAsset(XLM, "40"). // we spend no more than 40 XLM
+    Through(USD, EUR))    // go through USD and EUR
+```
+
 #### Streaming
 
 ```go
@@ -174,20 +193,6 @@ for i, s := range account.Signers {
 
 * API Docs - https://godoc.org/github.com/0xfe/microstellar
 * End-to-end test - https://github.com/0xfe/microstellar/blob/master/macrotest/macrotest.go
-
-### Supported Features
-
-* Account creation and funding
-* Lookup balances, home domain, and account signers
-* Payment of native and custom assets
-* Add and remove trust lines
-* Multisig accounts -- add/remove signers and make multisig payments.
-* Watch the ledger for streaming payments
-
-### Coming Soon
-
-* Offer management
-* Path payments
 
 ## Hacking on MicroStellar
 

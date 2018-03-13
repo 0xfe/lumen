@@ -31,6 +31,10 @@ func (cli *CLI) help(cmd *cobra.Command, args []string) {
 	}
 }
 
+func debugf(fields logrus.Fields, msg string, args ...interface{}) {
+	logrus.WithFields(fields).Debugf(msg, args...)
+}
+
 func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) {
 	showError(logFields, msg, args...)
 
@@ -77,7 +81,7 @@ func buildFlagsForTxOptions(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("signers", []string{}, "alternate signers (comma separated)")
 }
 
-func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*microstellar.TxOptions, error) {
+func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*microstellar.Options, error) {
 	opts := microstellar.Opts()
 
 	if memotext, err := cmd.Flags().GetString("memotext"); err == nil && memotext != "" {

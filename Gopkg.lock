@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "d715412ca4da7d8cd30e01334d903470527c4dea"
-  version = "v0.1.9"
+  revision = "638db05de2cab5181c4fa52e8dee68111f454bf8"
+  version = "v0.2.3"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -158,8 +158,8 @@
     ".",
     "hooks/test"
   ]
-  revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
-  version = "v1.0.4"
+  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
+  version = "v1.0.5"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -244,13 +244,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "c7dcf104e3a7a1417abc0230cb0d5240d764159d"
+  revision = "182114d582623c1caa54f73de9c7224e23a48487"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "d0aafc73d5cdc42264b0af071c261abac580695e"
+  revision = "803fdb99c0f72e493c28ef2099d250a9c989d8ff"
 
 [[projects]]
   branch = "master"
@@ -259,7 +259,7 @@
     "unix",
     "windows"
   ]
-  revision = "7dca6fe1f43775aa6d1334576870ff63f978f539"
+  revision = "8c0ece68c28377f4c326d85b94f8df0dace46f80"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -283,6 +283,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1000609da36ea0d15a57d85acdb3439e93bd065873f417b8d5ef3488f5160898"
+  inputs-digest = "7e32db8d69ebc1f1827e80e510866b6849686a4889fd6ec93458fc7bcd8a684a"
   solver-name = "gps-cdcl"
   solver-version = 1

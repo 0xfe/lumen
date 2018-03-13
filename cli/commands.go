@@ -37,7 +37,7 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.AddCommand(cli.buildDelCmd())
 	rootCmd.AddCommand(cli.buildFriendbotCmd())
 
-	// Higher
+	// Higher level
 	rootCmd.AddCommand(cli.buildBalanceCmd())
 	rootCmd.AddCommand(cli.buildPayCmd())
 	rootCmd.AddCommand(cli.buildAccountCmd())
@@ -45,4 +45,5 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.AddCommand(cli.buildTrustCmd())
 	rootCmd.AddCommand(cli.buildSignerCmd())
 	rootCmd.AddCommand(cli.buildWatchCmd())
+	rootCmd.AddCommand(cli.buildDexCmd())
 }

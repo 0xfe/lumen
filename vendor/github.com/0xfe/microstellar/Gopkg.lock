@@ -91,8 +91,8 @@
     ".",
     "hooks/test"
   ]
-  revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
-  version = "v1.0.4"
+  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
+  version = "v1.0.5"
 
 [[projects]]
   branch = "master"
@@ -117,7 +117,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "0d276af676e575b5f29e047f88c7a774057765db"
+  revision = "07636e06a0545beb0c59dccfe769100ea48f5e64"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -138,13 +138,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "91a49db82a88618983a78a06c1cbd4e00ab749ab"
+  revision = "182114d582623c1caa54f73de9c7224e23a48487"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "22ae77b79946ea320088417e4d50825671d82d57"
+  revision = "ae89d30ce0c63142b652837da33d782e2b0a9b25"
 
 [[projects]]
   branch = "master"
@@ -153,11 +153,11 @@
     "unix",
     "windows"
   ]
-  revision = "dd2ff4accc098aceecb86b36eaa7829b2a17b1c9"
+  revision = "c28acc882ebcbfbe8ce9f0f14b9ac26ee138dd51"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d5e017be294e1c4ec63456d4d498da3339f8363a68a7df6f568fa31c3072aa32"
+  inputs-digest = "c3155c01e964b982db6bf94307809a9a0c7897154f9ee09e0a9cea6818660f82"
   solver-name = "gps-cdcl"
   solver-version = 1

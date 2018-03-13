@@ -5,10 +5,16 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/pkg/errors"
 	"github.com/stellar/go/clients/horizon"
 	"github.com/stellar/go/strkey"
 )
+
+func debugf(method string, msg string, args ...interface{}) {
+	logrus.WithFields(logrus.Fields{"lib": "microstellar", "method": method}).Debugf(msg, args...)
+}
 
 // ValidAddress returns error if address is an invalid stellar address
 func ValidAddress(address string) error {
@@ -61,6 +67,7 @@ func ErrorString(err error, showStackTrace ...bool) string {
 
 // FundWithFriendBot funds address on the test network with some initial funds.
 func FundWithFriendBot(address string) (string, error) {
+	debugf("FundWithFriendBot", "funding address: %s", address)
 	resp, err := http.Get("https://horizon-testnet.stellar.org/friendbot?addr=" + address)
 	if err != nil {
 		return "", err

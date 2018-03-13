@@ -2,6 +2,7 @@ package microstellar
 
 import (
 	"github.com/pkg/errors"
+	"github.com/stellar/go/build"
 )
 
 // AssetType represents an asset type on the stellar network.
@@ -63,4 +64,13 @@ func (asset Asset) Validate() error {
 	}
 
 	return nil
+}
+
+// ToStellarAsset returns a stellar-go Asset from this one.
+func (asset Asset) ToStellarAsset() build.Asset {
+	if asset.IsNative() {
+		return build.NativeAsset()
+	}
+
+	return build.CreditAsset(asset.Code, asset.Issuer)
 }
