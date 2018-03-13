@@ -16,7 +16,7 @@ func (cli *CLI) buildBalanceCmd() *cobra.Command {
 			asset := microstellar.NativeAsset
 
 			logFields := logrus.Fields{"cmd": "balance"}
-			address, err := cli.validateAddressOrSeed(logFields, name, "address")
+			address, err := cli.ResolveAccount(logFields, name, "address")
 
 			if err != nil {
 				cli.error(logFields, "invalid address: %s", name)
@@ -25,7 +25,7 @@ func (cli *CLI) buildBalanceCmd() *cobra.Command {
 
 			if len(args) > 1 {
 				assetName := args[1]
-				asset, err = cli.GetAsset(assetName)
+				asset, err = cli.ResolveAsset(assetName)
 
 				if err != nil {
 					cli.error(logFields, "bad asset: %s", assetName)

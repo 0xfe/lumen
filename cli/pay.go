@@ -19,7 +19,7 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 				assetName = args[1]
 			}
 
-			asset, err := cli.GetAsset(assetName)
+			asset, err := cli.ResolveAsset(assetName)
 			if err != nil {
 				logrus.WithFields(fields).Debugf("could not get asset %s: %v", assetName, err)
 				cli.error(fields, "bad asset: %s", assetName)
@@ -28,13 +28,13 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 
 			to, _ := cmd.Flags().GetString("to")
 			from, _ := cmd.Flags().GetString("from")
-			source, err := cli.validateAddressOrSeed(fields, from, "seed")
+			source, err := cli.ResolveAccount(fields, from, "seed")
 			if err != nil {
 				cli.error(fields, "bad --from address: %s", from)
 				return
 			}
 
-			target, err := cli.validateAddressOrSeed(fields, to, "address")
+			target, err := cli.ResolveAccount(fields, to, "address")
 			if err != nil {
 				cli.error(fields, "bad --to address: ", to)
 				return
@@ -61,7 +61,7 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 				var withAsset *microstellar.Asset
 				var assetPath []*microstellar.Asset
 
-				withAsset, err = cli.GetAsset(with)
+				withAsset, err = cli.ResolveAsset(with)
 				if err != nil {
 					cli.error(fields, "bad --with asset: %s", with)
 					return
@@ -73,7 +73,7 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 				}
 
 				for _, a := range path {
-					pathAsset, err := cli.GetAsset(a)
+					pathAsset, err := cli.ResolveAsset(a)
 					if err != nil {
 						cli.error(fields, "bad --path asset: %s", a)
 						return

@@ -40,14 +40,14 @@ func (cli *CLI) buildTrustCreateCmd() *cobra.Command {
 			}
 
 			logFields := logrus.Fields{"cmd": "trust", "subcmd": "create"}
-			source, err := cli.validateAddressOrSeed(logFields, name, "seed")
+			source, err := cli.ResolveAccount(logFields, name, "seed")
 
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", name)
 				return
 			}
 
-			asset, err := cli.GetAsset(assetName)
+			asset, err := cli.ResolveAsset(assetName)
 			if err != nil {
 				cli.error(logFields, "invalid asset: %s", assetName)
 				return
@@ -81,14 +81,14 @@ func (cli *CLI) buildTrustRemoveCmd() *cobra.Command {
 			assetName := args[1]
 
 			logFields := logrus.Fields{"cmd": "trust", "subcmd": "remove"}
-			source, err := cli.validateAddressOrSeed(logFields, name, "seed")
+			source, err := cli.ResolveAccount(logFields, name, "seed")
 
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", name)
 				return
 			}
 
-			asset, err := cli.GetAsset(assetName)
+			asset, err := cli.ResolveAsset(assetName)
 			if err != nil {
 				cli.error(logFields, "invalid asset: %s", assetName)
 				return

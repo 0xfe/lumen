@@ -45,36 +45,6 @@ func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) 
 	}
 }
 
-func (cli *CLI) validateAddressOrSeed(fields logrus.Fields, addressOrSeed string, keyType string) (string, error) {
-	var err error
-	lookupKey := addressOrSeed
-
-	if strings.Contains(lookupKey, "*") {
-		logrus.WithFields(fields).Debugf("resolving federation address: %s", lookupKey)
-		resolvedAddr, err := cli.ms.Resolve(lookupKey)
-
-		if err == nil {
-			logrus.WithFields(fields).Debugf("got address: %s = %s", lookupKey, resolvedAddr)
-			addressOrSeed = resolvedAddr
-			lookupKey = resolvedAddr
-		}
-	}
-
-	if !microstellar.ValidAddressOrSeed(lookupKey) {
-		addressOrSeed, err = cli.GetAccountOrSeed(lookupKey, keyType)
-		if err != nil {
-			logrus.WithFields(fields).Debugf("invalid address, seed, or account name: %s", lookupKey)
-			return "", err
-		}
-
-		if strings.Contains(addressOrSeed, "*") {
-			return cli.validateAddressOrSeed(fields, addressOrSeed, keyType)
-		}
-	}
-
-	return addressOrSeed, nil
-}
-
 func buildFlagsForTxOptions(cmd *cobra.Command) {
 	cmd.Flags().String("memotext", "", "memo text")
 	cmd.Flags().String("memoid", "", "memo ID")
@@ -100,7 +70,7 @@ func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*micr
 	if signers, err := cmd.Flags().GetStringSlice("signers"); err == nil && len(signers) > 0 {
 		for _, signer := range signers {
 			logrus.WithFields(logFields).Debugf("adding signer: %s", signer)
-			address, err := cli.validateAddressOrSeed(logFields, signer, "seed")
+			address, err := cli.ResolveAccount(logFields, signer, "seed")
 
 			if err != nil {
 				logrus.WithFields(logFields).Debugf("bad signer %s: %v", signer, err)
@@ -112,6 +82,76 @@ func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*micr
 	}
 
 	return opts, nil
+}
+
+// ResolveAccount returns an address or seed (depending on keyType), by looking up lookupKey
+// in the local store (or in federation servers.)
+func (cli *CLI) ResolveAccount(fields logrus.Fields, lookupKey string, keyType string) (string, error) {
+	var err error
+	addressOrSeed := lookupKey
+
+	if strings.Contains(lookupKey, "*") {
+		logrus.WithFields(fields).Debugf("resolving federation address: %s", lookupKey)
+		resolvedAddr, err := cli.ms.Resolve(lookupKey)
+
+		if err == nil {
+			logrus.WithFields(fields).Debugf("got address: %s = %s", lookupKey, resolvedAddr)
+			addressOrSeed = resolvedAddr
+			lookupKey = resolvedAddr
+		}
+	}
+
+	if !microstellar.ValidAddressOrSeed(lookupKey) {
+		addressOrSeed, err = cli.GetAccountOrSeed(lookupKey, keyType)
+		if err != nil {
+			logrus.WithFields(fields).Debugf("invalid address, seed, or account name: %s", lookupKey)
+			return "", err
+		}
+
+		if strings.Contains(addressOrSeed, "*") {
+			return cli.ResolveAccount(fields, addressOrSeed, keyType)
+		}
+	}
+
+	return addressOrSeed, nil
+}
+
+// ResolveAsset looks up name and returns a microstellar Asset
+func (cli *CLI) ResolveAsset(name string) (*microstellar.Asset, error) {
+	if name == "" {
+		return microstellar.NativeAsset, nil
+	}
+
+	readField := func(field string) (string, error) {
+		key := fmt.Sprintf("asset:%s:%s", name, field)
+		val, err := cli.GetVar(key)
+		if err != nil {
+			return "", err
+		}
+
+		return val, nil
+	}
+
+	code, err1 := readField("code")
+	issuer, err2 := readField("issuer")
+	assetType, err3 := readField("type")
+
+	if err1 != nil || err2 != nil || err3 != nil {
+		return nil, errors.Errorf("could not read asset: %v, %v, %v", err1, err2, err3)
+	}
+
+	var asset *microstellar.Asset
+
+	if assetType == string(microstellar.Credit4Type) {
+		asset = microstellar.NewAsset(code, issuer, microstellar.Credit4Type)
+	} else if assetType == string(microstellar.Credit12Type) {
+		asset = microstellar.NewAsset(code, issuer, microstellar.Credit12Type)
+	} else {
+		asset = microstellar.NativeAsset
+	}
+
+	logrus.Debugf("got asset: %+v", asset)
+	return asset, nil
 }
 
 // GetAccount returns the account address or seed for "name". Set keyType
@@ -148,42 +188,4 @@ func (cli *CLI) GetAccountOrSeed(name, keyType string) (string, error) {
 	}
 
 	return code, err
-}
-
-// GetAsset returns the asset with the given name
-func (cli *CLI) GetAsset(name string) (*microstellar.Asset, error) {
-	if name == "" {
-		return microstellar.NativeAsset, nil
-	}
-
-	readField := func(field string) (string, error) {
-		key := fmt.Sprintf("asset:%s:%s", name, field)
-		val, err := cli.GetVar(key)
-		if err != nil {
-			return "", err
-		}
-
-		return val, nil
-	}
-
-	code, err1 := readField("code")
-	issuer, err2 := readField("issuer")
-	assetType, err3 := readField("type")
-
-	if err1 != nil || err2 != nil || err3 != nil {
-		return nil, errors.Errorf("could not read asset: %v, %v, %v", err1, err2, err3)
-	}
-
-	var asset *microstellar.Asset
-
-	if assetType == string(microstellar.Credit4Type) {
-		asset = microstellar.NewAsset(code, issuer, microstellar.Credit4Type)
-	} else if assetType == string(microstellar.Credit12Type) {
-		asset = microstellar.NewAsset(code, issuer, microstellar.Credit12Type)
-	} else {
-		asset = microstellar.NativeAsset
-	}
-
-	logrus.Debugf("got asset: %+v", asset)
-	return asset, nil
 }

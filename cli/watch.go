@@ -18,7 +18,7 @@ func (cli *CLI) buildWatchCmd() *cobra.Command {
 
 			logFields := logrus.Fields{"cmd": "watch"}
 
-			address, err := cli.validateAddressOrSeed(logFields, name, "address")
+			address, err := cli.ResolveAccount(logFields, name, "address")
 
 			if err != nil {
 				cli.error(logFields, "invalid address: %s", name)

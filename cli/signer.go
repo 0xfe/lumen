@@ -38,7 +38,7 @@ func (cli *CLI) buildSignerAddCmd() *cobra.Command {
 			weight := args[1]
 
 			logFields := logrus.Fields{"cmd": "signer", "subcmd": "add"}
-			signer, err := cli.validateAddressOrSeed(logFields, signerAddress, "address")
+			signer, err := cli.ResolveAccount(logFields, signerAddress, "address")
 
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", signerAddress)
@@ -47,7 +47,7 @@ func (cli *CLI) buildSignerAddCmd() *cobra.Command {
 
 			to, _ := cmd.Flags().GetString("to")
 
-			signee, err := cli.validateAddressOrSeed(logFields, to, "seed")
+			signee, err := cli.ResolveAccount(logFields, to, "seed")
 
 			if err != nil {
 				cli.error(logFields, "invalid signee: %s", to)
@@ -90,7 +90,7 @@ func (cli *CLI) buildSignerRemoveCmd() *cobra.Command {
 			signerAddress := args[0]
 
 			logFields := logrus.Fields{"cmd": "signer", "subcmd": "remove"}
-			signer, err := cli.validateAddressOrSeed(logFields, signerAddress, "address")
+			signer, err := cli.ResolveAccount(logFields, signerAddress, "address")
 
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", signerAddress)
@@ -99,7 +99,7 @@ func (cli *CLI) buildSignerRemoveCmd() *cobra.Command {
 
 			from, _ := cmd.Flags().GetString("from")
 
-			signee, err := cli.validateAddressOrSeed(logFields, from, "seed")
+			signee, err := cli.ResolveAccount(logFields, from, "seed")
 
 			if err != nil {
 				cli.error(logFields, "invalid signee: %s", from)
@@ -139,7 +139,7 @@ func (cli *CLI) buildSignerThresholdsCmd() *cobra.Command {
 			highString := args[3]
 
 			logFields := logrus.Fields{"cmd": "signer", "subcmd": "thresholds"}
-			address, err := cli.validateAddressOrSeed(logFields, account, "seed")
+			address, err := cli.ResolveAccount(logFields, account, "seed")
 
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", account)

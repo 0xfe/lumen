@@ -115,7 +115,7 @@ func (cli *CLI) buildFriendbotCmd() *cobra.Command {
 			name := args[0]
 
 			logFields := logrus.Fields{"cmd": "trust", "subcmd": "create"}
-			address, err := cli.validateAddressOrSeed(logFields, name, "address")
+			address, err := cli.ResolveAccount(logFields, name, "address")
 
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", name)

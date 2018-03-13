@@ -114,7 +114,7 @@ func (cli *CLI) buildAssetCodeCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			if asset, err := cli.GetAsset(name); err != nil {
+			if asset, err := cli.ResolveAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "code"}).Debugf("%v", err)
 				cli.error(logrus.Fields{"cmd": "asset", "subcmd": "code"}, "could not load asset: %s", name)
 				return
@@ -134,7 +134,7 @@ func (cli *CLI) buildAssetIssuerCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			if asset, err := cli.GetAsset(name); err != nil {
+			if asset, err := cli.ResolveAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}).Debugf("%v", err)
 				cli.error(logrus.Fields{"cmd": "asset", "subcmd": "issuer"}, "could not load asset: %s", name)
 				return
@@ -154,7 +154,7 @@ func (cli *CLI) buildAssetTypeCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			if asset, err := cli.GetAsset(name); err != nil {
+			if asset, err := cli.ResolveAsset(name); err != nil {
 				logrus.WithFields(logrus.Fields{"cmd": "asset", "subcmd": "type"}).Debugf("%v", err)
 				cli.error(logrus.Fields{"cmd": "asset", "subcmd": "type"}, "could not load asset: %s", name)
 				return

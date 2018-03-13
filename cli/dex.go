@@ -44,19 +44,19 @@ func (cli *CLI) buildDexTradeCmd() *cobra.Command {
 			delete, _ := cmd.Flags().GetString("delete")
 			isPassive, _ := cmd.Flags().GetBool("passive")
 
-			source, err := cli.validateAddressOrSeed(logFields, account, "seed")
+			source, err := cli.ResolveAccount(logFields, account, "seed")
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", account)
 				return
 			}
 
-			buyAsset, err := cli.GetAsset(buy)
+			buyAsset, err := cli.ResolveAsset(buy)
 			if err != nil {
 				cli.error(logFields, "invalid buy asset: %s", buy)
 				return
 			}
 
-			sellAsset, err := cli.GetAsset(sell)
+			sellAsset, err := cli.ResolveAsset(sell)
 			if err != nil {
 				cli.error(logFields, "invalid sell asset: %s", sell)
 				return
@@ -124,7 +124,7 @@ func (cli *CLI) buildDexListCmd() *cobra.Command {
 
 			logFields := logrus.Fields{"cmd": "dex", "subcmd": "list"}
 
-			address, err := cli.validateAddressOrSeed(logFields, name, "address")
+			address, err := cli.ResolveAccount(logFields, name, "address")
 
 			if err != nil {
 				cli.error(logFields, "invalid account: %s", name)

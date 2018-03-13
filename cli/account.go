@@ -112,7 +112,7 @@ func (cli *CLI) buildAccountAddressCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			code, err := cli.validateAddressOrSeed(logrus.Fields{"cmd": "account", "subcmd": "address"}, name, "address")
+			code, err := cli.ResolveAccount(logrus.Fields{"cmd": "account", "subcmd": "address"}, name, "address")
 
 			if err != nil || microstellar.ValidSeed(code) == nil {
 				cli.error(logrus.Fields{"cmd": "account", "subcmd": "address"}, "could not get address for account: %s", name)
