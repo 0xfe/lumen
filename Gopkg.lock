@@ -2,10 +2,10 @@
 
 
 [[projects]]
+  branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "638db05de2cab5181c4fa52e8dee68111f454bf8"
-  version = "v0.2.3"
+  revision = "a166edf82c470a8f5d2e9c775d51e099dfc028e4"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -70,8 +70,8 @@
     "internal/singleflight",
     "internal/util"
   ]
-  revision = "9133634a132e00309476e2d9acbf0c8058d4c888"
-  version = "v6.10.0"
+  revision = "17b6cf1e5a09b11593b563b1311d45146af24b33"
+  version = "v6.10.1"
 
 [[projects]]
   branch = "master"
@@ -223,7 +223,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "07636e06a0545beb0c59dccfe769100ea48f5e64"
+  revision = "f8a5cca5144706d82debed241ec142f4cbfa050c"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -244,7 +244,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "182114d582623c1caa54f73de9c7224e23a48487"
+  revision = "c4a91bd4f524f10d064139674cf55852e055ad01"
 
 [[projects]]
   branch = "master"

@@ -8,12 +8,23 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/pkg/errors"
+	"github.com/stellar/go/amount"
 	"github.com/stellar/go/clients/horizon"
 	"github.com/stellar/go/strkey"
 )
 
 func debugf(method string, msg string, args ...interface{}) {
 	logrus.WithFields(logrus.Fields{"lib": "microstellar", "method": method}).Debugf(msg, args...)
+}
+
+// ParseAmount converts a currency amount string to an int64
+func ParseAmount(v string) (int64, error) {
+	return amount.ParseInt64(v)
+}
+
+// ToAmountString converts an int64 amount to a string
+func ToAmountString(v int64) string {
+	return amount.StringFromInt64(v)
 }
 
 // ValidAddress returns error if address is an invalid stellar address

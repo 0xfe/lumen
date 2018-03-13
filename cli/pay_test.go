@@ -52,7 +52,6 @@ func TestPathPayments(t *testing.T) {
 	cli.TestCommand("asset set INR issuer")
 
 	expectOutput(t, cli, "", "pay 4 USD --from mary --to kelly --with XLM --max 20 --path EUR,INR")
-	expectOutput(t, cli, "", "pay 4 USD --from mary --to kelly --with XLM --max 20")
 	expectOutput(t, cli, "error", "pay 4 USD --from mary --to kelly --with XLM --path EUR,INR")
 	expectOutput(t, cli, "error", "pay 4 USD --from mary --to kelly --with XLM --path BAD")
 }

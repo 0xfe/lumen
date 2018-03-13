@@ -21,6 +21,14 @@
 // the transaction -- and it's okay to use a public address instead of a seed for sourceSeed.
 // See examples for how to use Options.
 //
+// Amounts in Microstellar are typically represented as strings, to protect users from accidentaly
+// performing floating point operations on them. The convenience methods `ParseAmount` and `ToAmountString`
+// to convert the strings to `int64` values that represent a `10e7` multiple of the numeric
+// value. E.g.,
+//
+//   ParseAmount("2.5") == int64(25000000)
+//   ToAmountString(1000000) == "1.000000"
+//
 // You can use ErrorString(...) to extract the Horizon error from a returned error.
 package microstellar
 
@@ -184,13 +192,19 @@ func (ms *MicroStellar) PayNative(sourceSeed string, targetAddress string, amoun
 //
 //   ms.Pay("marys_seed", "bobs_address", "2000", INR,
 //       microstellar.Opts().WithAsset(XLM, "20").Through(USD, EUR).WithMemoText("take your rupees!"))
-func (ms *MicroStellar) Pay(sourceSeed string, targetAddress string, amount string, asset *Asset, options ...*Options) error {
+//
+// If you don't know what path to take ahead of time, use Options.FindPathFrom(sourceAddress) to
+// find a path for you.
+//
+//   ms.Pay("marys_seed", "bobs_address", "2000", INR,
+//       microstellar.Opts().WithAsset(XLM, "20").Through(USD, EUR).FindPathFrom("marys_address"))
+func (ms *MicroStellar) Pay(sourceAddressOrSeed string, targetAddress string, amount string, asset *Asset, options ...*Options) error {
 	if err := asset.Validate(); err != nil {
 		return errors.Wrap(err, "can't pay")
 	}
 
-	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't pay: invalid source address or seed: %s", sourceSeed)
+	if !ValidAddressOrSeed(sourceAddressOrSeed) {
+		return errors.Errorf("can't pay: invalid source address or seed: %s", sourceAddressOrSeed)
 	}
 
 	if !ValidAddressOrSeed(targetAddress) {
@@ -219,17 +233,38 @@ func (ms *MicroStellar) Pay(sourceSeed string, targetAddress string, amount stri
 			debugf("Pay", "path payment: deposit %s with %s", asset.Code, opts.sendAsset.Code)
 			payPath := build.PayWith(opts.sendAsset.ToStellarAsset(), opts.maxAmount)
 
-			for _, through := range opts.path {
-				debugf("Pay", "path payment: through %s", through.Code)
-				payPath = payPath.Through(through.ToStellarAsset())
+			if len(opts.path) > 0 {
+				for _, through := range opts.path {
+					debugf("Pay", "path payment: through %s", through.Code)
+					payPath = payPath.Through(through.ToStellarAsset())
+				}
+			} else {
+				debugf("Pay", "no path specified, searching for paths from: %s", opts.sourceAddress)
+				if err := ValidAddress(opts.sourceAddress); err != nil {
+					return errors.Wrapf(err, "not a valid source address: %s", opts.sourceAddress)
+				}
+
+				paths, err := ms.FindPaths(opts.sourceAddress, targetAddress, asset, amount, Opts().WithAsset(opts.sendAsset, opts.maxAmount))
+				if err != nil {
+					return errors.Wrap(err, "path finding error")
+				}
+
+				if len(paths) < 1 {
+					return errors.Errorf("no paths found from %s to %s", opts.sendAsset.Code, asset.Code)
+				}
+
+				for _, hop := range paths[0].Hops {
+					debugf("Pay", "path payment: through %s", hop.Code)
+					payPath = payPath.Through(hop.ToStellarAsset())
+				}
 			}
 
 			paymentMuts = append(paymentMuts, payPath)
 		}
 	}
 
-	tx.Build(sourceAccount(sourceSeed), build.Payment(paymentMuts...))
-	tx.Sign(sourceSeed)
+	tx.Build(sourceAccount(sourceAddressOrSeed), build.Payment(paymentMuts...))
+	tx.Sign(sourceAddressOrSeed)
 	tx.Submit()
 	return tx.Err()
 }

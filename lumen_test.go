@@ -243,7 +243,7 @@ func TestDex(t *testing.T) {
 
 	// Try a path payment
 	expectOutput(t, cli, "", "dex trade citibank --sell USD --buy XLM --amount 10 --price 1")
-	expectOutput(t, cli, "", "pay 1 EUR --to bob --from mo --with XLM --max 20 --path USD")
+	expectOutput(t, cli, "", "pay 1 EUR --to bob --from mo --with XLM --max 20 -v")
 
 	expectOutput(t, cli, "100006.0000000", "balance bob EUR")
 }

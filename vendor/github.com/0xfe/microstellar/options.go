@@ -56,9 +56,10 @@ type Options struct {
 	passiveOffer bool
 
 	// for Path payments.
-	sendAsset *Asset
-	maxAmount string
-	path      []*Asset
+	sourceAddress string
+	sendAsset     *Asset
+	maxAmount     string
+	path          []*Asset
 }
 
 // NewOptions creates a new options structure for Tx.
@@ -72,6 +73,7 @@ func NewOptions() *Options {
 		hasLimit:       false,
 		sortDescending: false,
 		passiveOffer:   false,
+		sourceAddress:  "",
 	}
 }
 
@@ -150,7 +152,7 @@ func (o *Options) MakePassive() *Options {
 
 // WithAsset is used to setup a path payment. This makes the Pay method
 // use "asset" as the sending asset, and sends no more than maxAmount units
-// of the asset. Used with Pay.
+// of the asset. Used with Pay and FindPaths.
 //
 // E.g.,
 //   ms.Pay(sourceSeed, address, "20", INR, Opts().WithAsset(NativeAsset, "20").Through(USD, EUR)
@@ -166,6 +168,13 @@ func (o *Options) WithAsset(asset *Asset, maxAmount string) *Options {
 //   ms.Pay(sourceSeed, address, "20", INR, Opts().WithAsset(NativeAsset, "20").Through(USD, EUR)
 func (o *Options) Through(asset ...*Asset) *Options {
 	o.path = append(o.path, asset...)
+	return o
+}
+
+// FindPathFrom enables automatic path finding for path payments. Use sourceAddress
+// to specify the address (not seed) for the source account.
+func (o *Options) FindPathFrom(sourceAddress string) *Options {
+	o.sourceAddress = sourceAddress
 	return o
 }
 

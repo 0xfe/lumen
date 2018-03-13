@@ -56,8 +56,6 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 				max, _ := cmd.Flags().GetString("max")
 				path, _ := cmd.Flags().GetStringSlice("path")
 
-				debugf(fields, "path payment with %s (max %s) through %+v", with, max, path)
-
 				var withAsset *microstellar.Asset
 				var assetPath []*microstellar.Asset
 
@@ -72,17 +70,30 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 					return
 				}
 
-				for _, a := range path {
-					pathAsset, err := cli.ResolveAsset(a)
+				if len(path) > 0 {
+					debugf(fields, "path payment with %s (max %s) through %+v", with, max, path)
+					for _, a := range path {
+						pathAsset, err := cli.ResolveAsset(a)
+						if err != nil {
+							cli.error(fields, "bad --path asset: %s", a)
+							return
+						}
+
+						assetPath = append(assetPath, pathAsset)
+					}
+
+					opts = opts.WithAsset(withAsset, max).Through(assetPath...)
+				} else {
+					debugf(fields, "path payment with %s (max %s) using pathfinder", with, max)
+					sourceAddress, err := cli.ResolveAccount(fields, from, "address")
 					if err != nil {
-						cli.error(fields, "bad --path asset: %s", a)
+						cli.error(fields, "no address in --from: %s", from)
 						return
 					}
 
-					assetPath = append(assetPath, pathAsset)
+					debugf(fields, "searching for paths from: %s", sourceAddress)
+					opts = opts.WithAsset(withAsset, max).FindPathFrom(sourceAddress)
 				}
-
-				opts = opts.WithAsset(withAsset, max).Through(assetPath...)
 			}
 
 			if fund {
@@ -105,7 +116,7 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 	cmd.Flags().String("to", "", "target account address or name")
 	cmd.Flags().String("with", "", "make a path payment with this asset")
 	cmd.Flags().String("max", "", "spend no more than this much during path payments")
-	cmd.Flags().StringSlice("path", []string{}, "comma-separated list of paths")
+	cmd.Flags().StringSlice("path", []string{}, "comma-separated list of paths, uses auto pathfinder if empty")
 
 	cmd.Flags().Bool("fund", false, "fund a new account")
 	cmd.MarkFlagRequired("from")
