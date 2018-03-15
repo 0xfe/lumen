@@ -10,12 +10,12 @@ import (
 
 func (cli *CLI) buildSignerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signer [add|remove|thresholds]",
+		Use:   "signer [add|remove|thresholds|masterweight]",
 		Short: "manage signers on account",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				cli.error(logrus.Fields{"cmd": "signer"}, "unrecognized signer command: %s, expecting: add|remove", args[0])
+				cli.error(logrus.Fields{"cmd": "signer"}, "unrecognized signer command: %s, expecting: add|remove|thresholds|masterweight", args[0])
 				return
 			}
 		},
@@ -24,6 +24,7 @@ func (cli *CLI) buildSignerCmd() *cobra.Command {
 	cmd.AddCommand(cli.buildSignerAddCmd())
 	cmd.AddCommand(cli.buildSignerRemoveCmd())
 	cmd.AddCommand(cli.buildSignerThresholdsCmd())
+	cmd.AddCommand(cli.buildSignerMasterWeightCmd())
 
 	return cmd
 }
@@ -176,6 +177,48 @@ func (cli *CLI) buildSignerThresholdsCmd() *cobra.Command {
 			err = cli.ms.SetThresholds(address, uint32(low), uint32(medium), uint32(high), opts)
 			if err != nil {
 				cli.error(logFields, "failed to set thresholds for %s: %v", account, microstellar.ErrorString(err))
+				return
+			}
+		},
+	}
+
+	buildFlagsForTxOptions(cmd)
+	return cmd
+}
+
+func (cli *CLI) buildSignerMasterWeightCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "masterweight [account] [weight]",
+		Short: "set the weight of the account's master key",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			account := args[0]
+			weightString := args[1]
+
+			logFields := logrus.Fields{"cmd": "signer", "subcmd": "masterweight"}
+			source, err := cli.ResolveAccount(logFields, account, "seed")
+
+			if err != nil {
+				cli.error(logFields, "invalid account: %s", account)
+				return
+			}
+
+			weight, err := strconv.ParseUint(weightString, 10, 32)
+			if err != nil {
+				logrus.WithFields(logFields).Errorf("error parsing weight: %v", err)
+				cli.error(logFields, "bad weight: %s", weightString)
+				return
+			}
+
+			opts, err := cli.genTxOptions(cmd, logFields)
+			if err != nil {
+				cli.error(logFields, "can't generate transaction: %v", err)
+				return
+			}
+
+			err = cli.ms.SetMasterWeight(source, uint32(weight), opts)
+			if err != nil {
+				cli.error(logFields, "failed to set master weight of %s to %s: %v", account, weightString, microstellar.ErrorString(err))
 				return
 			}
 		},

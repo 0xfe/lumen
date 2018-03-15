@@ -17,7 +17,7 @@ import (
 const payBack = "GAVQK5QMS6TNUZNS3TXDV5RKFIHLSMWDYZQR5ZV72VJT2SL4JMJXWQZE"
 
 // Suck funds from here if friendbot fails
-const fundSource = "SDGRPZDOPXDZPBY5LMCY7HE7ISSPMG2IIAXFIKF4TQW7RZHCUH5O7SJK"
+const fundSource = "SDPWNPMCESNRW47YS2XIZ3BZTGTGBO54A3EPGUG72DYPQJO5MAEGK6JY"
 
 func getTempFile() (string, func()) {
 	dir, err := ioutil.TempDir("", "example")
@@ -85,11 +85,11 @@ func createFundedAccount(t *testing.T, cli *cli.CLI, name string) {
 		run(cli, fmt.Sprintf("pay 5000 --from %s --to landlord", name))
 	} else {
 		// friendbot failed, fund via sugar daddy
-		run(cli, fmt.Sprintf("pay 5000 --from sugar --to %s", name))
+		run(cli, fmt.Sprintf("pay 1000 --from sugar --to %s --fund", name))
 	}
 
 	balance = getBalance(cli, name)
-	if balance < 4999 {
+	if balance < 999 {
 		t.Fatalf("could not fund account: %s", name)
 	}
 }
@@ -180,6 +180,13 @@ func TestMultisig(t *testing.T) {
 
 	// Make another multisig payment
 	expectOutput(t, cli, "", "pay 10 --from sharon --to fred --signers sharon,mary")
+
+	// Kill sharon's keys
+	expectOutput(t, cli, "", "signer thresholds sharon 1 1 1 --signers sharon,mary")
+	expectOutput(t, cli, "", "signer masterweight sharon 0")
+
+	expectOutput(t, cli, "error", "pay 10 --from sharon --to fred")
+	expectOutput(t, cli, "", "pay 10 --from sharon --to fred --signers mary")
 
 	// Stop watching sharon's ledger
 	// done()
