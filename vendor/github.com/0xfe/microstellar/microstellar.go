@@ -341,6 +341,9 @@ func (ms *MicroStellar) SetMasterWeight(sourceSeed string, weight uint32, option
 type AccountFlags int32
 
 const (
+	// FlagsNone disables all flags (can only be used alone.)
+	FlagsNone = AccountFlags(0)
+
 	// FlagAuthRequired requires the issuing account to give the receiving
 	// account permission to hold the asset.
 	FlagAuthRequired = AccountFlags(1)
@@ -467,6 +470,8 @@ func NewPaymentFromHorizon(p *horizon.Payment) *Payment {
 type PaymentWatcher struct {
 	// Ch gets a *Payment everytime there's a new entry in the ledger.
 	Ch chan *Payment
+
+	// TODO: another channel for structured Payment info
 
 	// Call Done to stop watching the ledger. This closes Ch.
 	Done func()

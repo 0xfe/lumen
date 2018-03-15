@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "a166edf82c470a8f5d2e9c775d51e099dfc028e4"
+  revision = "3bbc8a596cd6ee0f1759486c410dcaaf15073694"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -25,8 +25,8 @@
 [[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
-  revision = "521b25f4b05fd26bec69d9dedeb8f9c9a83939a8"
-  version = "v8"
+  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
+  version = "v9"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
@@ -70,8 +70,8 @@
     "internal/singleflight",
     "internal/util"
   ]
-  revision = "17b6cf1e5a09b11593b563b1311d45146af24b33"
-  version = "v6.10.1"
+  revision = "877867d2845fbaf86798befe410b6ceb6f5c29a3"
+  version = "v6.10.2"
 
 [[projects]]
   branch = "master"
@@ -223,7 +223,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "f8a5cca5144706d82debed241ec142f4cbfa050c"
+  revision = "081dd9cab83f085f74200d0cd72c13c111e63882"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -244,13 +244,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "c4a91bd4f524f10d064139674cf55852e055ad01"
+  revision = "21652f85b0fdddb6c2b6b77a5beca5c5a908174a"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "803fdb99c0f72e493c28ef2099d250a9c989d8ff"
+  revision = "e0c57d8f86c17f0724497efcb3bc617e82834821"
 
 [[projects]]
   branch = "master"
@@ -259,7 +259,7 @@
     "unix",
     "windows"
   ]
-  revision = "8c0ece68c28377f4c326d85b94f8df0dace46f80"
+  revision = "cc7307a45468e49eaf2997c890f14aa03a26917b"
 
 [[projects]]
   name = "golang.org/x/text"

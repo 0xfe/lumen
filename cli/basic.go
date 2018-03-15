@@ -114,7 +114,7 @@ func (cli *CLI) buildFriendbotCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
 
-			logFields := logrus.Fields{"cmd": "trust", "subcmd": "create"}
+			logFields := logrus.Fields{"cmd": "friendbot"}
 			address, err := cli.ResolveAccount(logFields, name, "address")
 
 			if err != nil {
@@ -130,6 +130,62 @@ func (cli *CLI) buildFriendbotCmd() *cobra.Command {
 			}
 
 			showSuccess("friendbot says:\n %v", response)
+		},
+	}
+
+	return cmd
+}
+
+func (cli *CLI) buildFlagsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "flags [account] [none|auth_required|auth_revocable|auth_immutable]...",
+		Short: "set stellar account flags on [account]",
+		Args:  cobra.MinimumNArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+
+			logFields := logrus.Fields{"cmd": "flags"}
+			address, err := cli.ResolveAccount(logFields, name, "seed")
+
+			if err != nil {
+				cli.error(logFields, "invalid account: %s", name)
+				return
+			}
+
+			flags := microstellar.FlagsNone
+
+			for i, flag := range args {
+				if i == 0 {
+					continue
+				}
+
+				switch flag {
+				case "none":
+					break
+				case "auth_required":
+					flags |= microstellar.FlagAuthRequired
+				case "auth_revocable":
+					flags |= microstellar.FlagAuthRevocable
+				case "auth_immutable":
+					flags |= microstellar.FlagAuthImmutable
+				default:
+					cli.error(logFields, "bad flag: %s", flag)
+					return
+				}
+			}
+
+			opts, err := cli.genTxOptions(cmd, logFields)
+			if err != nil {
+				cli.error(logFields, "can't generate transaction: %v", err)
+				return
+			}
+
+			err = cli.ms.SetFlags(address, flags, opts)
+
+			if err != nil {
+				cli.error(logFields, "can't set flags: %v", microstellar.ErrorString(err))
+				return
+			}
 		},
 	}
 

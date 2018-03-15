@@ -25,4 +25,11 @@ func TestVariables(t *testing.T) {
 
 	cli.TestCommand("del foo")
 	expectOutput(t, cli, "error", "get foo")
+
+	expectOutput(t, cli, "error", "flags nobody nothing")
+
+	cli.TestCommand("set config:network fake")
+	cli.TestCommand("account new mo")
+	expectOutput(t, cli, "", "flags mo none")
+	expectOutput(t, cli, "", "flags mo auth_revocable auth_immutable")
 }
