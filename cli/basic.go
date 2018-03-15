@@ -139,7 +139,7 @@ func (cli *CLI) buildFriendbotCmd() *cobra.Command {
 func (cli *CLI) buildFlagsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "flags [account] [none|auth_required|auth_revocable|auth_immutable]...",
-		Short: "set stellar account flags on [account]",
+		Short: "set/clear stellar flags on [account]",
 		Args:  cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
@@ -180,7 +180,13 @@ func (cli *CLI) buildFlagsCmd() *cobra.Command {
 				return
 			}
 
-			err = cli.ms.SetFlags(address, flags, opts)
+			shouldClear, err := cmd.Flags().GetBool("clear")
+
+			if shouldClear {
+				err = cli.ms.ClearFlags(address, flags, opts)
+			} else {
+				err = cli.ms.SetFlags(address, flags, opts)
+			}
 
 			if err != nil {
 				cli.error(logFields, "can't set flags: %v", microstellar.ErrorString(err))
@@ -188,6 +194,9 @@ func (cli *CLI) buildFlagsCmd() *cobra.Command {
 			}
 		},
 	}
+
+	cmd.Flags().Bool("clear", false, "clear flags instead of setting them")
+	buildFlagsForTxOptions(cmd)
 
 	return cmd
 }

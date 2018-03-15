@@ -217,6 +217,11 @@ type Thresholds struct {
 	High   *uint32
 }
 
+type Timebounds struct {
+    MinTime uint64
+    MaxTime uint64
+}
+
 // Trustor is a mutator capable of setting the trustor on
 // allow_trust operation.
 type Trustor struct {

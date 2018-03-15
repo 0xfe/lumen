@@ -132,6 +132,10 @@ func TestAssets(t *testing.T) {
 
 	// Verify balance on kelly's account
 	expectOutput(t, cli, "100.0000000", "balance kelly USD")
+
+	// Change the flags on the issuers account
+	expectOutput(t, cli, "", "flags citibank auth_revocable")
+	expectOutput(t, cli, "", "flags citibank auth_revocable --clear")
 }
 
 func TestMultisig(t *testing.T) {

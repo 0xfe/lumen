@@ -357,7 +357,7 @@ const (
 	FlagAuthImmutable = AccountFlags(4)
 )
 
-// SetFlags changes the flags for the account.
+// SetFlags sets flags on the account.
 func (ms *MicroStellar) SetFlags(sourceSeed string, flags AccountFlags, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
 		return errors.Errorf("can't set flags: invalid source address or seed: %s", sourceSeed)
@@ -370,6 +370,24 @@ func (ms *MicroStellar) SetFlags(sourceSeed string, flags AccountFlags, options 
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.SetFlag(int32(flags)))
+	tx.Sign(sourceSeed)
+	tx.Submit()
+	return tx.Err()
+}
+
+// ClearFlags clears the specified flags for the account.
+func (ms *MicroStellar) ClearFlags(sourceSeed string, flags AccountFlags, options ...*Options) error {
+	if !ValidAddressOrSeed(sourceSeed) {
+		return errors.Errorf("can't clear flags: invalid source address or seed: %s", sourceSeed)
+	}
+
+	tx := NewTx(ms.networkName, ms.params)
+
+	if len(options) > 0 {
+		tx.SetOptions(options[0])
+	}
+
+	tx.Build(sourceAccount(sourceSeed), build.ClearFlag(int32(flags)))
 	tx.Sign(sourceSeed)
 	tx.Submit()
 	return tx.Err()

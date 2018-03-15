@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "3bbc8a596cd6ee0f1759486c410dcaaf15073694"
+  revision = "2a19681498c0dd1680d3aa66c46a8f230ee126a6"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -223,7 +223,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "081dd9cab83f085f74200d0cd72c13c111e63882"
+  revision = "e64c35d7e951e81e5c357fab88779283dc09a50f"
 
 [[projects]]
   name = "github.com/stretchr/objx"
