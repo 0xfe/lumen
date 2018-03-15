@@ -107,7 +107,6 @@ func (cli *CLI) buildDexTradeCmd() *cobra.Command {
 
 	cmd.MarkFlagRequired("buy")
 	cmd.MarkFlagRequired("sell")
-	cmd.MarkFlagRequired("amount")
 	cmd.MarkFlagRequired("price")
 
 	buildFlagsForTxOptions(cmd)
