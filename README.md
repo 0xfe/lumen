@@ -318,6 +318,8 @@ You can get the current namespace with `lumen ns`. The default namespace is `def
   * Add godoc comments
   * If necessary, update the integration test in `lumen_test.go`
 
+**You can also support this project by sending lumens to GDEVC4BOVFMB46UHGJ6NKEBCQVY5WI56GOBWPG3QKS4QV4TKDLPE6AH6.**
+
 ### Environment Setup
 
 This package uses [dep](https://github.com/golang/dep) to manage dependencies. Before
