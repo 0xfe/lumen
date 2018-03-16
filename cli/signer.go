@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/0xfe/microstellar"
@@ -10,12 +11,12 @@ import (
 
 func (cli *CLI) buildSignerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signer [add|remove|thresholds|masterweight]",
+		Use:   "signer [list|add|remove|thresholds|masterweight]",
 		Short: "manage signers on account",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				cli.error(logrus.Fields{"cmd": "signer"}, "unrecognized signer command: %s, expecting: add|remove|thresholds|masterweight", args[0])
+				cli.error(logrus.Fields{"cmd": "signer"}, "unrecognized signer command: %s, expecting: list|add|remove|thresholds|masterweight", args[0])
 				return
 			}
 		},
@@ -25,6 +26,7 @@ func (cli *CLI) buildSignerCmd() *cobra.Command {
 	cmd.AddCommand(cli.buildSignerRemoveCmd())
 	cmd.AddCommand(cli.buildSignerThresholdsCmd())
 	cmd.AddCommand(cli.buildSignerMasterWeightCmd())
+	cmd.AddCommand(cli.buildSignerListCmd())
 
 	return cmd
 }
@@ -225,5 +227,49 @@ func (cli *CLI) buildSignerMasterWeightCmd() *cobra.Command {
 	}
 
 	buildFlagsForTxOptions(cmd)
+	return cmd
+}
+
+func (cli *CLI) buildSignerListCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list [account]",
+		Short: "list the signers on the account",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+
+			logFields := logrus.Fields{"cmd": "signer", "subcmd": "list"}
+			address, err := cli.ResolveAccount(logFields, name, "address")
+
+			if err != nil {
+				cli.error(logFields, "invalid account: %s", name)
+				return
+			}
+
+			account, err := cli.ms.LoadAccount(address)
+
+			if err != nil {
+				cli.error(logFields, "can't load account: %v", microstellar.ErrorString(err))
+				return
+			}
+
+			format, _ := cmd.Flags().GetString("format")
+
+			if format == "json" {
+				jsonSigners, err := json.MarshalIndent(account.Signers, "", "  ")
+				if err != nil {
+					cli.error(logFields, "can't marshall signers: %v", err)
+					return
+				}
+
+				showSuccess(string(jsonSigners))
+			} else {
+				for _, signer := range account.Signers {
+					showSuccess("address:%s weight:%d", signer.PublicKey, signer.Weight)
+				}
+			}
+		},
+	}
+
 	return cmd
 }
