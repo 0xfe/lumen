@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/0xfe/microstellar"
@@ -191,37 +192,55 @@ func (cli *CLI) buildSignerThresholdsCmd() *cobra.Command {
 func (cli *CLI) buildSignerMasterWeightCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "masterweight [account] [weight]",
-		Short: "set the weight of the account's master key",
-		Args:  cobra.ExactArgs(2),
+		Short: "get/set the weight of the account's master key",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			account := args[0]
-			weightString := args[1]
-
 			logFields := logrus.Fields{"cmd": "signer", "subcmd": "masterweight"}
-			source, err := cli.ResolveAccount(logFields, account, "seed")
 
-			if err != nil {
-				cli.error(logFields, "invalid account: %s", account)
-				return
-			}
+			if len(args) > 1 {
+				source, err := cli.ResolveAccount(logFields, account, "seed")
 
-			weight, err := strconv.ParseUint(weightString, 10, 32)
-			if err != nil {
-				logrus.WithFields(logFields).Errorf("error parsing weight: %v", err)
-				cli.error(logFields, "bad weight: %s", weightString)
-				return
-			}
+				if err != nil {
+					cli.error(logFields, "invalid account: %s", account)
+					return
+				}
 
-			opts, err := cli.genTxOptions(cmd, logFields)
-			if err != nil {
-				cli.error(logFields, "can't generate transaction: %v", err)
-				return
-			}
+				weightString := args[1]
+				weight, err := strconv.ParseUint(weightString, 10, 32)
+				if err != nil {
+					logrus.WithFields(logFields).Errorf("error parsing weight: %v", err)
+					cli.error(logFields, "bad weight: %s", weightString)
+					return
+				}
 
-			err = cli.ms.SetMasterWeight(source, uint32(weight), opts)
-			if err != nil {
-				cli.error(logFields, "failed to set master weight of %s to %s: %v", account, weightString, microstellar.ErrorString(err))
-				return
+				opts, err := cli.genTxOptions(cmd, logFields)
+				if err != nil {
+					cli.error(logFields, "can't generate transaction: %v", err)
+					return
+				}
+
+				err = cli.ms.SetMasterWeight(source, uint32(weight), opts)
+				if err != nil {
+					cli.error(logFields, "failed to set master weight of %s to %s: %v", account, weightString, microstellar.ErrorString(err))
+					return
+				}
+			} else {
+				address, err := cli.ResolveAccount(logFields, account, "address")
+
+				if err != nil {
+					cli.error(logFields, "invalid account: %s", account)
+					return
+				}
+
+				account, err := cli.ms.LoadAccount(address)
+
+				if err != nil {
+					cli.error(logFields, "can't load account: %v", microstellar.ErrorString(err))
+					return
+				}
+
+				showSuccess(fmt.Sprintf("%d", account.GetMasterWeight()))
 			}
 		},
 	}
@@ -271,5 +290,6 @@ func (cli *CLI) buildSignerListCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().String("format", "", "output format (json,line)")
 	return cmd
 }
