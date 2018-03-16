@@ -19,26 +19,26 @@ type KeyPair struct {
 
 // Balance is the balance amount of the asset in the account.
 type Balance struct {
-	Asset  *Asset
-	Amount string
-	Limit  string
+	Asset  *Asset `json:"asset"`
+	Amount string `json:"amount"`
+	Limit  string `json:"limit"`
 }
 
 // Signer represents a key that can sign for an account.
 type Signer struct {
-	PublicKey string
-	Weight    int32
-	Key       string
-	Type      string
+	PublicKey string `json:"public_key"`
+	Weight    int32  `json:"weight"`
+	Key       string `json:"key"`
+	Type      string `json:"type"`
 }
 
 // Account represents an account on the stellar network.
 type Account struct {
-	Balances      []Balance
-	Signers       []Signer
-	NativeBalance Balance
-	HomeDomain    string
-	Sequence      string
+	Balances      []Balance `json:"balances"`
+	Signers       []Signer  `json:"signers"`
+	NativeBalance Balance   `json:"native_balance"`
+	HomeDomain    string    `json:"home_domain"`
+	Sequence      string    `json:"seq"`
 }
 
 // newAccount creates a new initialized account

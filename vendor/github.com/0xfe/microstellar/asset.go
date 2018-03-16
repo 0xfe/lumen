@@ -20,9 +20,9 @@ const Credit12Type AssetType = "credit_alphanum12"
 // Asset represents a specific asset class on the stellar network. For native
 // assets "Code" and "Issuer" are ignored.
 type Asset struct {
-	Code   string
-	Issuer string
-	Type   AssetType // Credit4Type, Credit12Type, NativeType
+	Code   string    `json:"code"`
+	Issuer string    `json:"issuer"`
+	Type   AssetType `json:"type,string"`
 }
 
 // NativeAsset is a convenience const representing a native asset.

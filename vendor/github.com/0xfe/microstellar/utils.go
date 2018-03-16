@@ -79,7 +79,7 @@ func ErrorString(err error, showStackTrace ...bool) string {
 // FundWithFriendBot funds address on the test network with some initial funds.
 func FundWithFriendBot(address string) (string, error) {
 	debugf("FundWithFriendBot", "funding address: %s", address)
-	resp, err := http.Get("https://horizon-testnet.stellar.org/friendbot?addr=" + address)
+	resp, err := http.Get("https://friendbot.stellar.org/?addr=" + address)
 	if err != nil {
 		return "", err
 	}

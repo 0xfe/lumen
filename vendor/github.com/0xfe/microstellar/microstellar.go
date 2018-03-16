@@ -52,6 +52,8 @@ type MicroStellar struct {
 	networkName string
 	params      Params
 	fake        bool
+	tx          *Tx
+	isMultiOp   bool
 }
 
 // Error wraps underlying errors (e.g., horizon)
@@ -59,7 +61,7 @@ type Error struct {
 	HorizonError horizon.Error
 }
 
-// Params lets you add optional parameters to New and NewTx.
+// Params lets you add optional parameters to the common microstellar methods.
 type Params map[string]interface{}
 
 // New returns a new MicroStellar client connected that operates on the network
@@ -87,7 +89,70 @@ func New(networkName string, params ...Params) *MicroStellar {
 		networkName: networkName,
 		params:      p,
 		fake:        networkName == "fake",
+		tx:          nil,
+		isMultiOp:   false,
 	}
+}
+
+func (ms *MicroStellar) getTx() *Tx {
+	if ms.isMultiOp && ms.tx != nil {
+		return ms.tx
+	} else {
+		return NewTx(ms.networkName, ms.params)
+	}
+}
+
+func (ms *MicroStellar) signAndSubmit(tx *Tx, signers ...string) error {
+	if !ms.isMultiOp {
+		tx.Sign(signers...)
+		tx.Submit()
+	}
+
+	return tx.Err()
+}
+
+// Start begins a new multi-op transaction. This lets you lump a set of operations into
+// a single transaction, and submit them together in one atomic step.
+//
+// You can pass in the signers and envelope fields (such as memotext, memoid, etc.) for the
+// transaction as options. The signers must have signing authority on all the operations
+// in the transaction.
+//
+// The fee for the transaction is billed to sourceSeed, which is typically a seed, but can
+// be an address if differnt signers are used.
+//
+// Call microstellar.Submit() on the instance to close the transaction and send it to
+// the network.
+//
+//   ms = microstellar.New("test")
+//   ms.Start("sourceSeed", microstellar.Opts().WithMemoText("big op").WithSigner("signerSeed"))
+//   ms.Pay("marys_address", "bobs_address", "2000", INR)
+//   ms.Pay("marys_address", "bills_address", "2000", USD)
+//   ms.SetMasterWeight("bobs_address", 0)
+//   ms.SetHomeDomain("bobs_address", "qubit.sh")
+//   ms.Submit()
+//
+func (ms *MicroStellar) Start(sourceSeed string, options ...*Options) *MicroStellar {
+	ms.tx = NewTx(ms.networkName, ms.params).Start(sourceSeed)
+	ms.tx.SetOptions(mergeOptions(options))
+	ms.isMultiOp = true
+	return ms
+}
+
+// Submit signs and submits a multi-op transaction to the network. See microstellar.Start() for
+// details.
+func (ms *MicroStellar) Submit() error {
+	if !ms.isMultiOp {
+		return errors.Errorf("can't submit, not a multi-op transaction")
+	}
+
+	ms.tx.Sign()
+	ms.tx.Submit()
+
+	err := ms.tx.Err()
+	ms.isMultiOp = false
+	ms.tx = nil
+	return err
 }
 
 // CreateKeyPair generates a new random key pair.
@@ -116,16 +181,14 @@ func (ms *MicroStellar) FundAccount(sourceSeed string, addressOrSeed string, amo
 		build.Destination{AddressOrSeed: addressOrSeed},
 		build.NativeAmount{Amount: amount})
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), payment)
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // LoadAccount loads the account information for the given address.
@@ -222,7 +285,7 @@ func (ms *MicroStellar) Pay(sourceAddressOrSeed string, targetAddress string, am
 			build.CreditAmount{Code: asset.Code, Issuer: asset.Issuer, Amount: amount})
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		opts := options[0]
@@ -264,9 +327,7 @@ func (ms *MicroStellar) Pay(sourceAddressOrSeed string, targetAddress string, am
 	}
 
 	tx.Build(sourceAccount(sourceAddressOrSeed), build.Payment(paymentMuts...))
-	tx.Sign(sourceAddressOrSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceAddressOrSeed)
 }
 
 // CreateTrustLine creates a trustline from sourceSeed to asset, with the specified trust limit. An empty
@@ -280,7 +341,7 @@ func (ms *MicroStellar) CreateTrustLine(sourceSeed string, asset *Asset, limit s
 		return errors.Wrap(err, "can't create trust line")
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
@@ -292,9 +353,7 @@ func (ms *MicroStellar) CreateTrustLine(sourceSeed string, asset *Asset, limit s
 		tx.Build(sourceAccount(sourceSeed), build.Trust(asset.Code, asset.Issuer, build.Limit(limit)))
 	}
 
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // RemoveTrustLine removes an trustline from sourceSeed to an asset.
@@ -307,16 +366,14 @@ func (ms *MicroStellar) RemoveTrustLine(sourceSeed string, asset *Asset, options
 		return errors.Wrapf(err, "can't remove trust line")
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.RemoveTrust(asset.Code, asset.Issuer))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // SetMasterWeight changes the master weight of sourceSeed.
@@ -325,16 +382,14 @@ func (ms *MicroStellar) SetMasterWeight(sourceSeed string, weight uint32, option
 		return errors.Errorf("can't set master weight: invalid source address or seed: %s", sourceSeed)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.MasterWeight(weight))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // AccountFlags are used by issuers of assets.
@@ -363,16 +418,14 @@ func (ms *MicroStellar) SetFlags(sourceSeed string, flags AccountFlags, options 
 		return errors.Errorf("can't set flags: invalid source address or seed: %s", sourceSeed)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.SetFlag(int32(flags)))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // ClearFlags clears the specified flags for the account.
@@ -381,16 +434,14 @@ func (ms *MicroStellar) ClearFlags(sourceSeed string, flags AccountFlags, option
 		return errors.Errorf("can't clear flags: invalid source address or seed: %s", sourceSeed)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.ClearFlag(int32(flags)))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // SetHomeDomain changes the home domain of sourceSeed.
@@ -399,16 +450,14 @@ func (ms *MicroStellar) SetHomeDomain(sourceSeed string, domain string, options 
 		return errors.Errorf("can't set home domain: invalid source address or seed: %s", sourceSeed)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.HomeDomain(domain))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // AddSigner adds signerAddress as a signer to sourceSeed's account with weight signerWeight.
@@ -421,16 +470,14 @@ func (ms *MicroStellar) AddSigner(sourceSeed string, signerAddress string, signe
 		return errors.Errorf("can't add signer: invalid signer address or seed: %s", signerAddress)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.AddSigner(signerAddress, signerWeight))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // RemoveSigner removes signerAddress as a signer from sourceSeed's account.
@@ -443,16 +490,14 @@ func (ms *MicroStellar) RemoveSigner(sourceSeed string, signerAddress string, op
 		return errors.Errorf("can't remove signer: invalid signer address or seed: %s", signerAddress)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.RemoveSigner(signerAddress))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // SetThresholds sets the signing thresholds for the account.
@@ -461,16 +506,14 @@ func (ms *MicroStellar) SetThresholds(sourceSeed string, low, medium, high uint3
 		return errors.Errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.SetThresholds(low, medium, high))
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // Payment represents a finalized payment in the ledger. You can subscribe to payments

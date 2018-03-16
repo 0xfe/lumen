@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "2a19681498c0dd1680d3aa66c46a8f230ee126a6"
+  revision = "8da4e9a28823b1028d1b44f9c34f22653cc18eb3"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -244,7 +244,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "21652f85b0fdddb6c2b6b77a5beca5c5a908174a"
+  revision = "b4956d363a8b14623cc81db401707679605930a3"
 
 [[projects]]
   branch = "master"
