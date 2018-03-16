@@ -32,13 +32,22 @@ type Signer struct {
 	Type      string `json:"type"`
 }
 
+// Thresholds represent the signing thresholds on the account
+type Thresholds struct {
+	High   byte `json:"high"`
+	Medium byte `json:"medium"`
+	Low    byte `json:"low"`
+}
+
 // Account represents an account on the stellar network.
 type Account struct {
-	Balances      []Balance `json:"balances"`
-	Signers       []Signer  `json:"signers"`
-	NativeBalance Balance   `json:"native_balance"`
-	HomeDomain    string    `json:"home_domain"`
-	Sequence      string    `json:"seq"`
+	Address       string     `json:"address"`
+	Balances      []Balance  `json:"balances"`
+	Signers       []Signer   `json:"signers"`
+	NativeBalance Balance    `json:"native_balance"`
+	HomeDomain    string     `json:"home_domain"`
+	Thresholds    Thresholds `json:"thresholds"`
+	Sequence      string     `json:"seq"`
 }
 
 // newAccount creates a new initialized account
@@ -48,6 +57,7 @@ func newAccount() *Account {
 	account.Signers = []Signer{
 		Signer{},
 	}
+	account.Balances = []Balance{}
 
 	return account
 }
@@ -56,6 +66,7 @@ func newAccount() *Account {
 func newAccountFromHorizon(ha horizon.Account) *Account {
 	account := newAccount()
 
+	account.Address = ha.HistoryAccount.AccountID
 	account.HomeDomain = ha.HomeDomain
 	account.Sequence = ha.Sequence
 
@@ -85,6 +96,10 @@ func newAccountFromHorizon(ha horizon.Account) *Account {
 		account.Signers = append(account.Signers, signer)
 	}
 
+	account.Thresholds.High = ha.Thresholds.HighThreshold
+	account.Thresholds.Medium = ha.Thresholds.MedThreshold
+	account.Thresholds.Low = ha.Thresholds.LowThreshold
+
 	return account
 }
 
@@ -112,5 +127,11 @@ func (account *Account) GetNativeBalance() string {
 
 // GetMasterWeight returns the weight of the primary key in the account.
 func (account *Account) GetMasterWeight() int32 {
-	return account.Signers[0].Weight
+	for _, a := range account.Signers {
+		if a.PublicKey == account.Address {
+			return a.Weight
+		}
+	}
+
+	return -1
 }

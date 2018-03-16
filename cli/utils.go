@@ -189,3 +189,22 @@ func (cli *CLI) GetAccountOrSeed(name, keyType string) (string, error) {
 
 	return code, err
 }
+
+// LoadAccount loads information for "name" from horizon.
+func (cli *CLI) LoadAccount(logFields logrus.Fields, name string) *microstellar.Account {
+	address, err := cli.ResolveAccount(logFields, name, "address")
+
+	if err != nil {
+		cli.error(logFields, "invalid address: %s", name)
+		return nil
+	}
+
+	account, err := cli.ms.LoadAccount(address)
+
+	if err != nil {
+		cli.error(logFields, "can't load account: %v", microstellar.ErrorString(err))
+		return nil
+	}
+
+	return account
+}

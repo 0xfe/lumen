@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"encoding/json"
+
 	"github.com/0xfe/microstellar"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -16,14 +18,9 @@ func (cli *CLI) buildBalanceCmd() *cobra.Command {
 			asset := microstellar.NativeAsset
 
 			logFields := logrus.Fields{"cmd": "balance"}
-			address, err := cli.ResolveAccount(logFields, name, "address")
-
-			if err != nil {
-				cli.error(logFields, "invalid address: %s", name)
-				return
-			}
 
 			if len(args) > 1 {
+				var err error
 				assetName := args[1]
 				asset, err = cli.ResolveAsset(assetName)
 
@@ -33,10 +30,8 @@ func (cli *CLI) buildBalanceCmd() *cobra.Command {
 				}
 			}
 
-			account, err := cli.ms.LoadAccount(address)
-
-			if err != nil {
-				cli.error(logFields, "can't load account: %v", microstellar.ErrorString(err))
+			account := cli.LoadAccount(logFields, name)
+			if account == nil {
 				return
 			}
 
@@ -47,6 +42,27 @@ func (cli *CLI) buildBalanceCmd() *cobra.Command {
 			} else {
 				showSuccess(balance)
 			}
+		},
+	}
+
+	return cmd
+}
+
+func (cli *CLI) buildInfoCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "info [account]",
+		Short: "get account info",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+			logFields := logrus.Fields{"cmd": "balance"}
+			account := cli.LoadAccount(logFields, name)
+			if account == nil {
+				return
+			}
+
+			info, _ := json.MarshalIndent(*account, "", "  ")
+			showSuccess(string(info))
 		},
 	}
 

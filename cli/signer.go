@@ -226,17 +226,8 @@ func (cli *CLI) buildSignerMasterWeightCmd() *cobra.Command {
 					return
 				}
 			} else {
-				address, err := cli.ResolveAccount(logFields, account, "address")
-
-				if err != nil {
-					cli.error(logFields, "invalid account: %s", account)
-					return
-				}
-
-				account, err := cli.ms.LoadAccount(address)
-
-				if err != nil {
-					cli.error(logFields, "can't load account: %v", microstellar.ErrorString(err))
+				account := cli.LoadAccount(logFields, account)
+				if account == nil {
 					return
 				}
 
@@ -256,19 +247,9 @@ func (cli *CLI) buildSignerListCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-
 			logFields := logrus.Fields{"cmd": "signer", "subcmd": "list"}
-			address, err := cli.ResolveAccount(logFields, name, "address")
-
-			if err != nil {
-				cli.error(logFields, "invalid account: %s", name)
-				return
-			}
-
-			account, err := cli.ms.LoadAccount(address)
-
-			if err != nil {
-				cli.error(logFields, "can't load account: %v", microstellar.ErrorString(err))
+			account := cli.LoadAccount(logFields, name)
+			if account == nil {
 				return
 			}
 

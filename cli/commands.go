@@ -37,6 +37,7 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.AddCommand(cli.buildDelCmd())
 	rootCmd.AddCommand(cli.buildFriendbotCmd())
 	rootCmd.AddCommand(cli.buildFlagsCmd())
+	rootCmd.AddCommand(cli.buildInfoCmd())
 
 	// Higher level
 	rootCmd.AddCommand(cli.buildBalanceCmd())
