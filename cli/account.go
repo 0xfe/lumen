@@ -36,10 +36,16 @@ func (cli *CLI) buildAccountNewCmd() *cobra.Command {
 	accountNewCmd := &cobra.Command{
 		Use:   "new [name]",
 		Short: "create a new random keypair named [name]",
-		Args:  cobra.MinimumNArgs(1),
+		Args:  cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
 			pair, err := cli.ms.CreateKeyPair()
+			showSuccess("%s %s", pair.Address, pair.Seed)
+
+			if len(args) == 0 {
+				return
+			}
+
+			name := args[0]
 
 			if err != nil {
 				showError(logrus.Fields{"cmd": "account", "subcmd": "new"}, "could not create keypair: %s", name)
@@ -59,8 +65,6 @@ func (cli *CLI) buildAccountNewCmd() *cobra.Command {
 				showError(logrus.Fields{"cmd": "account", "subcmd": "new"}, "could not save keypair: %s", name)
 				return
 			}
-
-			showSuccess("%s %s", pair.Address, pair.Seed)
 		},
 	}
 
