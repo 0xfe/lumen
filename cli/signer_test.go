@@ -27,5 +27,5 @@ func TestSigners(t *testing.T) {
 	expectOutput(t, cli, "error", "signer masterweight mo 400")
 	expectOutput(t, cli, "", "signer masterweight master 400")
 
-	expectOutput(t, cli, "", "signer list master")
+	expectOutput(t, cli, "address: weight:0", "signer list master")
 }
