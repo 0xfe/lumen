@@ -30,22 +30,27 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.PersistentFlags().String("store", fmt.Sprintf("file:%s/.lumen-data.yml", home), "namespace to use (default)")
 
 	// Basic commands
-	rootCmd.AddCommand(cli.buildVersionCmd())
-	rootCmd.AddCommand(cli.buildNSCmd())
-	rootCmd.AddCommand(cli.buildSetCmd())
-	rootCmd.AddCommand(cli.buildGetCmd())
-	rootCmd.AddCommand(cli.buildDelCmd())
-	rootCmd.AddCommand(cli.buildFriendbotCmd())
-	rootCmd.AddCommand(cli.buildFlagsCmd())
-	rootCmd.AddCommand(cli.buildInfoCmd())
+	rootCmd.AddCommand(cli.buildVersionCmd()) // version
+	rootCmd.AddCommand(cli.buildNSCmd())      // ns
+	rootCmd.AddCommand(cli.buildSetCmd())     // set
+	rootCmd.AddCommand(cli.buildGetCmd())     // get
+	rootCmd.AddCommand(cli.buildDelCmd())     // del
 
-	// Higher level
-	rootCmd.AddCommand(cli.buildBalanceCmd())
-	rootCmd.AddCommand(cli.buildPayCmd())
-	rootCmd.AddCommand(cli.buildAccountCmd())
-	rootCmd.AddCommand(cli.buildAssetCmd())
-	rootCmd.AddCommand(cli.buildTrustCmd())
-	rootCmd.AddCommand(cli.buildSignerCmd())
-	rootCmd.AddCommand(cli.buildWatchCmd())
-	rootCmd.AddCommand(cli.buildDexCmd())
+	// Core commands
+	rootCmd.AddCommand(cli.buildPayCmd())    // pay
+	rootCmd.AddCommand(cli.buildTrustCmd())  // trust
+	rootCmd.AddCommand(cli.buildSignerCmd()) // signer
+	rootCmd.AddCommand(cli.buildDexCmd())    // dex
+
+	// Aux commands
+	rootCmd.AddCommand(cli.buildFriendbotCmd()) // friendbot
+	rootCmd.AddCommand(cli.buildInfoCmd())      // info
+	rootCmd.AddCommand(cli.buildBalanceCmd())   // balance
+	rootCmd.AddCommand(cli.buildWatchCmd())     // watch
+	rootCmd.AddCommand(cli.buildFlagsCmd())     // flags
+	rootCmd.AddCommand(cli.buildDataCmd())      // data
+
+	// Alias commands
+	rootCmd.AddCommand(cli.buildAccountCmd()) // account
+	rootCmd.AddCommand(cli.buildAssetCmd())   // asset
 }
