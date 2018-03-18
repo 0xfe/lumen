@@ -70,6 +70,9 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   ```bash
   lumen pay 10 --from kelly --to mo*qubit.sh
   lumen balance mo*qubit.sh
+
+  # Works for assets too
+  lumen balance bob USD:issuer*citibank.com
   ```
 * Trade assets on the DEX and make path payments with automatic path finding
   ```bash
@@ -186,6 +189,9 @@ lumen balance mo
 #### Work with credit assets
 
 ```bash
+# Look up bob's USD balance (from specified issuer)
+lumen balance bob USD:GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
+
 # Create an alias for a new asset type. The asset code is derived from the alias (USD).
 lumen asset set USD GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM
 
@@ -199,6 +205,9 @@ lumen balance bob USD-chase
 # Create a trustline for kelly to Citibank's USD, then pay her
 lumen trust create kelly USD-citi
 lumen pay 5 USD-citi --from mo --to kelly --memotext "here's five bucks"
+
+# Use federated asset names
+lumen pay 5 USD:issuer*chase.com --from mo --to kelly --memotext "here's five bucks"
 ```
 
 #### Stream the ledger
