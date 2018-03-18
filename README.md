@@ -224,7 +224,7 @@ lumen ns default
 lumen account address corp
 ```
 
-#### Stream the ledger to watch for payments
+#### Stream the ledger
 
 ```bash
 # Watch for payments to and from kelly. This runs forever and emits payment details everytime
@@ -233,6 +233,12 @@ lumen watch payments kelly
 
 # Stream payments all the way from when the account was created
 lumen watch payments kelly --cursor start
+
+# Stream all transactions from kelly
+lumen watch transactions kelly
+
+# Stream all ledger updates in Stellar
+lumen watch ledger
 ```
 
 #### Multisig accounts
