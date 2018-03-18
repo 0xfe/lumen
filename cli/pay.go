@@ -36,7 +36,7 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 
 			target, err := cli.ResolveAccount(fields, to, "address")
 			if err != nil {
-				cli.error(fields, "bad --to address: ", to)
+				cli.error(fields, "bad --to address: %s", to)
 				return
 			}
 

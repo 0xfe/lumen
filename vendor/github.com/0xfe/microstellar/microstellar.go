@@ -33,10 +33,8 @@
 package microstellar
 
 import (
-	"context"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stellar/go/build"
@@ -516,95 +514,51 @@ func (ms *MicroStellar) SetThresholds(sourceSeed string, low, medium, high uint3
 	return ms.signAndSubmit(tx, sourceSeed)
 }
 
-// Payment represents a finalized payment in the ledger. You can subscribe to payments
-// on the stellar network via the WatchPayments call.
-type Payment horizon.Payment
-
-// NewPaymentFromHorizon converts a horizon JSON payment struct to Payment
-func NewPaymentFromHorizon(p *horizon.Payment) *Payment {
-	payment := Payment(*p)
-	return &payment
-}
-
-// PaymentWatcher is returned by WatchPayments, which watches the ledger for payments
-// to and from an address.
-type PaymentWatcher struct {
-	// Ch gets a *Payment everytime there's a new entry in the ledger.
-	Ch chan *Payment
-
-	// TODO: another channel for structured Payment info
-
-	// Call Done to stop watching the ledger. This closes Ch.
-	Done func()
-
-	// This is set if the stream terminates unexpectedly. Safe to check
-	// after Ch is closed.
-	Err *error
-}
-
-// WatchPayments watches the ledger for payments to and from address and streams them on a channel . Use
-// Options.WithContext to set a context.Context, and Options.WithCursor to set a cursor.
-func (ms *MicroStellar) WatchPayments(address string, options ...*Options) (*PaymentWatcher, error) {
-	debugf("WatchPayments", "watching address: %s", address)
-	if err := ValidAddress(address); err != nil {
-		return nil, errors.Errorf("can't watch payments, invalid address: %s", address)
+// SetData lets you attach (or update) arbitrary data to an account. The lengths of the key and value must each be
+// less than 64 bytes.
+func (ms *MicroStellar) SetData(sourceSeed string, key string, val []byte, options ...*Options) error {
+	if !ValidAddressOrSeed(sourceSeed) {
+		return errors.Errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
-
-	var cursor *horizon.Cursor
-	var ctx context.Context
-	var cancelFunc func()
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
-		if options[0].hasCursor {
-			// Ugh! Why do I have to do this?
-			c := horizon.Cursor(options[0].cursor)
-			cursor = &c
-			debugf("WatchPayments", "starting stream for address: %s at cursor: %s", address, string(*cursor))
-		}
-		ctx = options[0].ctx
 	}
 
-	if ctx == nil {
-		ctx, cancelFunc = context.WithCancel(context.Background())
-	} else {
-		ctx, cancelFunc = context.WithCancel(ctx)
+	if key == "" {
+		return errors.Errorf("data key must not be empty")
 	}
 
-	var streamError error
-	ch := make(chan *Payment)
+	if len(key) > 64 {
+		return errors.Errorf("data key must be under 64 bytes: %s", key)
+	}
 
-	go func(ch chan *Payment, streamError *error) {
-		if tx.fake {
-		out:
-			for {
-				select {
-				case <-ctx.Done():
-					break out
-				default:
-					// continue
-				}
-				ch <- &Payment{From: "FAKESOURCE", To: "FAKEDEST", Type: "payment", AssetCode: "QBIT", Amount: "5"}
-				time.Sleep(200 * time.Millisecond)
-			}
-		} else {
-			err := tx.GetClient().StreamPayments(ctx, address, cursor, func(payment horizon.Payment) {
-				debugf("WatchPayments", "found payment (%s) at %s, loading memo", payment.Type, address)
-				tx.GetClient().LoadMemo(&payment)
-				ch <- NewPaymentFromHorizon(&payment)
-			})
+	if len(val) > 64 {
+		return errors.Errorf("data value must be under 64 bytes: %s", string(val))
+	}
 
-			if err != nil {
-				debugf("WatchPayments", "stream unexpectedly disconnected", err)
-				*streamError = errors.Wrapf(err, "payment stream disconnected")
-				cancelFunc()
-			}
-		}
+	tx.Build(sourceAccount(sourceSeed), build.SetData(key, val))
+	return ms.signAndSubmit(tx, sourceSeed)
+}
 
-		close(ch)
-	}(ch, &streamError)
+// ClearData removes attached data from an account.
+func (ms *MicroStellar) ClearData(sourceSeed string, key string, options ...*Options) error {
+	if !ValidAddressOrSeed(sourceSeed) {
+		return errors.Errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
+	}
 
-	return &PaymentWatcher{ch, cancelFunc, &streamError}, nil
+	tx := ms.getTx()
+
+	if len(options) > 0 {
+		tx.SetOptions(options[0])
+	}
+
+	if len(key) > 64 {
+		return errors.Errorf("data key must be under 64 bytes: %s", key)
+	}
+
+	tx.Build(sourceAccount(sourceSeed), build.ClearData(key))
+	return ms.signAndSubmit(tx, sourceSeed)
 }

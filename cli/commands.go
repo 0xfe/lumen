@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +21,7 @@ func (cli *CLI) buildRootCmd() {
 	}
 	cli.rootCmd = rootCmd
 
-	home := os.Getenv("HOME")
+	home, _ := homedir.Dir()
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output (false)")

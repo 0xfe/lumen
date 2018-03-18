@@ -9,6 +9,10 @@ MicroStellar is intended to be robust, well tested, and well documented -- we de
 
 To get started, follow the instructions below, or read the [API docs](https://godoc.org/github.com/0xfe/microstellar) for more.
 
+Also see:
+* [Lumen](http://github.com/0xfe/lumen), a commandline interface for Stellar, based on MicroStellar.
+* [Hacking Stellar](http://github.com/0xfe/hacking-stellar), an open-source e-book on working with Stellar.
+
 <a href="https://travis-ci.org/0xfe/microstellar"><img src="https://travis-ci.org/0xfe/microstellar.svg?branch=master"/></a>
 
 ## QuickStart
@@ -182,47 +186,45 @@ ms.Start(bob.Address,
   microstellar.Opts().WithMemoText("multi-op").WithSigner(mary.Seed))
 
 ms.SetHomeDomain(bob.Address, "qubit.sh")
+ms.SetData(bob.Address, "foo", []byte("bar"))
 ms.SetFlags(bob.Address, microstellar.FlagAuthRequired)
 ms.PayNative(bob.Address, mary.Address, "1")
 ms.PayNative(mary.Address, bob.Address, "0.5")
 
 // Sign and submit the transaction.
-err := ms.Submit()
+ms.Submit()
+
+// Load account to see if it worked.
+account, _ := ms.LoadAccount(bob.Address)
+foo, ok := account.GetData("foo")
+if ok {
+  fmt.Printf("Bob's data for foo: %s", string(foo))
+}
 ```
 
 #### Streaming
 
 ```go
-// Watch for payments to address. (The fake network sends payments every 200ms.)
-watcher, err := ms.WatchPayments("GCCRUJJGPYWKQWM5NLAXUCSBCJKO37VVJ74LIZ5AQUKT6KPVCPNAGC4A")
+// Watch for payments to and from address starting from now.
+watcher, err := ms.WatchPayments("GCCRUJJGPYWKQWM5NLAXUCSBCJKO37VVJ74LIZ5AQUKT6KPVCPNAGC4A"),
+  Opts().WithCursor("now"))
 
 go func() {
   for p := range watcher.Ch {
-    log.Printf("WatchPayments: %v -- %v %v from %v to %v\n",
-      p.Type, p.Amount, p.AssetCode, p.From, p.To)
+    log.Printf("Saw payment: %+v", p)
   }
-  log.Printf("WatchPayments Done -- Error: %v\n", *watcher.StreamError)
 }()
 
 // Stream the ledger for about a second then stop the watcher.
 time.Sleep(1 * time.Second)
 watcher.Done()
-```
 
-#### Other stuff
+// Watch for transactions from address.
+watcher, err := ms.WatchTransactions("GCCRUJJGPYWKQWM5NLAXUCSBCJKO37VVJ74LIZ5AQUKT6KPVCPNAGC4A",
+  Opts().WithCursor("now"))
 
-```go
-// What's their USD balance?
-account, _ = ms.LoadAccount("GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM")
-log.Printf("USD Balance: %v USD", account.GetBalance(USD))
-
-// What's their home domain?
-log.Printf("Home domain: %s", account.HomeDomain)
-
-// Who are the signers on the account?
-for i, s := range account.Signers {
-    log.Printf("Signer %d (weight: %v): %v", i, s.PublicKey, s.Weight)
-}
+// Get the firehose of ledger updates.
+watcher, err := ms.WatchLedgers(Opts().WithCursor("now"))
 ```
 
 ## Documentation

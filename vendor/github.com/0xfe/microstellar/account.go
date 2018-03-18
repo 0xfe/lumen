@@ -1,6 +1,8 @@
 package microstellar
 
 import (
+	"encoding/base64"
+
 	"github.com/stellar/go/clients/horizon"
 )
 
@@ -39,15 +41,24 @@ type Thresholds struct {
 	Low    byte `json:"low"`
 }
 
+// Flags contains the auth flags in the account
+type Flags struct {
+	AuthRequired  bool `json:"auth_required"`
+	AuthRevocable bool `json:"auth_revocable"`
+	AuthImmutable bool `json:"auth_immutable"`
+}
+
 // Account represents an account on the stellar network.
 type Account struct {
-	Address       string     `json:"address"`
-	Balances      []Balance  `json:"balances"`
-	Signers       []Signer   `json:"signers"`
-	NativeBalance Balance    `json:"native_balance"`
-	HomeDomain    string     `json:"home_domain"`
-	Thresholds    Thresholds `json:"thresholds"`
-	Sequence      string     `json:"seq"`
+	Address       string            `json:"address"`
+	Balances      []Balance         `json:"balances"`
+	Signers       []Signer          `json:"signers"`
+	Flags         Flags             `json:"flags"`
+	NativeBalance Balance           `json:"native_balance"`
+	HomeDomain    string            `json:"home_domain"`
+	Thresholds    Thresholds        `json:"thresholds"`
+	Data          map[string]string `json:"data"`
+	Sequence      string            `json:"seq"`
 }
 
 // newAccount creates a new initialized account
@@ -100,6 +111,14 @@ func newAccountFromHorizon(ha horizon.Account) *Account {
 	account.Thresholds.Medium = ha.Thresholds.MedThreshold
 	account.Thresholds.Low = ha.Thresholds.LowThreshold
 
+	account.Flags.AuthRequired = ha.Flags.AuthRequired
+	account.Flags.AuthRevocable = ha.Flags.AuthRevocable
+
+	account.Data = map[string]string{}
+	for k, v := range ha.Data {
+		account.Data[k] = v
+	}
+
 	return account
 }
 
@@ -134,4 +153,19 @@ func (account *Account) GetMasterWeight() int32 {
 	}
 
 	return -1
+}
+
+// GetData decodes and returns the base-64 encoded data in "key"
+func (account *Account) GetData(key string) ([]byte, bool) {
+	v, ok := account.Data[key]
+
+	if ok {
+		decodedVal, err := base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			return nil, false
+		}
+		return decodedVal, true
+	}
+
+	return nil, false
 }

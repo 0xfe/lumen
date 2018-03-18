@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "f22ac619dfd8685dc8f38e82f4548f49aa58445f"
+  revision = "17518fb80a440ab7c911862ff9c73e9739f83950"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -115,6 +115,12 @@
   name = "github.com/manucorporat/sse"
   packages = ["."]
   revision = "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
 
 [[projects]]
   branch = "master"
@@ -250,7 +256,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "e0c57d8f86c17f0724497efcb3bc617e82834821"
+  revision = "24dd3780ca4f75fed9f321890729414a4b5d3f13"
 
 [[projects]]
   branch = "master"
@@ -283,6 +289,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7e32db8d69ebc1f1827e80e510866b6849686a4889fd6ec93458fc7bcd8a684a"
+  inputs-digest = "b9eaac44e986d401b0326c9d407612c65270f8df3fcb5ae498c0fa0f41d7fc50"
   solver-name = "gps-cdcl"
   solver-version = 1

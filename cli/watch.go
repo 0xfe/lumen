@@ -2,27 +2,95 @@ package cli
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/0xfe/microstellar"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
+func showEntry(logFields logrus.Fields, entry interface{}, format string) {
+	if format == "json" {
+		data, err := json.MarshalIndent(entry, "", "  ")
+
+		if err != nil {
+			logrus.WithFields(logFields).Errorf("skipping bad data: %v", err)
+		} else {
+			showSuccess("%v", string(data))
+		}
+	} else {
+		showSuccess("%+v", entry)
+	}
+}
+
+func watch(ms *microstellar.MicroStellar, logFields logrus.Fields, entity string, address string, format string, stopFunc *func(), opts *microstellar.Options) error {
+	var watcher interface{}
+	var err error
+	var streamErr *error
+
+	for streamErr == nil {
+		switch entity {
+		case "payments":
+			watcher, err = ms.WatchPayments(address, opts)
+			*stopFunc = watcher.(*microstellar.PaymentWatcher).Done
+			streamErr = watcher.(*microstellar.PaymentWatcher).Err
+			for entry := range watcher.(*microstellar.PaymentWatcher).Ch {
+				showEntry(logFields, entry, format)
+			}
+		case "transactions":
+			watcher, err = ms.WatchTransactions(address, opts)
+			*stopFunc = watcher.(*microstellar.TransactionWatcher).Done
+			streamErr = watcher.(*microstellar.TransactionWatcher).Err
+			for entry := range watcher.(*microstellar.TransactionWatcher).Ch {
+				showEntry(logFields, entry, format)
+			}
+		case "ledger":
+			watcher, err = ms.WatchLedgers(opts)
+			*stopFunc = watcher.(*microstellar.LedgerWatcher).Done
+			streamErr = watcher.(*microstellar.LedgerWatcher).Err
+			for entry := range watcher.(*microstellar.LedgerWatcher).Ch {
+				showEntry(logFields, entry, format)
+			}
+		default:
+			return errors.Errorf("invalid watch entity: %s", entity)
+		}
+
+		if *streamErr != nil {
+			debugf(logFields, "connection closed", *streamErr)
+		}
+
+		if err != nil {
+			return errors.Wrapf(err, "can't watch address: %v", microstellar.ErrorString(err))
+		}
+
+		debugf(logFields, "retrying in 2s...")
+		time.Sleep(2 * time.Second)
+	}
+
+	return nil
+}
+
 func (cli *CLI) buildWatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "watch [account]",
+		Use:   "watch [payments|transactions|ledger] [account]",
 		Short: "watch the account on the ledger",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
+			entity := args[0]
+			address := ""
 
 			logFields := logrus.Fields{"cmd": "watch"}
 
-			address, err := cli.ResolveAccount(logFields, name, "address")
+			if len(args) > 1 {
+				name := args[1]
+				var err error
+				address, err = cli.ResolveAccount(logFields, name, "address")
 
-			if err != nil {
-				cli.error(logFields, "invalid address: %s", name)
-				return
+				if err != nil {
+					cli.error(logFields, "invalid address: %s", name)
+					return
+				}
 			}
 
 			opts := microstellar.Opts()
@@ -32,32 +100,11 @@ func (cli *CLI) buildWatchCmd() *cobra.Command {
 				opts = opts.WithCursor(cursor)
 			}
 
-			watcher, err := cli.ms.WatchPayments(address, opts)
+			format, _ := cmd.Flags().GetString("format")
+			err := watch(cli.ms, logFields, entity, address, format, &cli.stopWatcher, opts)
 
 			if err != nil {
-				cli.error(logFields, "can't watch address: %v", microstellar.ErrorString(err))
-				return
-			}
-
-			cli.stopWatcher = watcher.Done
-			format, err := cmd.Flags().GetString("format")
-
-			for p := range watcher.Ch {
-				if format == "json" {
-					data, err := json.MarshalIndent(p, "", "  ")
-
-					if err != nil {
-						logrus.WithFields(logFields).Errorf("skipping bad data: %v", err)
-					} else {
-						showSuccess("%v", string(data))
-					}
-				} else {
-					showSuccess("%+v", p)
-				}
-			}
-
-			if watcher.Err != nil {
-				cli.error(logrus.Fields{"cmd": "watch"}, "%v", *watcher.Err)
+				cli.error(logFields, "can't watch stream: %v", microstellar.ErrorString(err))
 				return
 			}
 		},
