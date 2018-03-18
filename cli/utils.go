@@ -122,22 +122,51 @@ func (cli *CLI) ResolveAsset(name string) (*microstellar.Asset, error) {
 		return microstellar.NativeAsset, nil
 	}
 
-	readField := func(field string) (string, error) {
-		key := fmt.Sprintf("asset:%s:%s", name, field)
-		val, err := cli.GetVar(key)
-		if err != nil {
-			return "", err
+	var code, issuer, assetType string
+	if strings.Contains(name, ":") {
+		var issuerName string
+		parts := strings.Split(name, ":")
+		if len(parts) < 2 {
+			return nil, errors.Errorf("bad asset: %s", name)
 		}
 
-		return val, nil
-	}
+		code = parts[0]
+		issuerName = parts[1]
 
-	code, err1 := readField("code")
-	issuer, err2 := readField("issuer")
-	assetType, err3 := readField("type")
+		if len(parts) > 2 {
+			assetType = parts[2]
+		} else {
+			if len(code) <= 5 {
+				assetType = string(microstellar.Credit4Type)
+			} else {
+				assetType = string(microstellar.Credit12Type)
+			}
+		}
 
-	if err1 != nil || err2 != nil || err3 != nil {
-		return nil, errors.Errorf("could not read asset: %v, %v, %v", err1, err2, err3)
+		var err error
+		issuer, err = cli.ResolveAccount(logrus.Fields{"method": "ResolveAsset"}, issuerName, "address")
+		if err != nil {
+			return nil, errors.Errorf("bad asset issuer: %v", issuerName)
+		}
+	} else {
+		readField := func(field string) (string, error) {
+			key := fmt.Sprintf("asset:%s:%s", name, field)
+			val, err := cli.GetVar(key)
+			if err != nil {
+				return "", err
+			}
+
+			return val, nil
+		}
+
+		var err1, err2, err3 error
+		code, err1 = readField("code")
+		issuer, err2 = readField("issuer")
+		assetType, err3 = readField("type")
+
+		if err1 != nil || err2 != nil || err3 != nil {
+			return nil, errors.Errorf("could not read asset: %v, %v, %v", err1, err2, err3)
+		}
 	}
 
 	var asset *microstellar.Asset
