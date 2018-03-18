@@ -263,3 +263,16 @@ func TestDex(t *testing.T) {
 	expectOutput(t, cli, "", "pay 1 EUR --to bob --from mo --with XLM --max 20 --path USD,EUR -v")
 
 }
+
+func TestData(t *testing.T) {
+	cli, cleanupFunc := newCLI()
+	defer cleanupFunc()
+
+	createFundedAccount(t, cli, "mo")
+
+	expectOutput(t, cli, "error", "data mo foo")
+	expectOutput(t, cli, "", "data mo foo bar")
+	expectOutput(t, cli, "bar", "data mo foo")
+	expectOutput(t, cli, "", "data mo foo --clear")
+	expectOutput(t, cli, "error", "data mo foo")
+}
