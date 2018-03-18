@@ -29,7 +29,7 @@ func watch(ms *microstellar.MicroStellar, logFields logrus.Fields, entity string
 	var err error
 	var streamErr *error
 
-	for streamErr == nil {
+	for err == nil {
 		switch entity {
 		case "payments":
 			watcher, err = ms.WatchPayments(address, opts)
@@ -57,7 +57,7 @@ func watch(ms *microstellar.MicroStellar, logFields logrus.Fields, entity string
 		}
 
 		if *streamErr != nil {
-			debugf(logFields, "connection closed", *streamErr)
+			debugf(logFields, "connection closed: %v", *streamErr)
 		}
 
 		if err != nil {
