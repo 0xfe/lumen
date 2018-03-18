@@ -201,29 +201,6 @@ lumen trust create kelly USD-citi
 lumen pay 5 USD-citi --from mo --to kelly --memotext "here's five bucks"
 ```
 
-#### Working with namespaces
-You can use namespaces to work on multiple projects at the same time. The default namespace is called `default`.
-
-```bash
-# Lookup the current namespace
-lumen ns
-
-# Change to namespace prod (creates a new namespace, if necessary)
-lumen ns prod
-
-# Associate this namespace with the public horizon servers
-lumen set config:network public
-
-# Setup a new account in this namespace
-lumen account set corp GBPQN4UDRR7BVTSSBQFUEQ5UIJS5EJ4LRXP4TJZF5Q6IDY6OBCB6UPZR SAQBE63WGYQACOXGDSW4JEG6IXGRRRCGFW6ET3F5T4STKXSQSKRRAH2I
-
-# Switch back to default namespace
-lumen ns default
-
-# The corp account should not exist
-lumen account address corp
-```
-
 #### Stream the ledger
 
 ```bash
@@ -270,10 +247,37 @@ lumen pay mary bob 10 USD --signers sharon,bill
 lumen signer remove bill --from mary --signers mary,bill
 ```
 
+#### Advanced features
+
+```sh
+# Attach data fields to an account
+lumen data bob mydata "the fresh prince"
+lumen data bob otherdata "more data"
+
+# Lookup the key "mydata" in bob's account
+lumen data bob mydata
+# output: the fresh prince
+
+# Delete data key mydata
+lumen data bob mydata --clear
+
+# Cross-asset path payments. Deposit 10 INR into Mary's account using USD from
+# Bob's USD account, spending no more than 3 USD
+lumen pay 10 INR --to mary --from bob --with USD --max 3
+
+# Get detailed account information in JSON
+lumen info bob
+
+# Change bob's account flags
+lumen flags bob auth_revocables
+
+# Disable Bob's master key (by setting it's weight to 0)
+lumen signer masterweight bob 0
+```
+
 ### Configuring Lumen
 
 Lumen looks for a configuration file called `.lumen-config.yml` in one of the following locations (in order of preference):
-
 
 * The current directory: `.`
 * The parent directory: `..`
@@ -314,6 +318,26 @@ You can switch namespaces by (in order of preference):
 * The `LUMEN_NS` environment variable.
 
 You can get the current namespace with `lumen ns`. The default namespace is `default`.
+
+```bash
+# Lookup the current namespace
+lumen ns
+
+# Change to namespace prod (creates a new namespace, if necessary)
+lumen ns prod
+
+# Associate this namespace with the public horizon servers
+lumen set config:network public
+
+# Setup a new account in this namespace
+lumen account set corp GBPQN4UDRR7BVTSSBQFUEQ5UIJS5EJ4LRXP4TJZF5Q6IDY6OBCB6UPZR SAQBE63WGYQACOXGDSW4JEG6IXGRRRCGFW6ET3F5T4STKXSQSKRRAH2I
+
+# Switch back to default namespace
+lumen ns default
+
+# The corp account should not exist
+lumen account address corp
+```
 
 ## Hacking on Lumen
 

@@ -138,7 +138,7 @@ func (cli *CLI) buildFriendbotCmd() *cobra.Command {
 
 func (cli *CLI) buildFlagsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "flags [account] [none|auth_required|auth_revocable|auth_immutable]...",
+		Use:   "flags [account] [none|auth_required|auth_revocable|auth_immutable]... [--clear]",
 		Short: "set/clear stellar flags on [account]",
 		Args:  cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
