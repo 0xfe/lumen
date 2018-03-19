@@ -25,6 +25,7 @@ func (cli *CLI) buildRootCmd() {
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output (false)")
+	rootCmd.PersistentFlags().Bool("nosubmit", false, "display transaction without submitting")
 	rootCmd.PersistentFlags().String("network", "test", "network to use (test)")
 	rootCmd.PersistentFlags().String("ns", "default", "namespace to use (default)")
 	rootCmd.PersistentFlags().String("store", fmt.Sprintf("file:%s/.lumen-data.yml", home), "namespace to use (default)")

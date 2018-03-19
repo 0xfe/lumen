@@ -272,6 +272,24 @@ func (tx *Tx) Submit() error {
 		return tx.err
 	}
 
+	if tx.options != nil {
+		// Call the presubmit handler, if set.
+		handler, ok := tx.options.handlers[EvBeforeSubmit]
+		if ok {
+			debugf("Tx.Submit", "calling presubmit handler")
+			f := (func(...interface{}) (bool, error))(*handler)
+			cont, err := f(tx.payload)
+			if tx.err != nil {
+				tx.err = errors.Wrap(err, "presubmit handler failed")
+				return tx.err
+			}
+
+			if !cont {
+				return nil
+			}
+		}
+	}
+
 	if tx.fake {
 		tx.response = &horizon.TransactionSuccess{Result: "fake_ok"}
 		return nil
@@ -288,6 +306,8 @@ func (tx *Tx) Submit() error {
 
 	debugf("Tx.Submit", "transaction submitted to ledger %d with hash %s", int32(resp.Ledger), resp.Hash)
 	tx.response = &resp
+	tx.submitted = true
+
 	tx.submitted = true
 	return nil
 }

@@ -26,11 +26,25 @@ const (
 	MemoReturn = MemoType(4) // Return hash memo
 )
 
+// Event denotes a specific event for a handler.
+type Event int
+
+// Supported events.
+const (
+	EvBeforeSubmit = Event(0)
+)
+
+// TxHandler is a custom function that can be called when certain events occur. If
+// false is returned or if the method returns an error, the caller stops processing the
+// event immediately.
+type TxHandler func(data ...interface{}) (bool, error)
+
 // Options are additional parameters for a transaction. Use Opts() or NewOptions()
 // to create a new instance.
 type Options struct {
 	// Defaults to context.Background if unset.
-	ctx context.Context
+	ctx      context.Context
+	handlers map[Event]*TxHandler
 
 	// Use With* methods to set these options
 	hasFee        bool
@@ -70,6 +84,7 @@ type Options struct {
 func NewOptions() *Options {
 	return &Options{
 		ctx:            nil,
+		handlers:       map[Event]*TxHandler{},
 		hasFee:         false,
 		hasTimeBounds:  false,
 		memoType:       MemoNone,
@@ -189,6 +204,14 @@ func (o *Options) FindPathFrom(sourceAddress string) *Options {
 func (o *Options) MultiOp(sourceAccount string) *Options {
 	o.isMultiOp = true
 	o.multiOpSource = sourceAccount
+	return o
+}
+
+// On attaches a handler to an event. E.g.,
+//
+//   Opts().On(microstellar.EvBeforeSubmit, func(tx) { log.Print(tx); return nil })
+func (o *Options) On(event Event, handler *TxHandler) *Options {
+	o.handlers[event] = handler
 	return o
 }
 

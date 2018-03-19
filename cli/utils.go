@@ -81,6 +81,17 @@ func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*micr
 		}
 	}
 
+	if nosubmit, _ := cli.rootCmd.Flags().GetBool("nosubmit"); nosubmit {
+		handler := func(args ...interface{}) (bool, error) {
+			showSuccess(args[0].(string))
+			return false, nil
+		}
+
+		txHandler := microstellar.TxHandler(handler)
+		logrus.WithFields(logFields).Debugf("sign-only transaction")
+		opts = opts.On(microstellar.EvBeforeSubmit, &txHandler)
+	}
+
 	return opts, nil
 }
 
