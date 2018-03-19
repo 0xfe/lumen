@@ -74,10 +74,15 @@ ms.PayNative(
   "3")
 
 // Set the memo field on a payment
-ms.Pay(
+err := ms.Pay(
   "S6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // from
   "GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM", // to
   "3", microstellar.Opts().WithMemoText("thanks for the fish"))
+
+// Find out where the transaction was submitted.
+if err == nil {
+  fmt.Printf("Transaction submitted to ledger: %d", ms.TxResponse().Ledger)
+}
 
 // Now load the account details from the ledger.
 account, _ := ms.LoadAccount(pair.Address)

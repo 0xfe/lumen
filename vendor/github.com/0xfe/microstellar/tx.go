@@ -1,7 +1,6 @@
 package microstellar
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -95,6 +94,9 @@ func NewTx(networkName string, params ...Params) *Tx {
 // SetOptions sets the Tx options
 func (tx *Tx) SetOptions(options *Options) {
 	tx.options = options
+	if options.isMultiOp {
+		tx.Start(options.multiOpSource)
+	}
 }
 
 // WithOptions sets the Tx options and returns the Tx
@@ -113,9 +115,13 @@ func (tx *Tx) Err() error {
 	return tx.err
 }
 
+// TxResponse is returned by the horizon server for a successful transaction.
+type TxResponse horizon.TransactionSuccess
+
 // Response returns the horison response for the submitted operation.
-func (tx *Tx) Response() string {
-	return fmt.Sprintf("%+v", tx.response)
+func (tx *Tx) Response() *TxResponse {
+	response := TxResponse(*tx.response)
+	return &response
 }
 
 // Reset clears all internal sate, so you can run a new operation.

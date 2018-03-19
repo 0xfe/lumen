@@ -60,6 +60,10 @@ type Options struct {
 	sendAsset     *Asset
 	maxAmount     string
 	path          []*Asset
+
+	// for multi-op transactions
+	isMultiOp     bool
+	multiOpSource string
 }
 
 // NewOptions creates a new options structure for Tx.
@@ -74,6 +78,8 @@ func NewOptions() *Options {
 		sortDescending: false,
 		passiveOffer:   false,
 		sourceAddress:  "",
+		isMultiOp:      false,
+		multiOpSource:  "",
 	}
 }
 
@@ -175,6 +181,14 @@ func (o *Options) Through(asset ...*Asset) *Options {
 // to specify the address (not seed) for the source account.
 func (o *Options) FindPathFrom(sourceAddress string) *Options {
 	o.sourceAddress = sourceAddress
+	return o
+}
+
+// MultiOp specifies that this is a multi-op transactions, and sets the fund source account
+// to sourceAccount.
+func (o *Options) MultiOp(sourceAccount string) *Options {
+	o.isMultiOp = true
+	o.multiOpSource = sourceAccount
 	return o
 }
 

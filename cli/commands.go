@@ -41,6 +41,7 @@ func (cli *CLI) buildRootCmd() {
 	rootCmd.AddCommand(cli.buildTrustCmd())  // trust
 	rootCmd.AddCommand(cli.buildSignerCmd()) // signer
 	rootCmd.AddCommand(cli.buildDexCmd())    // dex
+	rootCmd.AddCommand(cli.buildTxCmd())     // tx
 
 	// Aux commands
 	rootCmd.AddCommand(cli.buildFriendbotCmd()) // friendbot

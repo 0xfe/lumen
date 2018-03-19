@@ -200,7 +200,7 @@ func (ms *MicroStellar) watch(entity string, address string, streamer streamFunc
 			// Ugh! Why do I have to do this?
 			c := horizon.Cursor(options[0].cursor)
 			cursor = &c
-			debugf(logField, "starting stream for at cursor: %s", string(*cursor))
+			debugf(logField, "starting stream at cursor: %s", string(*cursor))
 		}
 		ctx = options[0].ctx
 	}

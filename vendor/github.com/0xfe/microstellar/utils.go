@@ -1,9 +1,11 @@
 package microstellar
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/stellar/go/amount"
 	"github.com/stellar/go/clients/horizon"
 	"github.com/stellar/go/strkey"
+	"github.com/stellar/go/xdr"
 )
 
 func debugf(method string, msg string, args ...interface{}) {
@@ -91,4 +94,22 @@ func FundWithFriendBot(address string) (string, error) {
 	}
 
 	return string(body), nil
+}
+
+// DecodeTx extracts a TransactionEnvelope out of the base64-encoded string.
+func DecodeTx(base64tx string) (*xdr.TransactionEnvelope, error) {
+	var tx xdr.TransactionEnvelope
+
+	if base64tx[len(base64tx)-1] != '=' {
+		base64tx = base64tx + "=="
+	}
+
+	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(base64tx))
+	_, err := xdr.Unmarshal(reader, &tx)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "error decoding base64 transaction")
+	}
+
+	return &tx, nil
 }
