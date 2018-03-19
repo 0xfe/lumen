@@ -58,13 +58,22 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   lumen set config:network public
   lumen pay 100000 USD --from president --to terrorist
   ```
-* Share addresses and encrypted seeds with other users via Redis.
+* Decode, sign, and submit arbitrary transactions
   ```bash
-  export LUMEN_STORE="redis,localhost:3400"
+  # Display a base64 transaction without submitting it to the network
+  lumen pay 5 USD --from mary --to bob --nosubmit
+  # Output: base64-encoded transaction
 
-  # Aliases are loaded and saved from redis
-  lumen account new ally
-  lumen friendbot ally
+  # Decode a base64-encoded transaction
+  lumen tx decode AAAAALiDDp5...
+
+  # Add a signature to an encoded transaction
+  lumen tx sign AAAAALiDDp5... --signers mary,pizzafund
+  # Output: signed base64 transaction
+
+  # Submit a base64-encoded transaction to the network
+  lumen tx submit AAAAALiDDp5...
+  # Output: horizon response
   ```
 * Use federated addresses directly in your transactions
   ```bash
@@ -259,6 +268,10 @@ lumen signer remove bill --from mary --signers mary,bill
 #### Advanced features
 
 ```sh
+# Cross-asset path payments. Deposit 10 INR into Mary's account using USD from
+# Bob's USD account, spending no more than 3 USD
+lumen pay 10 INR --to mary --from bob --with USD --max 3
+
 # Attach data fields to an account
 lumen data bob mydata "the fresh prince"
 lumen data bob otherdata "more data"
@@ -270,9 +283,20 @@ lumen data bob mydata
 # Delete data key mydata
 lumen data bob mydata --clear
 
-# Cross-asset path payments. Deposit 10 INR into Mary's account using USD from
-# Bob's USD account, spending no more than 3 USD
-lumen pay 10 INR --to mary --from bob --with USD --max 3
+# Display a base64 transaction without submitting it to the network
+lumen pay 5 USD --from mary --to bob --nosubmit
+# Output: base64-encoded transaction
+
+# Decode a base64-encoded transaction
+lumen tx decode AAAAALiDDp5...
+
+# Add a signature to an encoded transaction
+lumen tx sign AAAAALiDDp5... --signers mary,pizzafund
+# Output: signed base64 transaction
+
+# Submit a base64-encoded transaction to the network
+lumen tx submit AAAAALiDDp5...
+# Output: horizon response
 
 # Get detailed account information in JSON
 lumen info bob
