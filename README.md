@@ -64,8 +64,9 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   lumen pay 5 USD --from mary --to bob --nosubmit
   # Output: base64-encoded transaction
 
-  # Decode a base64-encoded transaction
-  lumen tx decode AAAAALiDDp5...
+  # Decode a base64-encoded transaction into a JSON string
+  lumen tx decode AAAAALiDDp5... --pretty
+  # Output: JSON transaction string
 
   # Add a signature to an encoded transaction
   lumen tx sign AAAAALiDDp5... --signers mary,pizzafund
