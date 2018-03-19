@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "705d7edc9471a92fbc0928141bf01a7e1cbf7ae1"
+  revision = "f0d6462de3759b014ba9eafd34a1836421af98ec"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -50,7 +50,7 @@
   branch = "master"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "563b81fc02b75d664e54da31f787c2cc2186780b"
+  revision = "7562301a6763c9ac631b0a2011b4aa0e064e45d4"
 
 [[projects]]
   name = "github.com/go-errors/errors"
@@ -256,7 +256,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "24dd3780ca4f75fed9f321890729414a4b5d3f13"
+  revision = "92b859f39abd2d91a854c9f9c4621b2f5054a92d"
 
 [[projects]]
   branch = "master"
@@ -265,7 +265,7 @@
     "unix",
     "windows"
   ]
-  revision = "01acb38716e021ed1fc03a602bdb5838e1358c5e"
+  revision = "d8e400bc7db4870d786864138af681469693d18c"
 
 [[projects]]
   name = "golang.org/x/text"

@@ -23,6 +23,7 @@ func (cli *CLI) buildTxCmd() *cobra.Command {
 
 	cmd.AddCommand(cli.buildTxSignCmd())
 	cmd.AddCommand(cli.buildTxSubmitCmd())
+	cmd.AddCommand(cli.buildTxDecodeCmd())
 
 	return cmd
 }
@@ -102,5 +103,30 @@ func (cli *CLI) buildTxSubmitCmd() *cobra.Command {
 		},
 	}
 
+	return cmd
+}
+
+func (cli *CLI) buildTxDecodeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "decode [base64-encoded transaction] [--pretty]",
+		Short: "display the base64-encoded transaction in JSON",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			b64tx := args[0]
+
+			logFields := logrus.Fields{"cmd": "decode"}
+			pretty, _ := cmd.Flags().GetBool("pretty")
+			txe, err := microstellar.DecodeTxToJSON(b64tx, pretty)
+
+			if err != nil {
+				cli.error(logFields, "decode error: %v", microstellar.ErrorString(err))
+				return
+			}
+
+			showSuccess(txe)
+		},
+	}
+
+	cmd.Flags().Bool("pretty", false, "format JSON output")
 	return cmd
 }

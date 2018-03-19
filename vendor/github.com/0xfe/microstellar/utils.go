@@ -2,6 +2,7 @@ package microstellar
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -112,4 +113,25 @@ func DecodeTx(base64tx string) (*xdr.TransactionEnvelope, error) {
 	}
 
 	return &tx, nil
+}
+
+// DecodeTxToJSON converts the base-64 TX to a JSON string.
+func DecodeTxToJSON(base64tx string, pretty bool) (string, error) {
+	xdr, err := DecodeTx(base64tx)
+	if err != nil {
+		return "", errors.Wrap(err, "DecodeTxToJSON")
+	}
+
+	var xdrJSON []byte
+	if pretty {
+		xdrJSON, err = json.MarshalIndent(xdr, "", "  ")
+	} else {
+		xdrJSON, err = json.Marshal(xdr)
+	}
+
+	if err != nil {
+		return "", errors.Wrap(err, "json.MarshalIndent")
+	}
+
+	return string(xdrJSON), nil
 }
