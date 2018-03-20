@@ -60,20 +60,18 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   ```
 * Decode, sign, and submit arbitrary transactions
   ```bash
-  # Display a base64 transaction without submitting it to the network
-  lumen pay 5 USD --from mary --to bob --nosubmit
-  # Output: base64-encoded transaction
+  # Output a base64 transaction without submitting it to the network.
+  lumen pay 5 USD --from mary --to bob --nosubmit >payment.txt
 
-  # Decode a base64-encoded transaction into a JSON string
-  lumen tx decode AAAAALiDDp5... --pretty
+  # Decode a base64-encoded transaction into a JSON string.
+  lumen tx decode $(cat payment.txt) --pretty
   # Output: JSON transaction string
 
-  # Add a signature to an encoded transaction
-  lumen tx sign AAAAALiDDp5... --signers mary,pizzafund
-  # Output: signed base64 transaction
+  # Add a signature to an encoded transaction.
+  lumen tx sign $(cat payment.txt) --signers pizzafund >payment.signed.txt
 
-  # Submit a base64-encoded transaction to the network
-  lumen tx submit AAAAALiDDp5...
+  # Submit a base64-encoded transaction to the network.
+  lumen tx submit $(cat payment.signed.txt)
   # Output: horizon response
   ```
 * Use federated addresses directly in your transactions

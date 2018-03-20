@@ -46,6 +46,7 @@ func (cli *CLI) error(logFields logrus.Fields, msg string, args ...interface{}) 
 }
 
 func buildFlagsForTxOptions(cmd *cobra.Command) {
+	cmd.Flags().Bool("nosign", false, "don't sign transaction")
 	cmd.Flags().String("memotext", "", "memo text")
 	cmd.Flags().String("memoid", "", "memo ID")
 	cmd.Flags().StringSlice("signers", []string{}, "alternate signers (comma separated)")
@@ -90,6 +91,10 @@ func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*micr
 		txHandler := microstellar.TxHandler(handler)
 		logrus.WithFields(logFields).Debugf("sign-only transaction")
 		opts = opts.On(microstellar.EvBeforeSubmit, &txHandler)
+	}
+
+	if nosign, err := cmd.Flags().GetBool("nosign"); err == nil && nosign {
+		opts = opts.SkipSignatures()
 	}
 
 	return opts, nil

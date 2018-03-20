@@ -57,7 +57,8 @@ type Options struct {
 	memoText string   // additional memo text
 	memoID   uint64   // additional memo ID
 
-	signerSeeds []string
+	skipSignatures bool
+	signerSeeds    []string
 
 	// Options for query methods (Watch*, Load*)
 	hasCursor      bool
@@ -212,6 +213,13 @@ func (o *Options) MultiOp(sourceAccount string) *Options {
 //   Opts().On(microstellar.EvBeforeSubmit, func(tx) { log.Print(tx); return nil })
 func (o *Options) On(event Event, handler *TxHandler) *Options {
 	o.handlers[event] = handler
+	return o
+}
+
+// SkipSignatures prevents Tx from signing transactions. This is typically done if the
+// transaction is not meant to be submitted.
+func (o *Options) SkipSignatures() *Options {
+	o.skipSignatures = true
 	return o
 }
 

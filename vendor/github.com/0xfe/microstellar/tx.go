@@ -230,19 +230,24 @@ func (tx *Tx) Sign(keys ...string) error {
 		tx.builder, err = build.Transaction(tx.ops...)
 	}
 
-	debugf("Tx.Sign", "signing transaction, seq: %v", tx.builder.TX.SeqNum)
-	if tx.options != nil && len(tx.options.signerSeeds) > 0 {
-		txe, err = tx.builder.Sign(tx.options.signerSeeds...)
+	if tx.options != nil && tx.options.skipSignatures {
+		debugf("Tx.Sign", "skipping signatures")
+		txe.Mutate(tx.builder)
 	} else {
-		if len(keys) == 0 {
-			keys = []string{tx.sourceAccount}
+		debugf("Tx.Sign", "signing transaction, seq: %v", tx.builder.TX.SeqNum)
+		if tx.options != nil && len(tx.options.signerSeeds) > 0 {
+			txe, err = tx.builder.Sign(tx.options.signerSeeds...)
+		} else {
+			if len(keys) == 0 {
+				keys = []string{tx.sourceAccount}
+			}
+			txe, err = tx.builder.Sign(keys...)
 		}
-		txe, err = tx.builder.Sign(keys...)
-	}
 
-	if err != nil {
-		tx.err = errors.Wrap(err, "signing error")
-		return tx.err
+		if err != nil {
+			tx.err = errors.Wrap(err, "signing error")
+			return tx.err
+		}
 	}
 
 	tx.payload, err = txe.Base64()

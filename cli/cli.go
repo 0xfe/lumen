@@ -239,13 +239,13 @@ func (cli *CLI) setupNetwork() {
 	if cli.rootCmd.Flag("network").Changed {
 		network, _ := cli.rootCmd.Flags().GetString("network")
 		logrus.WithFields(logrus.Fields{"type": "setup"}).Debugf("using horizon network: %s", network)
-		cli.ms = microstellar.New(network)
+		cli.ms = microstellar.NewFromSpec(network)
 	} else {
 		network, err := cli.GetVar("vars:config:network")
 		if err != nil {
-			cli.ms = microstellar.New("test")
+			cli.ms = microstellar.NewFromSpec("test")
 		} else {
-			cli.ms = microstellar.New(network)
+			cli.ms = microstellar.NewFromSpec(network)
 		}
 	}
 }

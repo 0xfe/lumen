@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "bca901a8d04bbc4e71e4bbd974232dc4a401d101"
+  revision = "3b5d88bd4b1539a96bf36fa67056b567338793a2"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -80,6 +80,7 @@
     ".",
     "hcl/ast",
     "hcl/parser",
+    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -102,7 +103,7 @@
     ".",
     "oid"
   ]
-  revision = "88edab0803230a3898347e77b474f8c1820a1f20"
+  revision = "b2004221932bd6b13167ef654c81cffac36f7537"
 
 [[projects]]
   name = "github.com/magiconair/properties"
@@ -203,8 +204,8 @@
 [[projects]]
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
-  version = "v1.0.0"
+  revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
+  version = "v1.0.2"
 
 [[projects]]
   branch = "master"
@@ -256,7 +257,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "92b859f39abd2d91a854c9f9c4621b2f5054a92d"
+  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
 [[projects]]
   branch = "master"

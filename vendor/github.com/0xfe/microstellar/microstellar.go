@@ -93,6 +93,30 @@ func New(networkName string, params ...Params) *MicroStellar {
 	}
 }
 
+// NewFromSpec is a helper that creates a new MicroStellar client based on
+// spec, which is a semicolon-separated string.
+//
+//   spec == "test": connect to test network
+//   spec == "public": connect to live network
+//   spec == "custom;https://foobar.com;myverylongpassphrase": connect to custom network
+func NewFromSpec(spec string) *MicroStellar {
+	parts := strings.SplitN(spec, ";", 3)
+
+	network := ""
+	params := Params{}
+	if len(parts) > 0 {
+		network = parts[0]
+		if len(parts) == 3 {
+			params = Params{
+				"url":        parts[1],
+				"passphrase": parts[2],
+			}
+		}
+	}
+
+	return New(network, params)
+}
+
 func (ms *MicroStellar) getTx() *Tx {
 	var tx *Tx
 
