@@ -112,6 +112,8 @@ func NewFromSpec(spec string) *MicroStellar {
 				"passphrase": parts[2],
 			}
 		}
+	} else {
+		network = "test"
 	}
 
 	return New(network, params)

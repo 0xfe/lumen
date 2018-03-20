@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "3b5d88bd4b1539a96bf36fa67056b567338793a2"
+  revision = "42f076872a9ae88a75aa983e0c95adc427d8e5fc"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"

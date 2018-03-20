@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
 )
@@ -64,9 +65,22 @@ func NewTx(networkName string, params ...Params) *Tx {
 		client = horizon.DefaultTestNetClient
 		fake = true
 	case "custom":
-		network = build.Network{Passphrase: params[0]["passphrase"].(string)}
+		if len(params) < 1 {
+			logrus.Errorf("missing parameters for custom network, connecting to testnet")
+			return NewTx("test")
+		}
+
+		url, ok1 := params[0]["url"]
+		passphrase, ok2 := params[0]["passphrase"]
+
+		if !(ok1 && ok2) {
+			logrus.Errorf("missing url or passphrase, connecting to testnet")
+			return NewTx("test")
+		}
+
+		network = build.Network{Passphrase: passphrase.(string)}
 		client = &horizon.Client{
-			URL:  params[0]["url"].(string),
+			URL:  url.(string),
 			HTTP: http.DefaultClient,
 		}
 	default:
