@@ -60,15 +60,15 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   ```
 * Decode, sign, and submit arbitrary transactions
   ```bash
-  # Output a base64 transaction without submitting it to the network.
-  lumen pay 5 USD --from mary --to bob --nosubmit >payment.txt
+  # Output a base64 transaction without signing or submitting it to the network.
+  lumen pay 5 USD --from mary --to bob --nosign --nosubmit >payment.txt
 
   # Decode a base64-encoded transaction into a JSON string.
   lumen tx decode $(cat payment.txt) --pretty
   # Output: JSON transaction string
 
   # Add a signature to an encoded transaction.
-  lumen tx sign $(cat payment.txt) --signers pizzafund >payment.signed.txt
+  lumen tx sign $(cat payment.txt) --signers mary,pizzafund >payment.signed.txt
 
   # Submit a base64-encoded transaction to the network.
   lumen tx submit $(cat payment.signed.txt)
@@ -282,8 +282,12 @@ lumen data bob mydata
 # Delete data key mydata
 lumen data bob mydata --clear
 
-# Display a base64 transaction without submitting it to the network
+# Display a base64 transaction signed by mary without submitting it to the network
 lumen pay 5 USD --from mary --to bob --nosubmit
+# Output: base64-encoded transaction
+
+# Display an unsigned base64 transaction without submitting it to the network
+lumen pay 5 USD --from mary --to bob --nosign --nosubmit
 # Output: base64-encoded transaction
 
 # Decode a base64-encoded transaction
