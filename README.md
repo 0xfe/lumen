@@ -159,6 +159,28 @@ lumen balance GBDZI7NMPUMAIWMHUZWJK5EOGAQZTL3GKWMKX2LSQNYDE42NYY7SLJRB --network
 # Or...
 lumen set config:network public
 lumen balance GBDZI7NMPUMAIWMHUZWJK5EOGAQZTL3GKWMKX2LSQNYDE42NYY7SLJRB
+
+# Send a payment with verbose logging
+$ lumen pay 10 USD --from mo --to mary -v
+# DEBU[0000] LUMEN_ENV not set                             type=setup
+# DEBU[0000] using storage driver file with /Users/mo/.lumen-data.json  type=setup
+# DEBU[0000] getting global:ns                             method=GetGlobalVar type=cli
+# DEBU[0000] got val: default (expires: false, expires_on: 2018-03-21 08:00:43.557659 -0400 EDT)  key="global:ns" method=get type=filestore
+# DEBU[0000] getting default:vars:config:network           method=GetVar type=cli
+# DEBU[0000] getting default:asset:USD:code                method=GetVar type=cli
+# DEBU[0000] got val: USD (expires: false, expires_on: 2018-03-21 08:02:49.189346 -0400 EDT)  key="default:asset:USD:code" method=get type=filestore
+# DEBU[0000] getting default:asset:USD:issuer              method=GetVar type=cli
+# DEBU[0000] got val: GAGUZYRM2G7235EM3C3WY33UHTWORNR7MX2J3OT4F3D46HAFSUEA63LL (expires: false, expires_on: 2018-03-21 08:02:49.188011 -0400 EDT)  key="default:asset:USD:issuer" method=get type=filestore
+# DEBU[0000] got asset: &{Code:USD Issuer:GAGUZYRM2G7235EM3C3WY33UHTWORNR7MX2J3OT4F3D46HAFSUEA63LL Type:credit_alphanum4}
+# DEBU[0000] getting default:account:mo:seed               method=GetVar type=cli
+# DEBU[0000] got val: SAZW22BHCNGEIQNSTWR5OYG3HC44CTPXV4342OEQJDJZWCPHYUQLZCC7 (expires: false, expires_on: 2018-03-06 09:14:24.691781 -0500 EST)  key="default:account:mo:seed" method=get type=filestore
+# DEBU[0000] getting default:account:mary:address          method=GetVar type=cli
+# DEBU[0000] got val: GD6JJSOKWI7U2YDCMZ3YGPKNOP6W3D7K34HWLC6WHD32CKJJVALV7OBK (expires: false, expires_on: 2018-03-21 08:01:13.923333 -0400 EDT)  key="default:account:mary:address" method=get type=filestore
+# DEBU[0000] paying 10 USD/GAGUZYRM2G7235EM3C3WY33UHTWORNR7MX2J3OT4F3D46HAFSUEA63LL from SAZW22BHCNGEIQNSTWR5OYG3HC44CTPXV4342OEQJDJZWCPHYUQLZCC7 to GD6JJSOKWI7U2YDCMZ3YGPKNOP6W3D7K34HWLC6WHD32CKJJVALV7OBK, opts: &{ctx:<nil> handlers:map[] hasFee:false fee:0 hasTimeBounds:false timeBounds:0 memoType:0 memoText: memoID:0 skipSignatures:false signerSeeds:[] hasCursor:false cursor: hasLimit:false limit:0 sortDescending:false passiveOffer:false sourceAddress: sendAsset:<nil> maxAmount: path:[] isMultiOp:false multiOpSource:}  cmd=pay
+# DEBU[0000] signing transaction, seq: 33366067619299340   lib=microstellar method=Tx.Sign
+# DEBU[0000] signed transaction, payload: AAAAAPGR63kaYI062wyHd+LARbBzZOCK9pDleNq8UkGhV4sZAAAAZAB2ikMAAAAMAAAAAAAAAAAAAAABAAAAAAAAAAEAAAAA/JTJyrI/TWBiZneDPU1z/W2P6t8PZYvWOPehKSmoF18AAAABVVNEAAAAAAANTOIs0b+t9IzYt2xvdDzs6LY/ZfSdunwux88cBZUIDwAAAAAF9eEAAAAAAAAAAAGhV4sZAAAAQIJduVNXFgBu3/OD6uLLJJlkZD4i8JoHHorCxKi0L0LnbnVvsl2pVuazburcSH43N6AYPHI9kD/M6B03kZaz4gg=  lib=microstellar method=Tx.Sign
+# DEBU[0000] submitting transaction to network test        lib=microstellar method=Tx.Submit
+# DEBU[0001] transaction submitted to ledger 8026171 with hash abbac2c2906342dff927c7a88075487418c787bc4550fea6353dfc2c2faa75b2  lib=microstellar method=Tx.Submit
 ```
 
 #### Create aliases

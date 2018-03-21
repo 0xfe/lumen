@@ -134,7 +134,7 @@ func (cli *CLI) ResolveAccount(fields logrus.Fields, lookupKey string, keyType s
 
 // ResolveAsset looks up name and returns a microstellar Asset
 func (cli *CLI) ResolveAsset(name string) (*microstellar.Asset, error) {
-	if name == "" {
+	if name == "" || name == "native" {
 		return microstellar.NativeAsset, nil
 	}
 

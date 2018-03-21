@@ -48,7 +48,6 @@ func (cli *CLI) buildPayCmd() *cobra.Command {
 
 			// Is this a fund request?
 			fund, err := cmd.Flags().GetBool("fund")
-			debugf(fields, "fund: %v, err %v", fund, err)
 
 			// If --with is set, then this is a path payment
 			with, _ := cmd.Flags().GetString("with")
