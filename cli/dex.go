@@ -10,7 +10,7 @@ import (
 
 func (cli *CLI) buildDexCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "dex [trade|list]",
+		Use:   "dex [trade|list|orderbook]",
 		Short: "trade assets on the DEX",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -23,6 +23,7 @@ func (cli *CLI) buildDexCmd() *cobra.Command {
 
 	cmd.AddCommand(cli.buildDexTradeCmd())
 	cmd.AddCommand(cli.buildDexListCmd())
+	cmd.AddCommand(cli.buildDexOrderBookCmd())
 
 	return cmd
 }
@@ -183,6 +184,68 @@ func (cli *CLI) buildDexListCmd() *cobra.Command {
 	cmd.Flags().String("cursor", "", "start listing from paging token")
 	cmd.Flags().Uint("limit", 10, "return at most this many results")
 	cmd.Flags().Bool("desc", false, "descending order")
+
+	return cmd
+}
+
+func (cli *CLI) buildDexOrderBookCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "orderbook [sell_asset] [buy_asset] [--limit 10]",
+		Short: "list bids/asks on the DEX between sell_asset and buy_asset",
+		Args:  cobra.MinimumNArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			sellAssetName := args[0]
+			buyAssetName := args[1]
+
+			logFields := logrus.Fields{"cmd": "dex", "subcmd": "orderbook"}
+
+			limit, _ := cmd.Flags().GetUint("limit")
+			opts := microstellar.Opts().WithLimit(limit)
+
+			sellAsset, err := cli.ResolveAsset(sellAssetName)
+			if err != nil {
+				cli.error(logFields, "invalid sell asset: %s", sellAssetName)
+				return
+			}
+
+			buyAsset, err := cli.ResolveAsset(buyAssetName)
+			if err != nil {
+				cli.error(logFields, "invalid buy asset: %s", buyAssetName)
+				return
+			}
+
+			orderbook, err := cli.ms.LoadOrderBook(sellAsset, buyAsset, opts)
+
+			if err != nil {
+				cli.error(logFields, "can't load offers: %v", microstellar.ErrorString(err))
+				return
+			}
+
+			format, err := cmd.Flags().GetString("format")
+
+			if format == "json" {
+				data, err := json.MarshalIndent(*orderbook, "", "  ")
+
+				if err != nil {
+					cli.error(logFields, "got bad data: %v", err)
+					return
+				} else {
+					showSuccess("%v", string(data))
+				}
+			} else {
+				for _, ask := range orderbook.Asks {
+
+					showSuccess("ask: %s %s for %s %s/%s", ask.Amount, orderbook.Base.Code, ask.Price, orderbook.Counter.Code, orderbook.Base.Code)
+				}
+				for _, bid := range orderbook.Bids {
+					showSuccess("bid: %s %s for %s %s/%s", bid.Amount, orderbook.Counter.Code, bid.Price, orderbook.Counter.Code, orderbook.Base.Code)
+				}
+			}
+		},
+	}
+
+	cmd.Flags().String("format", "line", "output format (json, struct, line)")
+	cmd.Flags().Uint("limit", 10, "return at most this many results")
 
 	return cmd
 }

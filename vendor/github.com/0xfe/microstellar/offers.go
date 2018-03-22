@@ -52,39 +52,42 @@ func newOfferFromHorizon(offer horizon.Offer) Offer {
 	return Offer(offer)
 }
 
+// horizonAsset is an asset returned by the horizon server.
+type horizonAsset struct {
+	Code   string `json:"asset_code"`
+	Issuer string `json:"asset_issuer"`
+	Type   string `json:"asset_type"`
+}
+
 // Link is typically embedded in a horizon response
-type Link struct {
+type horizonLink struct {
 	Href      string `json:"href"`
 	Templated bool   `json:"templated,omitempty"`
 }
 
-// PathResponse is what the horizon server returns
-type PathResponse struct {
-	Links struct {
-		Self Link `json:"self"`
-		Next Link `json:"next"`
-		Prev Link `json:"prev"`
-	} `json:"_links"`
-	Embedded struct {
-		Records []HorizonPath `json:"records"`
-	} `json:"_embedded"`
+// horizonPath is a payment path returned by a horizon server
+type horizonPath struct {
+	DestAmount        string         `json:"destination_amount"`
+	DestAssetCode     string         `json:"destination_asset_code"`
+	DestAssetIssuer   string         `json:"destination_asset_issuer"`
+	DestAssetType     string         `json:"destination_asset_type"`
+	SourceAmount      string         `json:"source_amount"`
+	SourceAssetCode   string         `json:"source_asset_code"`
+	SourceAssetIssuer string         `json:"source_asset_issuer"`
+	SourceAssetType   string         `json:"source_asset_type"`
+	Path              []horizonAsset `json:"path"`
 }
 
-// HorizonPath is a payment path returned by a horizon server
-type HorizonPath struct {
-	DestAmount        string `json:"destination_amount"`
-	DestAssetCode     string `json:"destination_asset_code"`
-	DestAssetIssuer   string `json:"destination_asset_issuer"`
-	DestAssetType     string `json:"destination_asset_type"`
-	SourceAmount      string `json:"source_amount"`
-	SourceAssetCode   string `json:"source_asset_code"`
-	SourceAssetIssuer string `json:"source_asset_issuer"`
-	SourceAssetType   string `json:"source_asset_type"`
-	Path              []struct {
-		AssetCode   string `json:"asset_code"`
-		AssetIssuer string `json:"asset_issuer"`
-		AssetType   string `json:"asset_type"`
-	} `json:"path"`
+// PathResponse is what the horizon server returns
+type horizonPathResponse struct {
+	Links struct {
+		Self horizonLink `json:"self"`
+		Next horizonLink `json:"next"`
+		Prev horizonLink `json:"prev"`
+	} `json:"_links"`
+	Embedded struct {
+		Records []horizonPath `json:"records"`
+	} `json:"_embedded"`
 }
 
 // Path is a microstellar payment path
@@ -269,7 +272,7 @@ func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, dest
 		return nil, errors.Errorf("failed to query server: %v", err)
 	}
 
-	var pathResponse PathResponse
+	var pathResponse horizonPathResponse
 	bytes, _ := ioutil.ReadAll(resp.Body)
 	body := string(bytes)
 	debugf("FindPaths", "Got Body: %+v", body)
@@ -308,8 +311,8 @@ func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, dest
 		debugf("FindPaths", "cost: %s path source: %s(%s) %s", path.SourceAmount, sourceAsset.Code, sourceAsset.Type, sourceAsset.Issuer)
 		hops := []*Asset{}
 		for _, hop := range path.Path {
-			debugf("FindPaths", "hop: %s(%s) %s", hop.AssetCode, hop.AssetType, hop.AssetIssuer)
-			hops = append(hops, NewAsset(hop.AssetCode, hop.AssetIssuer, AssetType(hop.AssetType)))
+			debugf("FindPaths", "hop: %s(%s) %s", hop.Code, hop.Type, hop.Issuer)
+			hops = append(hops, NewAsset(hop.Code, hop.Issuer, AssetType(hop.Type)))
 		}
 
 		returnPath = append(returnPath,
@@ -323,4 +326,88 @@ func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, dest
 	}
 
 	return returnPath, nil
+}
+
+// HorizonOrderBook represents an a horzon order_book response.
+type horizonOrderBook struct {
+	Bids []struct {
+		Price  string `json:"price"`
+		Amount string `json:"amount"`
+	} `json:"bids"`
+	Asks []struct {
+		Price  string `json:"price"`
+		Amount string `json:"amount"`
+	} `json:"asks"`
+	Base    horizonAsset `json:"base"`
+	Counter horizonAsset `json:"counter"`
+}
+
+// BidAsk represents a price and amount for a specific Bid or Ask.
+type BidAsk struct {
+	Price  string `json:"price"`
+	Amount string `json:"amount"`
+}
+
+// OrderBook is returned by LoadOrderBook.
+type OrderBook struct {
+	Asks    []BidAsk `json:"asks"`
+	Bids    []BidAsk `json:"bids"`
+	Base    *Asset   `json:"base"`
+	Counter *Asset   `json:"counter"`
+}
+
+// LoadOrderBook returns the current orderbook for all trades between sellAsset and buyAsset. Use
+// Opts().WithLimit(limit) to limit the number of entries returned.
+func (ms *MicroStellar) LoadOrderBook(sellAsset *Asset, buyAsset *Asset, options ...*Options) (*OrderBook, error) {
+	tx := NewTx(ms.networkName, ms.params)
+	client := tx.GetClient()
+	baseURL := strings.TrimRight(client.URL, "/") + "/order_book"
+	opts := mergeOptions(options)
+
+	query := url.Values{}
+	query.Add("selling_asset_type", string(sellAsset.Type))
+	query.Add("selling_asset_issuer", sellAsset.Issuer)
+	query.Add("selling_asset_code", sellAsset.Code)
+
+	query.Add("buying_asset_type", string(buyAsset.Type))
+	query.Add("buying_asset_issuer", buyAsset.Issuer)
+	query.Add("buying_asset_code", buyAsset.Code)
+
+	if opts.hasLimit {
+		query.Add("limit", fmt.Sprintf("%d", opts.limit))
+	}
+
+	endpoint := fmt.Sprintf(baseURL+"?%s", query.Encode())
+	if _, err := url.Parse(endpoint); err != nil {
+		return nil, errors.Errorf("endpoint parse error: %v", err)
+	}
+
+	debugf("LoadOrderBook", "querying endpoint: %s", endpoint)
+	resp, err := client.HTTP.Get(endpoint)
+	if err != nil {
+		return nil, errors.Errorf("failed to query server: %v", err)
+	}
+
+	var orderBook horizonOrderBook
+	bytes, _ := ioutil.ReadAll(resp.Body)
+	body := string(bytes)
+	debugf("LoadOrderBook", "Got Body: %+v", body)
+	err = json.Unmarshal(bytes, &orderBook)
+	if err != nil {
+		return nil, errors.Errorf("error unmarshalling response: %v", err)
+	}
+
+	returnOrderBook := OrderBook{
+		Base:    NewAsset(orderBook.Base.Code, orderBook.Base.Issuer, AssetType(orderBook.Base.Type)),
+		Counter: NewAsset(orderBook.Counter.Code, orderBook.Counter.Issuer, AssetType(orderBook.Counter.Type)),
+	}
+
+	for _, ask := range orderBook.Asks {
+		returnOrderBook.Asks = append(returnOrderBook.Asks, BidAsk{Price: ask.Price, Amount: ask.Amount})
+	}
+	for _, bid := range orderBook.Bids {
+		returnOrderBook.Bids = append(returnOrderBook.Bids, BidAsk{Price: bid.Price, Amount: bid.Amount})
+	}
+
+	return &returnOrderBook, nil
 }

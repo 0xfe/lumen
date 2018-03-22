@@ -156,6 +156,12 @@ err := ms.CreateOffer("SCSMBQYTXKZYY7CLVT6NPPYWVDQYDOQ6BB3QND4OIXC7762JYJYZ3RMK"
 err := ms.UpdateOffer("SCSMBQYTXKZYY7CLVT6NPPYWVDQYDOQ6BB3QND4OIXC7762JYJYZ3RMK",
   USD, NativeAsset, "3", "150",
   Opts().MakePassive())
+
+// Get the order book for all USD -> Lumen trades on the DEX.
+orderBook, err := ms.LoadOrderBook(USD, microstellar.NativeAsset)
+
+// Get all offers made by account.
+offers, err := ms.LoadOffers("G6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA")
 ```
 
 #### Make path payments with automatic path-finding

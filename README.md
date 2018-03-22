@@ -84,6 +84,9 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   ```
 * Trade assets on the DEX and make path payments with automatic path finding
   ```bash
+  # List all DEX trades between USD and XLM
+  lumen dex orderbook USD native
+
   # Sell 10 USD for EUR at 2 EUR/USD (i.e, buy 5 EUR for 10 USD)
   lumen dex trade bob --sell USD --buy EUR --amount 10 --price 2
 
@@ -91,7 +94,7 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
   lumen dex list bob --limit 5
 
   # Cross-asset payments (path payments) via the DEX
-  lumen pay 20 USD --from bob --to mary --with EUR --max 10 --path XLM,INR
+  lumen pay 20 USD --from bob --to mary --with native --max 10 --path EUR,INR
 
   # If you don't speficy --path, Lumen finds a path for you!
   lumen pay 20 USD --from bob --to mary --with EUR --max 10

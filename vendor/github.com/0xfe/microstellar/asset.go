@@ -22,7 +22,7 @@ const Credit12Type AssetType = "credit_alphanum12"
 type Asset struct {
 	Code   string    `json:"code"`
 	Issuer string    `json:"issuer"`
-	Type   AssetType `json:"type,string"`
+	Type   AssetType `json:"type"`
 }
 
 // NativeAsset is a convenience const representing a native asset.
@@ -33,6 +33,9 @@ var NativeAsset = &Asset{"XLM", "", NativeType}
 //
 //   USD := microstellar.NewAsset("USD", "issuer_address", microstellar.Credit4Type)
 func NewAsset(code string, issuer string, assetType AssetType) *Asset {
+	if assetType == NativeType {
+		code = "xlm"
+	}
 	return &Asset{code, issuer, assetType}
 }
 

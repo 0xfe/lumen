@@ -26,4 +26,6 @@ func TestDex(t *testing.T) {
 	expectOutput(t, cli, "", "dex trade mo --buy INR --sell USD --amount 20 --price 2 --update 23112")
 	expectOutput(t, cli, "", "dex trade mo --buy INR --sell USD --amount 20 --price 2 --delete 23112")
 	expectOutput(t, cli, "", "dex list mo --cursor 23443 --limit 3 --desc")
+
+	expectOutput(t, cli, "", "dex orderbook USD INR --limit 10")
 }

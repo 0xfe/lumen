@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "42f076872a9ae88a75aa983e0c95adc427d8e5fc"
+  revision = "c310610d342455854e87a4a47383ddf5cf2fbf2e"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -88,7 +88,7 @@
     "json/scanner",
     "json/token"
   ]
-  revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
+  revision = "f40e974e75af4e271d97ce0fc917af5898ae7bda"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -230,7 +230,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "e64c35d7e951e81e5c357fab88779283dc09a50f"
+  revision = "71ef94e4866aaefa7a02f199158946b96854ac21"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -251,7 +251,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "c3a3ad6d03f7a915c0f7e194b7152974bb73d287"
+  revision = "80db560fac1fb3e6ac81dbc7f8ae4c061f5257bd"
 
 [[projects]]
   branch = "master"
@@ -266,7 +266,7 @@
     "unix",
     "windows"
   ]
-  revision = "d8e400bc7db4870d786864138af681469693d18c"
+  revision = "c488ab1dd8481ef762f96a79a9577c27825be697"
 
 [[projects]]
   name = "golang.org/x/text"

@@ -242,6 +242,17 @@ func TestDex(t *testing.T) {
 		t.Errorf("unexpected result, want offers, got nothing")
 	}
 
+	// Make sure orderbook has entries
+	out = run(cli, "dex orderbook USD EUR")
+	if out == "" {
+		t.Errorf("unexpected result, want orderbook, got nothing")
+	}
+
+	out = run(cli, "dex orderbook EUR USD --limit 0")
+	if out != "" {
+		t.Errorf("unexpected result, want empty string, got: %v", out)
+	}
+
 	// Create counterparty offers
 	expectOutput(t, cli, "", "dex trade citibank --sell EUR --buy USD --amount 10 --price 0.5")
 	expectOutput(t, cli, "", "dex trade chase --sell EUR --buy USD --amount 2 --price 1")
