@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -49,6 +51,10 @@ func buildFlagsForTxOptions(cmd *cobra.Command) {
 	cmd.Flags().Bool("nosign", false, "don't sign transaction")
 	cmd.Flags().String("memotext", "", "memo text")
 	cmd.Flags().String("memoid", "", "memo ID")
+	cmd.Flags().String("memohash", "", "memo hash (base64-encoded)")
+	cmd.Flags().String("memoreturn", "", "memo return (base64-encoded)")
+	cmd.Flags().String("mintime", "", "not valid before 'YYYY-MM-DD HH:MM:SS' in UTC")
+	cmd.Flags().String("maxtime", "", "not valid after 'YYYY-MM-DD HH:MM:SS' in UTC")
 	cmd.Flags().StringSlice("signers", []string{}, "alternate signers (comma separated)")
 }
 
@@ -68,6 +74,30 @@ func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*micr
 		opts = opts.WithMemoID(id)
 	}
 
+	if memohash, err := cmd.Flags().GetString("memohash"); err == nil && memohash != "" {
+		hash, err := base64.StdEncoding.DecodeString(memohash)
+		if err != nil {
+			logrus.WithFields(logFields).Debugf("error decoding memohash: %v", err)
+			return nil, errors.Errorf("bad memohash: %s", memohash)
+		}
+
+		var memoHash [32]byte
+		copy(memoHash[:], hash[:])
+		opts = opts.WithMemoHash(memoHash)
+	}
+
+	if memoreturn, err := cmd.Flags().GetString("memoreturn"); err == nil && memoreturn != "" {
+		hash, err := base64.StdEncoding.DecodeString(memoreturn)
+		if err != nil {
+			logrus.WithFields(logFields).Debugf("error decoding memoreturn: %v", err)
+			return nil, errors.Errorf("bad memoreturn: %s", memoreturn)
+		}
+
+		var memoReturn [32]byte
+		copy(memoReturn[:], hash[:])
+		opts = opts.WithMemoReturn(memoReturn)
+	}
+
 	if signers, err := cmd.Flags().GetStringSlice("signers"); err == nil && len(signers) > 0 {
 		for _, signer := range signers {
 			logrus.WithFields(logFields).Debugf("adding signer: %s", signer)
@@ -80,6 +110,34 @@ func (cli *CLI) genTxOptions(cmd *cobra.Command, logFields logrus.Fields) (*micr
 
 			opts = opts.WithSigner(address)
 		}
+	}
+
+	hasMinTime := false
+	hasMaxTime := false
+	minTimeBound := time.Now()
+	maxTimeBound := time.Now()
+	timeFormat := "2006-01-02 15:04:05"
+
+	if minTime, err := cmd.Flags().GetString("mintime"); err == nil && minTime != "" {
+		minTimeBound, err = time.Parse(timeFormat, minTime)
+		if err != nil {
+			return nil, errors.Errorf("bad --mintime: expecting YYYY-MM-DD HH:MM:SS, got: %v", minTime)
+		}
+		hasMinTime = true
+	}
+
+	if maxTime, err := cmd.Flags().GetString("maxtime"); err == nil && maxTime != "" {
+		maxTimeBound, err = time.Parse(timeFormat, maxTime)
+		if err != nil {
+			return nil, errors.Errorf("bad --maxtime: expecting YYYY-MM-DD HH:MM:SS")
+		}
+		hasMaxTime = true
+	}
+
+	if hasMinTime && hasMaxTime {
+		opts = opts.WithTimeBounds(minTimeBound.UTC(), maxTimeBound.UTC())
+	} else if hasMinTime || hasMaxTime {
+		return nil, errors.Errorf("need both --mintime and --maxtime")
 	}
 
 	if nosubmit, _ := cli.rootCmd.Flags().GetBool("nosubmit"); nosubmit {

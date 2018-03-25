@@ -50,12 +50,14 @@ type Options struct {
 	hasFee        bool
 	fee           uint32
 	hasTimeBounds bool
-	timeBounds    time.Duration
+	minTimeBound  time.Time
+	maxTimeBound  time.Time
 
 	// Used by all transactions.
 	memoType MemoType // defaults to no memo
 	memoText string   // additional memo text
 	memoID   uint64   // additional memo ID
+	memoHash [32]byte // additional memo ID
 
 	skipSignatures bool
 	signerSeeds    []string
@@ -114,7 +116,7 @@ func mergeOptions(opts []*Options) *Options {
 	return NewOptions()
 }
 
-// WithMemoText sets the memoType and memoText fields on a Payment. Used
+// WithMemoText sets the memoType and memoText fields on a Transaction. Used
 // with all transactions.
 func (o *Options) WithMemoText(text string) *Options {
 	o.memoType = MemoText
@@ -122,11 +124,27 @@ func (o *Options) WithMemoText(text string) *Options {
 	return o
 }
 
-// WithMemoID sets the memoType and memoID fields on a Payment. Used
+// WithMemoID sets the memoType and memoID fields on a Transaction. Used
 // with all transactions.
 func (o *Options) WithMemoID(id uint64) *Options {
 	o.memoType = MemoID
 	o.memoID = id
+	return o
+}
+
+// WithMemoHash sets the memoType and memoHash fields on a Transaction. Used
+// with all transactions.
+func (o *Options) WithMemoHash(hash [32]byte) *Options {
+	o.memoType = MemoHash
+	o.memoHash = hash
+	return o
+}
+
+// WithMemoReturn sets the memoType and memoReturn fields on a Transaction. Used
+// with all transactions.
+func (o *Options) WithMemoReturn(hash [32]byte) *Options {
+	o.memoType = MemoReturn
+	o.memoHash = hash
 	return o
 }
 
@@ -220,6 +238,15 @@ func (o *Options) On(event Event, handler *TxHandler) *Options {
 // transaction is not meant to be submitted.
 func (o *Options) SkipSignatures() *Options {
 	o.skipSignatures = true
+	return o
+}
+
+// WithTimeBounds attaches time bounds to the transaction. This means that the transaction
+// can only be submitted between min and max time (as determined by the ledger.)
+func (o *Options) WithTimeBounds(min time.Time, max time.Time) *Options {
+	o.hasTimeBounds = true
+	o.minTimeBound = min
+	o.maxTimeBound = max
 	return o
 }
 

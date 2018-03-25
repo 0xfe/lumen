@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
+	"github.com/stellar/go/xdr"
 )
 
 // Tx represents a unique stellar transaction. This is used by the MicroStellar
@@ -138,6 +139,39 @@ func (tx *Tx) Response() *TxResponse {
 	return &response
 }
 
+// Payload returns the built (and possibly signed) payload for this transaction as a
+// base64 string.
+func (tx *Tx) Payload() (string, error) {
+	if tx.fake {
+		return "PAYLOAD", nil
+	}
+
+	if tx.isMultiOp {
+		var err error
+		tx.builder, err = build.Transaction(tx.ops...)
+		if err != nil {
+			return "", errors.Wrap(err, "could not build transaction")
+		}
+	}
+
+	if tx.builder == nil {
+		return "", errors.Errorf("transaction not built")
+	}
+
+	if tx.payload == "" {
+		// If there's no payload, build it.
+		var txe build.TransactionEnvelopeBuilder
+		txe.Mutate(tx.builder)
+		b64, err := txe.Base64()
+		if err != nil {
+			return "", errors.Wrap(err, "error generating payload")
+		}
+		return b64, nil
+	}
+
+	return tx.payload, nil
+}
+
 // Reset clears all internal sate, so you can run a new operation.
 func (tx *Tx) Reset() {
 	tx.options = nil
@@ -192,6 +226,14 @@ func (tx *Tx) Build(sourceAccount build.TransactionMutator, muts ...build.Transa
 			muts = append(muts, build.MemoText{Value: tx.options.memoText})
 		case MemoID:
 			muts = append(muts, build.MemoID{Value: tx.options.memoID})
+		case MemoHash:
+			muts = append(muts, build.MemoHash{Value: xdr.Hash(tx.options.memoHash)})
+		case MemoReturn:
+			muts = append(muts, build.MemoReturn{Value: xdr.Hash(tx.options.memoHash)})
+		}
+
+		if tx.options.hasTimeBounds {
+			muts = append(muts, build.Timebounds{MinTime: uint64(tx.options.minTimeBound.Unix()), MaxTime: uint64(tx.options.maxTimeBound.Unix())})
 		}
 	}
 

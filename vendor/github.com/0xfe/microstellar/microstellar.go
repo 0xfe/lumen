@@ -54,6 +54,7 @@ type MicroStellar struct {
 	fake        bool
 	tx          *Tx
 	lastTx      *Tx
+	lastErr     error
 }
 
 // Error wraps underlying errors (e.g., horizon)
@@ -78,6 +79,9 @@ type Params map[string]interface{}
 //    New("custom", Params{
 //        "url": "https://my-horizon-server.com",
 //        "passphrase": "foobar"})
+//
+// The microstellar client is not thread-safe, however you can create as many clients
+// as you need.
 func New(networkName string, params ...Params) *MicroStellar {
 	var p Params
 
@@ -119,6 +123,8 @@ func NewFromSpec(spec string) *MicroStellar {
 	return New(network, params)
 }
 
+// getTx is a helper that builds a transaction based on the current context -- if we're in
+// the middle of a multi-op transaction, it returns an existing tx.
 func (ms *MicroStellar) getTx() *Tx {
 	var tx *Tx
 
@@ -133,6 +139,7 @@ func (ms *MicroStellar) getTx() *Tx {
 	return tx
 }
 
+// signAndSubmit signs tx and submits it to the current Stellar network.
 func (ms *MicroStellar) signAndSubmit(tx *Tx, signers ...string) error {
 	if !tx.isMultiOp {
 		tx.Sign(signers...)
@@ -141,7 +148,41 @@ func (ms *MicroStellar) signAndSubmit(tx *Tx, signers ...string) error {
 
 	// Save last tx to keep response and error
 	ms.lastTx = tx
-	return tx.Err()
+	return ms.err(tx.Err())
+}
+
+// success is a helper that sets the last error to nil
+func (ms *MicroStellar) success() error {
+	ms.lastErr = nil
+	return ms.lastErr
+}
+
+// err is a helper function to save the last error and return it.
+func (ms *MicroStellar) err(err error) error {
+	ms.lastErr = err
+	return ms.lastErr
+}
+
+// errorf is a helper function to build and save an error
+func (ms *MicroStellar) errorf(msg string, args ...interface{}) error {
+	ms.lastErr = errors.Errorf(msg, args...)
+	return ms.lastErr
+}
+
+// errorf is a helper function to wrap and safe an error
+func (ms *MicroStellar) wrapf(err error, msg string, args ...interface{}) error {
+	ms.lastErr = errors.Wrapf(err, msg, args...)
+	return ms.lastErr
+}
+
+// Err returns the last error on the transaction.
+func (ms *MicroStellar) Err() error {
+	return ms.lastErr
+}
+
+// Response returns the response from the last submission.
+func (ms *MicroStellar) Response() *TxResponse {
+	return ms.lastTx.Response()
 }
 
 // Start begins a new multi-op transaction. This lets you lump a set of operations into
@@ -176,7 +217,7 @@ func (ms *MicroStellar) Submit() error {
 	tx := ms.getTx()
 
 	if !tx.isMultiOp {
-		return errors.Errorf("can't submit, not a multi-op transaction")
+		return ms.errorf("can't submit, not a multi-op transaction")
 	}
 
 	ms.tx.Sign()
@@ -184,40 +225,45 @@ func (ms *MicroStellar) Submit() error {
 
 	// Save last tx to keep response and error
 	ms.lastTx = tx
-	tx = nil
-	return ms.lastTx.Err()
+	ms.tx = nil
+	return ms.err(ms.lastTx.Err())
 }
 
-// TxError returns the error from the last submission attempt.
-func (ms *MicroStellar) TxError() error {
-	return ms.lastTx.Err()
-}
+// Payload returns the payload for the current transaction without submitting it to the network. This
+// only works for transactions started with Start()
+func (ms *MicroStellar) Payload() (string, error) {
+	tx := ms.getTx()
 
-// TxResponse returns the response from the last submission.
-func (ms *MicroStellar) TxResponse() *TxResponse {
-	return ms.lastTx.Response()
+	if !tx.isMultiOp {
+		return "", ms.errorf("can't generate payload, Start() not called")
+	}
+
+	payload, err := tx.Payload()
+	ms.lastTx = tx
+	ms.tx = nil
+	return payload, ms.err(err)
 }
 
 // CreateKeyPair generates a new random key pair.
 func (ms *MicroStellar) CreateKeyPair() (*KeyPair, error) {
 	pair, err := keypair.Random()
 	if err != nil {
-		return nil, err
+		return nil, ms.err(err)
 	}
 
 	debugf("CreateKeyPair", "created address: %s, seed: <redacted>", pair.Address())
-	return &KeyPair{pair.Seed(), pair.Address()}, nil
+	return &KeyPair{pair.Seed(), pair.Address()}, ms.success()
 }
 
 // FundAccount creates a new account out of addressOrSeed by funding it with lumens
 // from sourceSeed. The minimum funding amount today is 0.5 XLM.
 func (ms *MicroStellar) FundAccount(sourceSeed string, addressOrSeed string, amount string, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("invalid source address or seed: %s", sourceSeed)
 	}
 
 	if !ValidAddressOrSeed(addressOrSeed) {
-		return errors.Errorf("invalid target address or seed: %s", addressOrSeed)
+		return ms.errorf("invalid target address or seed: %s", addressOrSeed)
 	}
 
 	payment := build.CreateAccount(
@@ -237,11 +283,11 @@ func (ms *MicroStellar) FundAccount(sourceSeed string, addressOrSeed string, amo
 // LoadAccount loads the account information for the given address.
 func (ms *MicroStellar) LoadAccount(address string) (*Account, error) {
 	if !ValidAddressOrSeed(address) {
-		return nil, errors.Errorf("can't load account: invalid address or seed: %v", address)
+		return nil, ms.errorf("can't load account: invalid address or seed: %v", address)
 	}
 
 	if ms.fake {
-		return newAccount(), nil
+		return newAccount(), ms.success()
 	}
 
 	debugf("LoadAccount", "loading account: %s", address)
@@ -249,17 +295,17 @@ func (ms *MicroStellar) LoadAccount(address string) (*Account, error) {
 	account, err := tx.GetClient().LoadAccount(address)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load account")
+		return nil, ms.wrapf(err, "could not load account")
 	}
 
-	return newAccountFromHorizon(account), nil
+	return newAccountFromHorizon(account), ms.success()
 }
 
 // Resolve looks up a federated address
 func (ms *MicroStellar) Resolve(address string) (string, error) {
 	debugf("Resolve", "looking up: %s", address)
 	if !strings.Contains(address, "*") {
-		return "", errors.Errorf("not a fedaration address: %s", address)
+		return "", ms.errorf("not a fedaration address: %s", address)
 	}
 
 	// Create a new federation client and lookup address
@@ -272,10 +318,10 @@ func (ms *MicroStellar) Resolve(address string) (string, error) {
 	resp, err := fedClient.LookupByAddress(address)
 
 	if err != nil {
-		return "", errors.Wrapf(err, "resolve error")
+		return "", ms.wrapf(err, "resolve error")
 	}
 
-	return resp.AccountID, nil
+	return resp.AccountID, ms.success()
 }
 
 // PayNative makes a native asset payment of amount from source to target.
@@ -306,15 +352,15 @@ func (ms *MicroStellar) PayNative(sourceSeed string, targetAddress string, amoun
 //       microstellar.Opts().WithAsset(XLM, "20").Through(USD, EUR).FindPathFrom("marys_address"))
 func (ms *MicroStellar) Pay(sourceAddressOrSeed string, targetAddress string, amount string, asset *Asset, options ...*Options) error {
 	if err := asset.Validate(); err != nil {
-		return errors.Wrap(err, "can't pay")
+		return ms.wrapf(err, "can't pay")
 	}
 
 	if !ValidAddressOrSeed(sourceAddressOrSeed) {
-		return errors.Errorf("can't pay: invalid source address or seed: %s", sourceAddressOrSeed)
+		return ms.errorf("can't pay: invalid source address or seed: %s", sourceAddressOrSeed)
 	}
 
 	if !ValidAddressOrSeed(targetAddress) {
-		return errors.Errorf("can't pay: invalid address: %v", targetAddress)
+		return ms.errorf("can't pay: invalid address: %v", targetAddress)
 	}
 
 	paymentMuts := []interface{}{
@@ -347,16 +393,16 @@ func (ms *MicroStellar) Pay(sourceAddressOrSeed string, targetAddress string, am
 			} else {
 				debugf("Pay", "no path specified, searching for paths from: %s", opts.sourceAddress)
 				if err := ValidAddress(opts.sourceAddress); err != nil {
-					return errors.Wrapf(err, "not a valid source address: %s", opts.sourceAddress)
+					return ms.wrapf(err, "not a valid source address: %s", opts.sourceAddress)
 				}
 
 				paths, err := ms.FindPaths(opts.sourceAddress, targetAddress, asset, amount, Opts().WithAsset(opts.sendAsset, opts.maxAmount))
 				if err != nil {
-					return errors.Wrap(err, "path finding error")
+					return ms.wrapf(err, "path finding error")
 				}
 
 				if len(paths) < 1 {
-					return errors.Errorf("no paths found from %s to %s", opts.sendAsset.Code, asset.Code)
+					return ms.errorf("no paths found from %s to %s", opts.sendAsset.Code, asset.Code)
 				}
 
 				for _, hop := range paths[0].Hops {
@@ -377,11 +423,11 @@ func (ms *MicroStellar) Pay(sourceAddressOrSeed string, targetAddress string, am
 // limit string indicates no limit.
 func (ms *MicroStellar) CreateTrustLine(sourceSeed string, asset *Asset, limit string, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't create trust line: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't create trust line: invalid source address or seed: %s", sourceSeed)
 	}
 
 	if err := asset.Validate(); err != nil {
-		return errors.Wrap(err, "can't create trust line")
+		return ms.wrapf(err, "can't create trust line")
 	}
 
 	tx := ms.getTx()
@@ -402,11 +448,11 @@ func (ms *MicroStellar) CreateTrustLine(sourceSeed string, asset *Asset, limit s
 // RemoveTrustLine removes an trustline from sourceSeed to an asset.
 func (ms *MicroStellar) RemoveTrustLine(sourceSeed string, asset *Asset, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't remove trust line: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't remove trust line: invalid source address or seed: %s", sourceSeed)
 	}
 
 	if err := asset.Validate(); err != nil {
-		return errors.Wrapf(err, "can't remove trust line")
+		return ms.wrapf(err, "can't remove trust line")
 	}
 
 	tx := ms.getTx()
@@ -422,7 +468,7 @@ func (ms *MicroStellar) RemoveTrustLine(sourceSeed string, asset *Asset, options
 // SetMasterWeight changes the master weight of sourceSeed.
 func (ms *MicroStellar) SetMasterWeight(sourceSeed string, weight uint32, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't set master weight: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't set master weight: invalid source address or seed: %s", sourceSeed)
 	}
 
 	tx := ms.getTx()
@@ -458,7 +504,7 @@ const (
 // SetFlags sets flags on the account.
 func (ms *MicroStellar) SetFlags(sourceSeed string, flags AccountFlags, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't set flags: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't set flags: invalid source address or seed: %s", sourceSeed)
 	}
 
 	tx := ms.getTx()
@@ -474,7 +520,7 @@ func (ms *MicroStellar) SetFlags(sourceSeed string, flags AccountFlags, options 
 // ClearFlags clears the specified flags for the account.
 func (ms *MicroStellar) ClearFlags(sourceSeed string, flags AccountFlags, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't clear flags: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't clear flags: invalid source address or seed: %s", sourceSeed)
 	}
 
 	tx := ms.getTx()
@@ -490,7 +536,7 @@ func (ms *MicroStellar) ClearFlags(sourceSeed string, flags AccountFlags, option
 // SetHomeDomain changes the home domain of sourceSeed.
 func (ms *MicroStellar) SetHomeDomain(sourceSeed string, domain string, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't set home domain: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't set home domain: invalid source address or seed: %s", sourceSeed)
 	}
 
 	tx := ms.getTx()
@@ -506,11 +552,11 @@ func (ms *MicroStellar) SetHomeDomain(sourceSeed string, domain string, options 
 // AddSigner adds signerAddress as a signer to sourceSeed's account with weight signerWeight.
 func (ms *MicroStellar) AddSigner(sourceSeed string, signerAddress string, signerWeight uint32, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't add signer: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't add signer: invalid source address or seed: %s", sourceSeed)
 	}
 
 	if !ValidAddressOrSeed(signerAddress) {
-		return errors.Errorf("can't add signer: invalid signer address or seed: %s", signerAddress)
+		return ms.errorf("can't add signer: invalid signer address or seed: %s", signerAddress)
 	}
 
 	tx := ms.getTx()
@@ -526,11 +572,11 @@ func (ms *MicroStellar) AddSigner(sourceSeed string, signerAddress string, signe
 // RemoveSigner removes signerAddress as a signer from sourceSeed's account.
 func (ms *MicroStellar) RemoveSigner(sourceSeed string, signerAddress string, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't remove signer: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't remove signer: invalid source address or seed: %s", sourceSeed)
 	}
 
 	if !ValidAddressOrSeed(signerAddress) {
-		return errors.Errorf("can't remove signer: invalid signer address or seed: %s", signerAddress)
+		return ms.errorf("can't remove signer: invalid signer address or seed: %s", signerAddress)
 	}
 
 	tx := ms.getTx()
@@ -546,7 +592,7 @@ func (ms *MicroStellar) RemoveSigner(sourceSeed string, signerAddress string, op
 // SetThresholds sets the signing thresholds for the account.
 func (ms *MicroStellar) SetThresholds(sourceSeed string, low, medium, high uint32, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
 	}
 
 	tx := ms.getTx()
@@ -563,7 +609,7 @@ func (ms *MicroStellar) SetThresholds(sourceSeed string, low, medium, high uint3
 // less than 64 bytes.
 func (ms *MicroStellar) SetData(sourceSeed string, key string, val []byte, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
 	}
 
 	tx := ms.getTx()
@@ -573,15 +619,15 @@ func (ms *MicroStellar) SetData(sourceSeed string, key string, val []byte, optio
 	}
 
 	if key == "" {
-		return errors.Errorf("data key must not be empty")
+		return ms.errorf("data key must not be empty")
 	}
 
 	if len(key) > 64 {
-		return errors.Errorf("data key must be under 64 bytes: %s", key)
+		return ms.errorf("data key must be under 64 bytes: %s", key)
 	}
 
 	if len(val) > 64 {
-		return errors.Errorf("data value must be under 64 bytes: %s", string(val))
+		return ms.errorf("data value must be under 64 bytes: %s", string(val))
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.SetData(key, val))
@@ -591,7 +637,7 @@ func (ms *MicroStellar) SetData(sourceSeed string, key string, val []byte, optio
 // ClearData removes attached data from an account.
 func (ms *MicroStellar) ClearData(sourceSeed string, key string, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("can't set thresholds: invalid source address or seed: %s", sourceSeed)
 	}
 
 	tx := ms.getTx()
@@ -601,7 +647,7 @@ func (ms *MicroStellar) ClearData(sourceSeed string, key string, options ...*Opt
 	}
 
 	if len(key) > 64 {
-		return errors.Errorf("data key must be under 64 bytes: %s", key)
+		return ms.errorf("data key must be under 64 bytes: %s", key)
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.ClearData(key))
@@ -615,25 +661,25 @@ func (ms *MicroStellar) SignTransaction(b64Tx string, seeds ...string) (string, 
 	xdrTxe, err := DecodeTx(b64Tx)
 
 	if err != nil {
-		return "", errors.Wrap(err, "DecodeTx")
+		return "", ms.wrapf(err, "DecodeTx")
 	}
 
 	debugf("SignTransaction", "decoded transaction: %+v", xdrTxe)
 	hash, err := network.HashTransaction(&xdrTxe.Tx, tx.network.Passphrase)
 
 	if err != nil {
-		return "", errors.Wrap(err, "hash failed")
+		return "", ms.wrapf(err, "hash failed")
 	}
 
 	for _, seed := range seeds {
 		kp, err := keypair.Parse(seed)
 		if err != nil {
-			return "", errors.Wrap(err, "parse failed")
+			return "", ms.wrapf(err, "parse failed")
 		}
 
 		sig, err := kp.SignDecorated(hash[:])
 		if err != nil {
-			return "", errors.Wrap(err, "sign failed")
+			return "", ms.wrapf(err, "sign failed")
 		}
 
 		debugf("SignTransaction", "adding signature: %+v", sig)
@@ -642,10 +688,10 @@ func (ms *MicroStellar) SignTransaction(b64Tx string, seeds ...string) (string, 
 
 	signedTx, err := xdr.MarshalBase64(xdrTxe)
 	if err != nil {
-		return "", errors.Wrap(err, "could not marshal transaction")
+		return "", ms.wrapf(err, "could not marshal transaction")
 	}
 
-	return signedTx, nil
+	return signedTx, ms.success()
 }
 
 // SubmitTransaction submits a base64-encoded transaction envelope to the Stellar network
@@ -653,5 +699,5 @@ func (ms *MicroStellar) SubmitTransaction(b64Tx string) (*TxResponse, error) {
 	tx := ms.getTx()
 	resp, err := tx.GetClient().SubmitTransaction(b64Tx)
 	txResponse := TxResponse(resp)
-	return &txResponse, err
+	return &txResponse, ms.err(err)
 }

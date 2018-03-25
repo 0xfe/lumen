@@ -40,6 +40,13 @@ func run(cli *cli.CLI, command string) string {
 	return strings.TrimSpace(got)
 }
 
+func runArgs(cli *cli.CLI, args ...string) string {
+	fmt.Printf("$ lumen %s\n", strings.Join(args, " "))
+	got := cli.Embeddable().Run(args...)
+	fmt.Printf("%s\n", got)
+	return strings.TrimSpace(got)
+}
+
 func expectOutput(t *testing.T, cli *cli.CLI, want string, command string) {
 	got := run(cli, command)
 
@@ -286,4 +293,32 @@ func TestData(t *testing.T) {
 	expectOutput(t, cli, "bar", "data mo foo")
 	expectOutput(t, cli, "", "data mo foo --clear")
 	expectOutput(t, cli, "error", "data mo foo")
+}
+
+func TestTimeBounds(t *testing.T) {
+	cli, cleanupFunc := newCLI()
+	defer cleanupFunc()
+
+	createFundedAccount(t, cli, "mo")
+	createFundedAccount(t, cli, "bob")
+
+	cli.Embeddable()
+	output := runArgs(cli, "pay", "1", "--from", "mo", "--to", "bob", "--mintime", "2017-01-01 12:00:00")
+	if output != "error" {
+		t.Errorf("want error, got %v", output)
+	}
+	output = runArgs(cli, "pay", "1", "--from", "mo", "--to", "bob", "--maxtime", "2017-01-01 12:00:00")
+	if output != "error" {
+		t.Errorf("want error, got %v", output)
+	}
+	output = runArgs(cli, "pay", "1", "--from", "mo", "--to", "bob", "--mintime", "2060-01-01 12:00:00", "--maxtime", "2075-01-01 12:00:00")
+	if output != "error" {
+		t.Errorf("want error, got %v", output)
+	}
+	output = runArgs(cli, "pay", "1", "--from", "mo", "--to", "bob", "--mintime", "2006-01-01 12:00:00", "--maxtime", "2075-01-01 12:00:00")
+	if output != "" {
+		t.Errorf("want nothing, got %v", output)
+	}
+
+	log.Print(output)
 }

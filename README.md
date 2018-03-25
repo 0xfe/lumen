@@ -334,6 +334,11 @@ lumen flags bob auth_revocables
 
 # Disable Bob's master key (by setting it's weight to 0)
 lumen signer masterweight bob 0
+
+# Create a time bound transaction only valid between given UTC timestamps
+# Submit it later with: lumen tx submit "base64-encoded transaction string"
+lumen pay 5 USD --from escrow --to bob --mintime '2017-06-06 12:00:00' --maxtime '2017-05-05 12:00:00' --nosubmit
+# Output: base64-encoded transaction string
 ```
 
 ### Configuring Lumen

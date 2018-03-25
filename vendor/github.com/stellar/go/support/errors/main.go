@@ -8,9 +8,6 @@
 package errors
 
 import (
-	"net/http"
-
-	"github.com/getsentry/raven-go"
 	"github.com/pkg/errors"
 )
 
@@ -37,24 +34,6 @@ func Errorf(format string, args ...interface{}) error {
 // https://godoc.org/github.com/pkg/errors#New for further details
 func New(message string) error {
 	return errors.New(message)
-}
-
-// ReportToSentry reports err to the configured sentry server.  Optionally,
-// specifying a non-nil `r` will include information in the report about the
-// current http request.
-func ReportToSentry(err error, r *http.Request) {
-	st := raven.NewStacktrace(4, 3, []string{"github.org/stellar"})
-	exc := raven.NewException(err, st)
-
-	var packet *raven.Packet
-	if r != nil {
-		h := raven.NewHttp(r)
-		packet = raven.NewPacket(err.Error(), exc, h)
-	} else {
-		packet = raven.NewPacket(err.Error(), exc)
-	}
-
-	raven.Capture(packet, nil)
 }
 
 // Wrap returns an error annotating err with message. If err is nil, Wrap

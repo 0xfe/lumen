@@ -23,22 +23,10 @@
   version = "v9"
 
 [[projects]]
-  name = "github.com/certifi/gocertifi"
-  packages = ["."]
-  revision = "deb3ae2ef2610fde3330947281941c562861188b"
-  version = "2018.01.18"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/getsentry/raven-go"
-  packages = ["."]
-  revision = "563b81fc02b75d664e54da31f787c2cc2186780b"
 
 [[projects]]
   name = "github.com/go-errors/errors"
@@ -53,7 +41,7 @@
     ".",
     "oid"
   ]
-  revision = "88edab0803230a3898347e77b474f8c1820a1f20"
+  revision = "b2004221932bd6b13167ef654c81cffac36f7537"
 
 [[projects]]
   branch = "master"
@@ -117,7 +105,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "e64c35d7e951e81e5c357fab88779283dc09a50f"
+  revision = "36bb4843f4732ba74925176b14612efde6ab6a3b"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -138,13 +126,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "374053ea96cb300f8671b8d3b07edeeb06e203b4"
+  revision = "88942b9c40a4c9d203b82b3731787b672d6e809b"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "24dd3780ca4f75fed9f321890729414a4b5d3f13"
+  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
 [[projects]]
   branch = "master"
@@ -153,11 +141,11 @@
     "unix",
     "windows"
   ]
-  revision = "2f1e207ee39ff70f3433e49c6eb52677a515e3b5"
+  revision = "91ee8cde435411ca3f1cd365e8f20131aed4d0a1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "03e51ca5b543ef99867ee4fe5b0d1d24abe2bc07a82f4b4930bdea065b0abced"
+  inputs-digest = "a8d37ad3613144a684bc0e23608183617aa4676cb405e778a074df64ac272fde"
   solver-name = "gps-cdcl"
   solver-version = 1

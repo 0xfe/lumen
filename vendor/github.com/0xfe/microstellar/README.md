@@ -37,8 +37,8 @@ ms := microstellar.New("test")
 //
 // Seed strings begin with "S" -- "S6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA"
 // Address strings begin with "G" -- "GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM"
-pair, _ := ms.CreateKeyPair()
-log.Print(pair.Seed, pair.Address)
+bob, _ := ms.CreateKeyPair()
+log.Print(bob.Seed, bob.Address)
 
 // In stellar, you can create all kinds of asset types -- dollars, houses, kittens. These
 // customized assets are called credit assets.
@@ -49,14 +49,11 @@ log.Print(pair.Seed, pair.Address)
 // When you first create a key pair, you need to fund it with atleast 0.5 lumens. This
 // is called the "base reserve", and makes the account valid. You can only transact to
 // and from accounts that maintain the base reserve.
-ms.FundAccount(
-  "S6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // func source
-  pair.Address,                                               // fund destination
-  "1")                                                        // amount in lumens (XLM)
+ms.FundAccount(kelly.Seed, bob.Address, "1")
 
 // On the test network, you can ask FriendBot to fund your account. You don't need to buy
 // lumens. (If you do want to buy lumens for the test network, call me!)
-microstellar.FundWithFriendBot(pair.Address)
+microstellar.FundWithFriendBot(bob.Address)
 ```
 
 #### Make payments and check balances
@@ -68,161 +65,154 @@ value. E.g., `ParseAmount("2.5") == int64(25000000)`.
 
 ```go
 // Pay someone 3 lumens.
-ms.PayNative(
-  "S6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // from
-  "GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM", // to
-  "3")
+ms.PayNative(kelly.Seed, bob.Address, "3")
 
-// Set the memo field on a payment
-err := ms.Pay(
-  "S6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // from
-  "GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM", // to
-  "3", microstellar.Opts().WithMemoText("thanks for the fish"))
+// Set the memo field on a payment.
+err := ms.Pay(kelly.Seed, bob.Address, "3",
+  microstellar.Opts().WithMemoText("thanks for the fish"))
 
 // Find out where the transaction was submitted.
 if err == nil {
-  fmt.Printf("Transaction submitted to ledger: %d", ms.TxResponse().Ledger)
+  fmt.Printf("Transaction submitted to ledger: %d", ms.Response().Ledger)
 }
 
-// Now load the account details from the ledger.
-account, _ := ms.LoadAccount(pair.Address)
-
+// Get kelly's balance.
+account, _ := ms.LoadAccount(kelly.Address)
 log.Printf("Native Balance: %v XLM", account.GetNativeBalance())
 ```
 
 #### Work with credit assets
 
 ```go
-// Create a custom asset with the code "USD" issued by some trusted issuer
-USD := microstellar.NewAsset(
-  "USD", // asset code
-  "G6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // issuer address
-  Credit4Type) // asset type (Credit4Type, Credit12Type, NativeType)
+// Create a custom asset with the code "USD" issued by some trusted issuer.
+USD := microstellar.NewAsset("USD", chaseBank.address, Credit4Type)
 
-// Create a trust line from an account to the asset, with a limit of 10000
-ms.CreateTrustLine(
-  "S4H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // source account
-  USD,     // asset to trust
-  "10000") // max holdings of this asset
+// Create a trust line from an account to the asset, with a limit of 10000.
+ms.CreateTrustLine(kelly.Seed, USD, "10000")
 
-// Make a payment in the asset
-ms.Pay(
-  "S6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // from
-  "GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM", // to
-  USD, 10, microstellar.Opts().WithMemo("funny money"))
+// Make a payment in the asset.
+ms.Pay(kelly.Seed, mary.Address, USD, "10",
+  microstellar.Opts().WithMemo("funny money"))
 ```
 
 #### Multisignature transactions
 ```go
-// Add two signers with weight 1 to account
-ms.AddSigner(
-  "S8H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // source account
-  "G6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // signer address
-  1) // weight
+// Add Bob as a signer to Kelly's account with the key weight 1.
+ms.AddSigner(kelly.Seed, bob.Address, 1)
 
-ms.AddSigner(
-  "S8H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // source account
-  "G9H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGB", // signer address
-  1) // weight
+// Add Mary as a signer to Kelly's account.
+ms.AddSigner(kelly.Seed, mary.Address, 1)
 
-// Set the low, medium, and high thresholds of the account. (Here we require a minimum
+// Set the low, medium, and high thresholds of KElly's account. (Here we require a minimum
 // total signing weight of 2 for all operations.)
-ms.SetThresholds("S8H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", 2, 2, 2)
+ms.SetThresholds(kelly.Seed, 2, 2, 2)
 
-// Kill the master weight of account, so only the new signers can sign transactions
-ms.SetMasterWeight("S8H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", 0,
-   microstellar.Opts().WithSigner("S2H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA"))
+// Disable Kelly's master key, so only Bob and Mary can sign her transactions.
+ms.SetMasterWeight(kelly.Seed,
+   microstellar.Opts().
+     WithSigner(kelly.Seed).
+     WithSigner(mary.Seed))
 
 // Make a payment (and sign with new signers). Note that the first parameter (source) here
 // can be an address instead of a seed (since the seed can't sign anymore.)
-ms.PayNative(
-  "G6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA", // from
-  "GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM", // to
-  "3", // amount
+ms.PayNative(kelly.Address, pizzahut.Address, USD, "20".
   microstellar.Opts().
-    WithSigner("S1H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA").
-    WithSigner("S2H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA"))
+    WithSigner(mary.Seed).
+    WithSigner(kelly.Seed))
 
 ```
 
-#### Trade assets on the Stellar DEX
+#### Trade assets on the Stellar Distributed Exchange (DEX)
 ```go
-// This is equivalent to an offer to buy 100 USD worth of lumens at 2 lumens/USD.
-err := ms.CreateOffer("SCSMBQYTXKZYY7CLVT6NPPYWVDQYDOQ6BB3QND4OIXC7762JYJYZ3RMK",
-  USD, NativeAsset, "2", "100",
+// Sell 100 USD for lumens on the DEX at 2 lumens/USD.
+err := ms.CreateOffer(bob.Seed, USD, NativeAsset, "2", "100",
   Opts().MakePassive())
 
 // No takers, update the offer.
-err := ms.UpdateOffer("SCSMBQYTXKZYY7CLVT6NPPYWVDQYDOQ6BB3QND4OIXC7762JYJYZ3RMK",
-  USD, NativeAsset, "3", "150",
-  Opts().MakePassive())
+err := ms.UpdateOffer(bob.Seed, offerID, USD, NativeAsset, "3", "150")
 
 // Get the order book for all USD -> Lumen trades on the DEX.
 orderBook, err := ms.LoadOrderBook(USD, microstellar.NativeAsset)
 
-// Get all offers made by account.
-offers, err := ms.LoadOffers("G6H4HQPE6BRZKLK3QNV6LTD5BGS7S6SZPU3PUGMJDJ26V7YRG3FRNPGA")
+// Get all offers made by Bob.
+offers, err := ms.LoadOffers(bob.Seed)
 ```
 
 #### Make path payments with automatic path-finding
 ```go
 // Path payments let you transparently convert currencies. Pay 5000 INR with XLM,
 // going through USD and EUR. Spend no more than 40 lumens on this transaction.
-err := ms.Pay(
-  "SAED4QHN3USETFHECASIM2LRI3H4QTVKZK44D2RC27IICZPZQEGXGXFC", // from
-  "GAGTJGMT55IDNTFTF2F553VQBWRBLGTWLU4YOOIFYBR2F6H6S4AEC45E", // to
-  "5000", INR, // destination receives 5000 INR
-  Opts().
+err := ms.Pay(kelly.Seed, mary.Address, "5000", INR, // mary gets 5000 INR
+  microstellar.Opts().
     WithAsset(XLM, "40"). // we spend no more than 40 XLM
     Through(USD, EUR))    // go through USD and EUR
 
 // Microstellar can automatically find paths for you, if you don't know what paths
 // to take beforehand.
-err := ms.Pay(
-  "SAED4QHN3USETFHECASIM2LRI3H4QTVKZK44D2RC27IICZPZQEGXGXFC", // from
-  "GAGTJGMT55IDNTFTF2F553VQBWRBLGTWLU4YOOIFYBR2F6H6S4AEC45E", // to
-  "5000", INR, // destination receives 5000 INR
+err := ms.Pay(kelly.Seed, mary.Address, "5000", INR, // mary receives 5000 INR
   Opts().
     WithAsset(XLM, "40"). // we spend no more than 40 XLM
-    FindPathFrom("GAUYTZ24ATLEBIV63MXMPOPQO2T6NHI6TQYEXRTFYXWYZ3JOCVO6UYUM") // from address
+    FindPathFrom(kelly.Address))
 ```
 
 #### Bundle multiple operations into a single transaction
 ```go
-// First, add Mary as a signer to Bob's account
-ms.AddSigner(bob.Seed, mary.Address, 1)
-
 // Start a mult-op transaction signed by Mary
 ms.Start(bob.Address,
-  microstellar.Opts().WithMemoText("multi-op").WithSigner(mary.Seed))
+  microstellar.Opts().
+    WithMemoText("multi-op").
+    WithSigner(mary.Seed))
 
+// Set the home domain for Bob's account.
 ms.SetHomeDomain(bob.Address, "qubit.sh")
+
+// Attach arbitrary data to Bob's account.
 ms.SetData(bob.Address, "foo", []byte("bar"))
-ms.SetFlags(bob.Address, microstellar.FlagAuthRequired)
-ms.PayNative(bob.Address, mary.Address, "1")
-ms.PayNative(mary.Address, bob.Address, "0.5")
+
+// Set Bob's acount flags.
+ms.SetFlags(bob.Address, microstellar.FlagAuthRequired | microstellar.FlagsAuthImmutable)
+
+// Make some payments
+ms.Pay(bob.Address, pizzaHut.Address, USD, "500")
+ms.PayNative(bob.Address, mary.Address, "25")
 
 // Sign and submit the transaction.
 ms.Submit()
 
-// Load account to see if it worked.
+// Load account to see check if it worked.
 account, _ := ms.LoadAccount(bob.Address)
 foo, ok := account.GetData("foo")
 if ok {
   fmt.Printf("Bob's data for foo: %s", string(foo))
 }
+
+fmt.Printf("Bob's home domain: %s", account.GetHomeDomain())
+```
+
+#### Time-bound transactions for smart contracts
+```go
+// Create a transaction valid between 1 and 8 hours from now.
+ms.Start(bob.Address,
+  microstellar.Opts().WithTimeBounds(time.Now().After(1*time.Hour), time.Now().After(8.time.Hour)))
+ms.Pay(bob.Address, pizzaHut.Address, USD, "500")
+
+// Get the transaction to submit later.
+payload := ms.Payload()
+
+// A few hours later...
+signedPayload, _ := ms.SignTransaction(payload, bob.Seed)
+ms.SubmitTransaction(signedPayload)
 ```
 
 #### Streaming
 
 ```go
 // Watch for payments to and from address starting from now.
-watcher, err := ms.WatchPayments("GCCRUJJGPYWKQWM5NLAXUCSBCJKO37VVJ74LIZ5AQUKT6KPVCPNAGC4A"),
-  Opts().WithCursor("now"))
+watcher, err := ms.WatchPayments(bob.Address, Opts().WithCursor("now"))
 
 go func() {
   for p := range watcher.Ch {
-    log.Printf("Saw payment: %+v", p)
+    log.Printf("Saw payment on Bob's address: %+v", p)
   }
 }()
 
@@ -231,8 +221,7 @@ time.Sleep(1 * time.Second)
 watcher.Done()
 
 // Watch for transactions from address.
-watcher, err := ms.WatchTransactions("GCCRUJJGPYWKQWM5NLAXUCSBCJKO37VVJ74LIZ5AQUKT6KPVCPNAGC4A",
-  Opts().WithCursor("now"))
+watcher, err := ms.WatchTransactions(kelly.Address, Opts().WithCursor("now"))
 
 // Get the firehose of ledger updates.
 watcher, err := ms.WatchLedgers(Opts().WithCursor("now"))

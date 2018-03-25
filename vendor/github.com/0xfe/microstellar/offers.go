@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
 )
@@ -102,7 +101,7 @@ type Path struct {
 // LoadOffers returns all existing trade offers made by address.
 func (ms *MicroStellar) LoadOffers(address string, options ...*Options) ([]Offer, error) {
 	if err := ValidAddress(address); err != nil {
-		return nil, errors.Errorf("invalid address: %s", address)
+		return nil, ms.errorf("invalid address: %s", address)
 	}
 
 	opt := mergeOptions(options)
@@ -124,36 +123,36 @@ func (ms *MicroStellar) LoadOffers(address string, options ...*Options) ([]Offer
 
 	debugf("LoadOffers", "loading offers for %s, with params +%v", address, params)
 	if ms.fake {
-		return []Offer{}, nil
+		return []Offer{}, ms.success()
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 	horizonOffers, err := tx.GetClient().LoadAccountOffers(address, params...)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "can't load offers")
+		return nil, ms.wrapf(err, "can't load offers")
 	}
 
 	results := make([]Offer, len(horizonOffers.Embedded.Records))
 	for i, o := range horizonOffers.Embedded.Records {
 		results[i] = Offer(o)
 	}
-	return results, nil
+	return results, ms.success()
 }
 
 // ManageOffer lets you trade on the DEX. See the Create/Update/DeleteOffer methods below
 // to see how this is used.
 func (ms *MicroStellar) ManageOffer(sourceSeed string, params *OfferParams, options ...*Options) error {
 	if !ValidAddressOrSeed(sourceSeed) {
-		return errors.Errorf("invalid source address or seed: %s", sourceSeed)
+		return ms.errorf("invalid source address or seed: %s", sourceSeed)
 	}
 
 	if err := params.BuyAsset.Validate(); err != nil {
-		return errors.Wrap(err, "ManageOffer")
+		return ms.wrapf(err, "ManageOffer")
 	}
 
 	if err := params.SellAsset.Validate(); err != nil {
-		return errors.Wrap(err, "ManageOffer")
+		return ms.wrapf(err, "ManageOffer")
 	}
 
 	rate := build.Rate{
@@ -166,7 +165,7 @@ func (ms *MicroStellar) ManageOffer(sourceSeed string, params *OfferParams, opti
 	if params.OfferID != "" {
 		var err error
 		if offerID, err = strconv.ParseUint(params.OfferID, 10, 64); err != nil {
-			return errors.Wrapf(err, "ManageOffer: bad OfferID: %v", params.OfferID)
+			return ms.wrapf(err, "ManageOffer: bad OfferID: %v", params.OfferID)
 		}
 	}
 
@@ -184,19 +183,17 @@ func (ms *MicroStellar) ManageOffer(sourceSeed string, params *OfferParams, opti
 	case OfferDelete:
 		builder = build.DeleteOffer(rate, build.OfferID(offerID))
 	default:
-		return errors.Errorf("ManageOffer: bad OfferType: %v", params.OfferType)
+		return ms.errorf("ManageOffer: bad OfferType: %v", params.OfferType)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	if len(options) > 0 {
 		tx.SetOptions(options[0])
 	}
 
 	tx.Build(sourceAccount(sourceSeed), builder)
-	tx.Sign(sourceSeed)
-	tx.Submit()
-	return tx.Err()
+	return ms.signAndSubmit(tx, sourceSeed)
 }
 
 // CreateOffer creates an offer to trade sellAmount of sellAsset held by sourceSeed for buyAsset at
@@ -247,7 +244,7 @@ func (ms *MicroStellar) DeleteOffer(sourceSeed string, offerID string, sellAsset
 // FindPaths finds payment paths between source and dest assets. Use Options.WithAsset
 // to filter the results by source asset and max spend.
 func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, destAsset *Asset, destAmount string, options ...*Options) ([]Path, error) {
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 	client := tx.GetClient()
 	baseURL := strings.TrimRight(client.URL, "/") + "/paths"
 
@@ -263,13 +260,13 @@ func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, dest
 
 	endpoint := fmt.Sprintf(baseURL+"?%s", query.Encode())
 	if _, err := url.Parse(endpoint); err != nil {
-		return nil, errors.Errorf("endpoint parse error: %v", err)
+		return nil, ms.errorf("endpoint parse error: %v", err)
 	}
 
 	debugf("FindPaths", "querying endpoint: %s", endpoint)
 	resp, err := client.HTTP.Get(endpoint)
 	if err != nil {
-		return nil, errors.Errorf("failed to query server: %v", err)
+		return nil, ms.errorf("failed to query server: %v", err)
 	}
 
 	var pathResponse horizonPathResponse
@@ -278,7 +275,7 @@ func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, dest
 	debugf("FindPaths", "Got Body: %+v", body)
 	err = json.Unmarshal(bytes, &pathResponse)
 	if err != nil {
-		return nil, errors.Errorf("error unmarshalling response: %v", err)
+		return nil, ms.errorf("error unmarshalling response: %v", err)
 	}
 
 	opts := mergeOptions(options)
@@ -294,12 +291,12 @@ func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, dest
 		if opts.maxAmount != "" {
 			maxAmount, err := ParseAmount(opts.maxAmount)
 			if err != nil {
-				return nil, errors.Errorf("error parsing maxAmount: %s: %v", opts.maxAmount, err)
+				return nil, ms.errorf("error parsing maxAmount: %s: %v", opts.maxAmount, err)
 			}
 
 			pathAmount, err := ParseAmount(path.SourceAmount)
 			if err != nil {
-				return nil, errors.Errorf("error parsing path.source_amount: %s: %v", path.SourceAmount, err)
+				return nil, ms.errorf("error parsing path.source_amount: %s: %v", path.SourceAmount, err)
 			}
 
 			if pathAmount > maxAmount {
@@ -325,7 +322,7 @@ func (ms *MicroStellar) FindPaths(sourceAddress string, destAddress string, dest
 			})
 	}
 
-	return returnPath, nil
+	return returnPath, ms.success()
 }
 
 // HorizonOrderBook represents an a horzon order_book response.
@@ -359,7 +356,7 @@ type OrderBook struct {
 // LoadOrderBook returns the current orderbook for all trades between sellAsset and buyAsset. Use
 // Opts().WithLimit(limit) to limit the number of entries returned.
 func (ms *MicroStellar) LoadOrderBook(sellAsset *Asset, buyAsset *Asset, options ...*Options) (*OrderBook, error) {
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 	client := tx.GetClient()
 	baseURL := strings.TrimRight(client.URL, "/") + "/order_book"
 	opts := mergeOptions(options)
@@ -379,13 +376,13 @@ func (ms *MicroStellar) LoadOrderBook(sellAsset *Asset, buyAsset *Asset, options
 
 	endpoint := fmt.Sprintf(baseURL+"?%s", query.Encode())
 	if _, err := url.Parse(endpoint); err != nil {
-		return nil, errors.Errorf("endpoint parse error: %v", err)
+		return nil, ms.errorf("endpoint parse error: %v", err)
 	}
 
 	debugf("LoadOrderBook", "querying endpoint: %s", endpoint)
 	resp, err := client.HTTP.Get(endpoint)
 	if err != nil {
-		return nil, errors.Errorf("failed to query server: %v", err)
+		return nil, ms.errorf("failed to query server: %v", err)
 	}
 
 	var orderBook horizonOrderBook
@@ -394,7 +391,7 @@ func (ms *MicroStellar) LoadOrderBook(sellAsset *Asset, buyAsset *Asset, options
 	debugf("LoadOrderBook", "Got Body: %+v", body)
 	err = json.Unmarshal(bytes, &orderBook)
 	if err != nil {
-		return nil, errors.Errorf("error unmarshalling response: %v", err)
+		return nil, ms.errorf("error unmarshalling response: %v", err)
 	}
 
 	returnOrderBook := OrderBook{
@@ -409,5 +406,5 @@ func (ms *MicroStellar) LoadOrderBook(sellAsset *Asset, buyAsset *Asset, options
 		returnOrderBook.Bids = append(returnOrderBook.Bids, BidAsk{Price: bid.Price, Amount: bid.Amount})
 	}
 
-	return &returnOrderBook, nil
+	return &returnOrderBook, ms.success()
 }

@@ -185,10 +185,10 @@ func (ms *MicroStellar) watch(entity string, address string, streamer streamFunc
 	debugf(logField, "watching address: %s", address)
 
 	if err := ValidAddress(address); address != "" && err != nil {
-		return nil, errors.Errorf("can't watch %s, invalid address: %s", entity, address)
+		return nil, ms.errorf("can't watch %s, invalid address: %s", entity, address)
 	}
 
-	tx := NewTx(ms.networkName, ms.params)
+	tx := ms.getTx()
 
 	var cursor *horizon.Cursor
 	var ctx context.Context
@@ -235,5 +235,5 @@ func (ms *MicroStellar) watch(entity string, address string, streamer streamFunc
 		}
 	}()
 
-	return cancelFunc, nil
+	return cancelFunc, ms.success()
 }

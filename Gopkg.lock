@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "c310610d342455854e87a4a47383ddf5cf2fbf2e"
+  revision = "0feffc0927dc9b1254dc47870a5f052e2c0d65e9"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -29,12 +29,6 @@
   version = "v9"
 
 [[projects]]
-  name = "github.com/certifi/gocertifi"
-  packages = ["."]
-  revision = "deb3ae2ef2610fde3330947281941c562861188b"
-  version = "2018.01.18"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -45,12 +39,6 @@
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
   version = "v1.4.7"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/getsentry/raven-go"
-  packages = ["."]
-  revision = "7562301a6763c9ac631b0a2011b4aa0e064e45d4"
 
 [[projects]]
   name = "github.com/go-errors/errors"
@@ -230,7 +218,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "71ef94e4866aaefa7a02f199158946b96854ac21"
+  revision = "36bb4843f4732ba74925176b14612efde6ab6a3b"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -251,7 +239,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "80db560fac1fb3e6ac81dbc7f8ae4c061f5257bd"
+  revision = "88942b9c40a4c9d203b82b3731787b672d6e809b"
 
 [[projects]]
   branch = "master"
@@ -266,7 +254,7 @@
     "unix",
     "windows"
   ]
-  revision = "c488ab1dd8481ef762f96a79a9577c27825be697"
+  revision = "91ee8cde435411ca3f1cd365e8f20131aed4d0a1"
 
 [[projects]]
   name = "golang.org/x/text"
