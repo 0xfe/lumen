@@ -230,7 +230,7 @@ func (ms *MicroStellar) Submit() error {
 }
 
 // Payload returns the payload for the current transaction without submitting it to the network. This
-// only works for transactions started with Start()
+// only works for transactions started with Start(). This method closes the transaction like Submit().
 func (ms *MicroStellar) Payload() (string, error) {
 	tx := ms.getTx()
 
@@ -462,6 +462,32 @@ func (ms *MicroStellar) RemoveTrustLine(sourceSeed string, asset *Asset, options
 	}
 
 	tx.Build(sourceAccount(sourceSeed), build.RemoveTrust(asset.Code, asset.Issuer))
+	return ms.signAndSubmit(tx, sourceSeed)
+}
+
+// AllowTrust authorizes an trustline that was just created by an account to an asset. This can be used
+// by issuers that have the AUTH_REQUIRED flag. The flag can be cleared if the issuer has the
+// AUTH_REVOCABLE flag. The assetCode field must be an asset issued by sourceSeed.
+func (ms *MicroStellar) AllowTrust(sourceSeed string, address string, assetCode string, authorized bool, options ...*Options) error {
+	if !ValidAddressOrSeed(sourceSeed) {
+		return ms.errorf("can't authorize trust line: invalid source address or seed: %s", sourceSeed)
+	}
+
+	if err := ValidAddress(address); err != nil {
+		return ms.errorf("can't authorize trust line: invalid account address: %s", address)
+	}
+
+	tx := ms.getTx()
+
+	if len(options) > 0 {
+		tx.SetOptions(options[0])
+	}
+
+	tx.Build(sourceAccount(sourceSeed), build.AllowTrust(
+		build.Trustor{Address: address},
+		build.AllowTrustAsset{Code: assetCode},
+		build.Authorize{Value: authorized}))
+
 	return ms.signAndSubmit(tx, sourceSeed)
 }
 

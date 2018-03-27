@@ -241,6 +241,16 @@ lumen pay 5 USD-citi --from mo --to kelly --memotext "here's five bucks"
 
 # Use federated asset names
 lumen pay 5 USD:issuer*chase.com --from mo --to kelly --memotext "here's five bucks"
+
+# Require issuer to authorize all new trustlines (and make them revocable)
+lumen flags issuer auth_required auth_revocable
+
+# Create a new trustline and authorize it
+lumen trust create kelly USD-citi
+lumen trust allow kelly USD-citi --signers citibank
+
+# Revoke a trust line (or freeze an asset in an account)
+lumen trust allow kelly USD-citi --revoke --signers citibank
 ```
 
 #### Stream the ledger

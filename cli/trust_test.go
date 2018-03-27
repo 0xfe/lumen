@@ -22,4 +22,5 @@ func TestTrust(t *testing.T) {
 	expectOutput(t, cli, "", "trust create kelly USD-citi --memoid 43")
 	expectOutput(t, cli, "", "trust remove mo USD --memotext ihatechase")
 	expectOutput(t, cli, "", "trust remove kelly USD --memoid 748")
+	expectOutput(t, cli, "", "trust allow kelly USD --revoke --signers issuer-chase")
 }

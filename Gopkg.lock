@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "0feffc0927dc9b1254dc47870a5f052e2c0d65e9"
+  revision = "5d9922e7f20c692b86cb806309475f085c1ecc28"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -43,8 +43,8 @@
 [[projects]]
   name = "github.com/go-errors/errors"
   packages = ["."]
-  revision = "3afebba5a48dbc89b574d890b6b34d9ee10b4785"
-  version = "v1.0.0"
+  revision = "a6af135bd4e28680facf08a3d206b454abc877a4"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/go-redis/redis"
@@ -91,7 +91,7 @@
     ".",
     "oid"
   ]
-  revision = "b2004221932bd6b13167ef654c81cffac36f7537"
+  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
 
 [[projects]]
   name = "github.com/magiconair/properties"
@@ -218,7 +218,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "36bb4843f4732ba74925176b14612efde6ab6a3b"
+  revision = "e55d6022945484273686a698c55d397a2283a623"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -254,7 +254,7 @@
     "unix",
     "windows"
   ]
-  revision = "91ee8cde435411ca3f1cd365e8f20131aed4d0a1"
+  revision = "13d03a9a82fba647c21a0ef8fba44a795d0f0835"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -272,8 +272,8 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
+  revision = "86f5ed62f8a0ee96bd888d2efdfd6d4fb100a4eb"
+  version = "v2.2.0"
 
 [solve-meta]
   analyzer-name = "dep"

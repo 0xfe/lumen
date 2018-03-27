@@ -93,6 +93,12 @@ ms.CreateTrustLine(kelly.Seed, USD, "10000")
 // Make a payment in the asset.
 ms.Pay(kelly.Seed, mary.Address, USD, "10",
   microstellar.Opts().WithMemo("funny money"))
+
+// Require trustlines to be authorized buy issuer.
+ms.SetFlags(issuer.Seed, microstellar.FlagAuthRequired)
+
+// Authorize a trustline after it's been created
+ms.AllowTrust(issuer.Seed, mary.Address, "USD", true)
 ```
 
 #### Multisignature transactions

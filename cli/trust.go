@@ -8,7 +8,7 @@ import (
 
 func (cli *CLI) buildTrustCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "trust [create|remove]",
+		Use:   "trust [create|remove|allow]",
 		Short: "manage trustlines between accounts and assets",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -21,6 +21,7 @@ func (cli *CLI) buildTrustCmd() *cobra.Command {
 
 	cmd.AddCommand(cli.buildTrustCreateCmd())
 	cmd.AddCommand(cli.buildTrustRemoveCmd())
+	cmd.AddCommand(cli.buildTrustAllowCmd())
 
 	return cmd
 }
@@ -108,6 +109,49 @@ func (cli *CLI) buildTrustRemoveCmd() *cobra.Command {
 		},
 	}
 
+	buildFlagsForTxOptions(cmd)
+	return cmd
+}
+
+func (cli *CLI) buildTrustAllowCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "allow [account] [asset] [--revoke] [--signers seed1,seed2...]",
+		Short: "allow/revoke a trustline between account and asset",
+		Args:  cobra.MinimumNArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+			assetName := args[1]
+
+			logFields := logrus.Fields{"cmd": "trust", "subcmd": "allow"}
+			address, err := cli.ResolveAccount(logFields, name, "address")
+
+			if err != nil {
+				cli.error(logFields, "invalid account: %s", name)
+				return
+			}
+
+			asset, err := cli.ResolveAsset(assetName)
+			if err != nil {
+				cli.error(logFields, "invalid asset: %s", assetName)
+				return
+			}
+
+			opts, err := cli.genTxOptions(cmd, logFields)
+			if err != nil {
+				cli.error(logFields, "can't generate allowtrust transaction: %v", err)
+				return
+			}
+
+			revoke, _ := cmd.Flags().GetBool("revoke")
+			err = cli.ms.AllowTrust(asset.Issuer, address, asset.Code, !revoke, opts)
+			if err != nil {
+				cli.error(logFields, "failed to create trustline from %s to %s: %v", name, assetName, microstellar.ErrorString(err))
+				return
+			}
+		},
+	}
+
+	cmd.Flags().Bool("revoke", false, "revoke authorization")
 	buildFlagsForTxOptions(cmd)
 	return cmd
 }
