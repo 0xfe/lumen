@@ -102,16 +102,7 @@ $ lumen pay 20 USD --from bob --to mary --with EUR --max 10
 * Embed Lumen into your own Go applications
   ```go
   import (
-    "fmt"
-    "io/ioutil"
-    "log"
-    "os"
-    "strconv"
-    "strings"
-    "testing"
-
     "github.com/0xfe/lumen/cli"
-    "github.com/sirupsen/logrus"
   )
 
   func main() {
