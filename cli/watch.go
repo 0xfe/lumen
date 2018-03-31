@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/0xfe/microstellar"
@@ -24,6 +25,19 @@ func showEntry(logFields logrus.Fields, entry interface{}, format string) {
 	}
 }
 
+func showPayment(logFields logrus.Fields, payment *microstellar.Payment) {
+	memo := ""
+	if payment.Memo.Type != "none" {
+		memo = fmt.Sprintf(" (memo: %v)", payment.Memo.Value)
+	}
+
+	if payment.Type == "create_account" {
+		showSuccess("create_account: %v funded with %v lumens %v", payment.Account, payment.StartingBalance, memo)
+	} else if payment.Type == "payment" {
+		showSuccess("payment: %v %v from %v to %v %v", payment.Amount, payment.AssetCode, payment.From, payment.To, memo)
+	}
+}
+
 func watch(ms *microstellar.MicroStellar, logFields logrus.Fields, entity string, address string, format string, stopFunc *func(), opts *microstellar.Options) error {
 	var watcher interface{}
 	var err error
@@ -36,7 +50,11 @@ func watch(ms *microstellar.MicroStellar, logFields logrus.Fields, entity string
 			*stopFunc = watcher.(*microstellar.PaymentWatcher).Done
 			streamErr = watcher.(*microstellar.PaymentWatcher).Err
 			for entry := range watcher.(*microstellar.PaymentWatcher).Ch {
-				showEntry(logFields, entry, format)
+				if format == "line" {
+					showPayment(logFields, entry)
+				} else {
+					showEntry(logFields, entry, format)
+				}
 			}
 		case "transactions":
 			watcher, err = ms.WatchTransactions(address, opts)
@@ -110,7 +128,7 @@ func (cli *CLI) buildWatchCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String("format", "json", "output format (json, yaml, struct)")
+	cmd.Flags().String("format", "line", "output format (json, yaml, struct)")
 	cmd.Flags().String("cursor", "now", "start watching from (now, start, paging_token)")
 
 	return cmd
