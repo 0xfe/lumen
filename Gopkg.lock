@@ -2,10 +2,10 @@
 
 
 [[projects]]
-  branch = "master"
   name = "github.com/0xfe/microstellar"
   packages = ["."]
-  revision = "5d9922e7f20c692b86cb806309475f085c1ecc28"
+  revision = "704e6a36f3bd57d6916becc0bd5b8557218109b0"
+  version = "v0.2.8"
 
 [[projects]]
   name = "github.com/BurntSushi/toml"
@@ -76,7 +76,7 @@
     "json/scanner",
     "json/token"
   ]
-  revision = "f40e974e75af4e271d97ce0fc917af5898ae7bda"
+  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -162,8 +162,8 @@
     ".",
     "mem"
   ]
-  revision = "bb8f1927f2a9d3ab41c9340aa034f6b803f4359c"
-  version = "v1.0.2"
+  revision = "63644898a8da0bc22138abf860edaf5277b6102e"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -174,8 +174,8 @@
 [[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
-  version = "v0.0.1"
+  revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
+  version = "v0.0.2"
 
 [[projects]]
   branch = "master"
@@ -186,8 +186,8 @@
 [[projects]]
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
-  version = "v1.0.0"
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/spf13/viper"
@@ -218,7 +218,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "e55d6022945484273686a698c55d397a2283a623"
+  revision = "9eb9682656c21d73a8fef16813872398ae6a6b6c"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -239,13 +239,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "88942b9c40a4c9d203b82b3731787b672d6e809b"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/net"
-  packages = ["context"]
-  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
+  revision = "2b6c08872f4b66da917bb4ce98df4f0307330f78"
 
 [[projects]]
   branch = "master"
@@ -254,7 +248,7 @@
     "unix",
     "windows"
   ]
-  revision = "13d03a9a82fba647c21a0ef8fba44a795d0f0835"
+  revision = "79b0c6888797020a994db17c8510466c72fe75d9"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -272,8 +266,8 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "86f5ed62f8a0ee96bd888d2efdfd6d4fb100a4eb"
-  version = "v2.2.0"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"

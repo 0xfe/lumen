@@ -1,8 +1,10 @@
 package horizon
 
 import (
+	"context"
+
+	"github.com/stellar/go/xdr"
 	"github.com/stretchr/testify/mock"
-	"golang.org/x/net/context"
 )
 
 // MockClient is a mockable horizon client.
@@ -29,7 +31,10 @@ func (m *MockClient) LoadAccount(accountID string) (Account, error) {
 }
 
 // LoadAccountOffers is a mocking a method
-func (m *MockClient) LoadAccountOffers(accountID string, params ...interface{}) (offers OffersPage, err error) {
+func (m *MockClient) LoadAccountOffers(
+	accountID string,
+	params ...interface{},
+) (offers OffersPage, err error) {
 	// There is no way to simply call:
 	//
 	// a := m.Called(accountID, params...)
@@ -43,6 +48,17 @@ func (m *MockClient) LoadAccountOffers(accountID string, params ...interface{}) 
 	return a.Get(0).(OffersPage), a.Error(1)
 }
 
+// LoadTradeAggregations is a mocking a method
+func (m *MockClient) LoadTradeAggregations(
+	baseAsset Asset,
+	counterAsset Asset,
+	resolution int64,
+	params ...interface{},
+) (tradeAggrs TradeAggregationsPage, err error) {
+	a := m.Called(baseAsset, counterAsset, resolution, params)
+	return a.Get(0).(TradeAggregationsPage), a.Error(1)
+}
+
 // LoadMemo is a mocking a method
 func (m *MockClient) LoadMemo(p *Payment) error {
 	a := m.Called(p)
@@ -50,31 +66,57 @@ func (m *MockClient) LoadMemo(p *Payment) error {
 }
 
 // LoadOrderBook is a mocking a method
-func (m *MockClient) LoadOrderBook(selling Asset, buying Asset, params ...interface{}) (orderBook OrderBookSummary, err error) {
+func (m *MockClient) LoadOrderBook(
+	selling Asset,
+	buying Asset,
+	params ...interface{},
+) (orderBook OrderBookSummary, err error) {
 	a := m.Called(selling, buying, params)
 	return a.Get(0).(OrderBookSummary), a.Error(1)
 }
 
+// SequenceForAccount is a mocking a method
+func (m *MockClient) SequenceForAccount(accountID string) (xdr.SequenceNumber, error) {
+	a := m.Called(accountID)
+	return a.Get(0).(xdr.SequenceNumber), a.Error(1)
+}
+
 // StreamLedgers is a mocking a method
-func (m *MockClient) StreamLedgers(ctx context.Context, cursor *Cursor, handler LedgerHandler) error {
+func (m *MockClient) StreamLedgers(
+	ctx context.Context,
+	cursor *Cursor,
+	handler LedgerHandler,
+) error {
 	a := m.Called(ctx, cursor, handler)
 	return a.Error(0)
 }
 
 // StreamPayments is a mocking a method
-func (m *MockClient) StreamPayments(ctx context.Context, accountID string, cursor *Cursor, handler PaymentHandler) error {
+func (m *MockClient) StreamPayments(
+	ctx context.Context,
+	accountID string,
+	cursor *Cursor,
+	handler PaymentHandler,
+) error {
 	a := m.Called(ctx, accountID, cursor, handler)
 	return a.Error(0)
 }
 
 // StreamTransactions is a mocking a method
-func (m *MockClient) StreamTransactions(ctx context.Context, accountID string, cursor *Cursor, handler TransactionHandler) error {
+func (m *MockClient) StreamTransactions(
+	ctx context.Context,
+	accountID string,
+	cursor *Cursor,
+	handler TransactionHandler,
+) error {
 	a := m.Called(ctx, accountID, cursor, handler)
 	return a.Error(0)
 }
 
 // SubmitTransaction is a mocking a method
-func (m *MockClient) SubmitTransaction(txeBase64 string) (TransactionSuccess, error) {
+func (m *MockClient) SubmitTransaction(
+	txeBase64 string,
+) (TransactionSuccess, error) {
 	a := m.Called(txeBase64)
 	return a.Get(0).(TransactionSuccess), a.Error(1)
 }

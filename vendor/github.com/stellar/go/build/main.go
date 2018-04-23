@@ -218,8 +218,8 @@ type Thresholds struct {
 }
 
 type Timebounds struct {
-    MinTime uint64
-    MaxTime uint64
+	MinTime uint64
+	MaxTime uint64
 }
 
 // Trustor is a mutator capable of setting the trustor on

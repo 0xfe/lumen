@@ -31,8 +31,8 @@
 [[projects]]
   name = "github.com/go-errors/errors"
   packages = ["."]
-  revision = "3afebba5a48dbc89b574d890b6b34d9ee10b4785"
-  version = "v1.0.0"
+  revision = "a6af135bd4e28680facf08a3d206b454abc877a4"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -41,7 +41,7 @@
     ".",
     "oid"
   ]
-  revision = "b2004221932bd6b13167ef654c81cffac36f7537"
+  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
 
 [[projects]]
   branch = "master"
@@ -105,7 +105,7 @@
     "support/render/problem",
     "xdr"
   ]
-  revision = "36bb4843f4732ba74925176b14612efde6ab6a3b"
+  revision = "9eb9682656c21d73a8fef16813872398ae6a6b6c"
 
 [[projects]]
   name = "github.com/stretchr/objx"
@@ -126,13 +126,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "88942b9c40a4c9d203b82b3731787b672d6e809b"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/net"
-  packages = ["context"]
-  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
+  revision = "2b6c08872f4b66da917bb4ce98df4f0307330f78"
 
 [[projects]]
   branch = "master"
@@ -141,7 +135,7 @@
     "unix",
     "windows"
   ]
-  revision = "91ee8cde435411ca3f1cd365e8f20131aed4d0a1"
+  revision = "79b0c6888797020a994db17c8510466c72fe75d9"
 
 [solve-meta]
   analyzer-name = "dep"

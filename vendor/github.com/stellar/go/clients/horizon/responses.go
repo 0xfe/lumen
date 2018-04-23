@@ -170,6 +170,35 @@ type Offer struct {
 	Price   string `json:"price"`
 }
 
+// TradeAggregationsPage returns a list of aggregated trade records,
+// aggregated by specific resolution
+type TradeAggregationsPage struct {
+	Links struct {
+		Self Link `json:"self"`
+		Next Link `json:"next"`
+		Prev Link `json:"prev"`
+	} `json:"_links"`
+	Embedded struct {
+		Records []TradeAggregation `json:"records"`
+	} `json:"_embedded"`
+}
+
+type TradeAggregation struct {
+	Timestamp     int64  `json:"timestamp"`
+	TradeCount    int64  `json:"trade_count"`
+	BaseVolume    string `json:"base_volume"`
+	CounterVolume string `json:"counter_volume"`
+	Average       string `json:"avg"`
+	High          string `json:"high"`
+	HighR         Price  `json:"high_r"`
+	Low           string `json:"low"`
+	LowR          Price  `json:"low_r"`
+	Open          string `json:"open"`
+	OpenR         Price  `json:"open_r"`
+	Close         string `json:"close"`
+	CloseR        Price  `json:"close_r"`
+}
+
 type OrderBookSummary struct {
 	Bids    []PriceLevel `json:"bids"`
 	Asks    []PriceLevel `json:"asks"`
@@ -224,9 +253,19 @@ type Payment struct {
 		} `json:"transaction"`
 	} `json:"_links"`
 
+	TransactionHash string `json:"transaction_hash"`
+	SourceAccount   string `json:"source_account"`
+	CreatedAt       string `json:"created_at"`
+
+	// create_account and account_merge field
+	Account string `json:"account"`
+
 	// create_account fields
-	Account         string `json:"account"`
+	Funder          string `json:"funder"`
 	StartingBalance string `json:"starting_balance"`
+
+	// account_merge fields
+	Into string `json:into"`
 
 	// payment/path_payment fields
 	From        string `json:"from"`

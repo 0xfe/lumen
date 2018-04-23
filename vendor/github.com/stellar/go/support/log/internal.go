@@ -1,11 +1,11 @@
 package log
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/stellar/go/support/http/mutil"
-	"golang.org/x/net/context"
 )
 
 // logStartOfRequest emits the logline that reports that an http request is

@@ -2,6 +2,7 @@ package build
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"github.com/stellar/go/network"
 	"github.com/stellar/go/support/errors"
@@ -43,10 +44,10 @@ func (b *TransactionBuilder) Mutate(muts ...TransactionMutator) error {
 		b.TX = &xdr.Transaction{}
 	}
 
-	for _, m := range muts {
+	for i, m := range muts {
 		err := m.MutateTransaction(b)
 		if err != nil {
-			return err
+			return errors.Wrap(err, fmt.Sprintf("mutator:%d failed", i))
 		}
 	}
 
@@ -130,7 +131,7 @@ func (m AutoSequence) MutateTransaction(o *TransactionBuilder) error {
 
 	seq, err := m.SequenceForAccount(source.Address())
 	if err != nil {
-		return err
+		return errors.Wrap(err, "couldn't load account for auto sequence")
 	}
 
 	o.TX.SeqNum = seq + 1
@@ -257,8 +258,8 @@ func (m MemoText) MutateTransaction(o *TransactionBuilder) (err error) {
 }
 
 func (m Timebounds) MutateTransaction(o *TransactionBuilder) error {
-    o.TX.TimeBounds = &xdr.TimeBounds{MinTime: xdr.Uint64(m.MinTime), MaxTime: xdr.Uint64(m.MaxTime)}
-    return nil
+	o.TX.TimeBounds = &xdr.TimeBounds{MinTime: xdr.Uint64(m.MinTime), MaxTime: xdr.Uint64(m.MaxTime)}
+	return nil
 }
 
 // MutateTransaction for Network sets the Network ID to use when signing this transaction
