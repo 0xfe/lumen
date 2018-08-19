@@ -11,7 +11,7 @@ import (
 func (cli *CLI) buildTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [sign|submit] [base64-encoded string] --signers seed1,seed2...",
-		Short: "manage trustlines between accounts and assets",
+		Short: "handle base64 encoded transactions",
 		Args:  cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
