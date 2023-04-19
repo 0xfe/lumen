@@ -6,3 +6,5 @@ go:
 
 script:
   - make test
+
+# Added comment - 
